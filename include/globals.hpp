@@ -8,12 +8,12 @@
 #include "stdint.h"
 
 namespace nsec {
-	namespace g {
-		extern uint8_t currentLevel;
-		extern bool currentlyLoading;
-		extern bool waitingForDisconnect;
-		extern uint8_t loadingBarPos;
-	}
-}
+namespace g {
+extern uint8_t currentLevel;
+extern bool currentlyLoading;
+extern bool waitingForDisconnect;
+extern uint8_t loadingBarPos;
+} // namespace g
+} // namespace nsec
 
 #endif /* NSEC_GLOBALS_HPP */

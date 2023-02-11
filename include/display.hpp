@@ -8,13 +8,13 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
-//WIP: expose our guts
+// WIP: expose our guts
 extern Adafruit_SSD1306 g_display;
 
 namespace nsec {
-	namespace display {
-		void init(void);
-	}
+namespace display {
+void init(void);
 }
+} // namespace nsec
 
 #endif /* NSEC_DISPLAY_HPP */

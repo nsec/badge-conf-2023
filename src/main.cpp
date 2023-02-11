@@ -2,31 +2,31 @@
 //
 // SPDX-License-Identifier: MIT
 
-﻿#include <Arduino.h>
-#include <SoftwareSerial.h>
-#include <SPI.h>
-#include <Wire.h>
-#include <ArduinoUniqueID.h>
-
 #include "board.hpp"
-#include "neopixel.hpp"
-#include "globals.hpp"
 #include "display.hpp"
+#include "globals.hpp"
+#include "neopixel.hpp"
 
-//SOFTWARE SERIAL
+#include <Arduino.h>
+#include <ArduinoUniqueID.h>
+#include <SPI.h>
+#include <SoftwareSerial.h>
+#include <Wire.h>
+
+// SOFTWARE SERIAL
 SoftwareSerial g_rightSerial(SIG_R2, SIG_R1); // RX, TX
 SoftwareSerial g_leftSerial(SIG_L1, SIG_L2); // RX, TX
 
-//PROTOTYPE FUNCTION
+// PROTOTYPE FUNCTION
 void softSerialRoutine(void);
 void incrementLoadingBar(void);
 
-//VARIABLE
-#define  MAX_MESSAGE_LENGTH 8
+// VARIABLE
+#define MAX_MESSAGE_LENGTH 8
 
 void setup()
 {
-	//GPIO INIT
+	// GPIO INIT
 	pinMode(LED_DBG, OUTPUT);
 
 	/* Buttons */
@@ -44,19 +44,19 @@ void setup()
 	digitalWrite(SIG_L2, LOW);
 	pinMode(SIG_L3, INPUT_PULLUP);
 
-	//SERIAL INIT
+	// SERIAL INIT
 	Serial.begin(38400);
 
 	g_rightSerial.begin(4800);
 	g_leftSerial.begin(4800);
 
-	//NEOPIXEL INIT
+	// NEOPIXEL INIT
 	neopix_init();
 
-	//DISPLAY INIT
+	// DISPLAY INIT
 	nsec::display::init();
 
-	//OLED INIT
+	// OLED INIT
 	g_display.setTextColor(SSD1306_WHITE);
 	g_display.clearDisplay();
 	g_display.setTextSize(1);
@@ -64,7 +64,7 @@ void setup()
 	g_display.print(F("John Smith"));
 	g_display.startscrollleft(0x00, 0x0F);
 	*/
-	g_display.display();      // Show initial text
+	g_display.display(); // Show initial text
 
 	UniqueIDdump(Serial);
 
@@ -75,33 +75,29 @@ void loop()
 {
 	softSerialRoutine();
 
-	//NSEC COMMUNICATION
+	// NSEC COMMUNICATION
 	bool commLeftConnected = false;
 	bool commRightConnected = false;
 
-	if(digitalRead(SIG_L3) == LOW) //scan left port
+	if (digitalRead(SIG_L3) == LOW) // scan left port
 		commLeftConnected = true;
-	else
-	{
+	else {
 		commLeftConnected = false;
 	}
 
-	if(digitalRead(SIG_R2) == LOW) //scan right port
+	if (digitalRead(SIG_R2) == LOW) // scan right port
 		commRightConnected = true;
-	else
-	{
+	else {
 		commRightConnected = false;
 	}
 
-
 	//--------------------------------------------
-	//DEBUG OUTPUT
+	// DEBUG OUTPUT
 	static uint32_t ts_uart = 0;
-	if(millis() - ts_uart > 100)
-	{
+	if (millis() - ts_uart > 100) {
 		ts_uart = millis();
 
-		//cheat code
+		// cheat code
 		if (digitalRead(BTN_UP) == LOW) {
 			Serial.print("\t Level Up");
 
@@ -110,7 +106,7 @@ void loop()
 			}
 
 			g_display.clearDisplay();
-			g_display.setCursor(0,0);
+			g_display.setCursor(0, 0);
 			g_display.println();
 			g_display.print(F("LVL="));
 			g_display.print(nsec::g::currentLevel);
@@ -118,12 +114,12 @@ void loop()
 		} else if (digitalRead(BTN_DOWN) == LOW) {
 			Serial.print("\t Level Down");
 
-			if(nsec::g::currentLevel > 1) {
+			if (nsec::g::currentLevel > 1) {
 				nsec::g::currentLevel--;
 			}
 
 			g_display.clearDisplay();
-			g_display.setCursor(0,0);
+			g_display.setCursor(0, 0);
 			g_display.println();
 			g_display.print(F("LVL="));
 			g_display.print(nsec::g::currentLevel);
@@ -132,21 +128,20 @@ void loop()
 	}
 
 	//--------------------------------------------
-	//NEOPIXEL UPDATE
+	// NEOPIXEL UPDATE
 	static uint32_t ts_neopix = 0;
-	if(millis() - ts_neopix > 1)
-	{
+	if (millis() - ts_neopix > 1) {
 		ts_neopix = millis();
 		if (commLeftConnected == true) {
-			if(nsec::g::waitingForDisconnect == false) {
+			if (nsec::g::waitingForDisconnect == false) {
 				incrementLoadingBar();
 				neopix_connectLeft();
 			} else {
 				neopix_success();
 			}
 
-		} else if(commRightConnected == true) {
-			if(nsec::g::waitingForDisconnect == false) {
+		} else if (commRightConnected == true) {
+			if (nsec::g::waitingForDisconnect == false) {
 				neopix_connectRight();
 				incrementLoadingBar();
 			} else {
@@ -155,7 +150,8 @@ void loop()
 		} else {
 			neopix_idle();
 			/*
-			if(nsec::g::waitingForDisconnect == true)	//if you just disconnect after pairing successfully. Return to showing the name
+			if(nsec::g::waitingForDisconnect == true)	//if you just disconnect
+			after pairing successfully. Return to showing the name
 			{
 				g_display.clearDisplay();
 				g_display.setTextSize(2); // Draw 2X-scale text
@@ -165,21 +161,21 @@ void loop()
 			}
 			*/
 
-			nsec::g::waitingForDisconnect = false;	//clear loading bar variables
+			nsec::g::waitingForDisconnect = false; // clear loading bar variables
 			nsec::g::currentlyLoading = false;
 			nsec::g::loadingBarPos = 0;
 		}
 	}
 
-
 	//--------------------------------------------
-	//DISPLAY UPDATE
+	// DISPLAY UPDATE
 	static uint32_t ts_oled = 0;
-	if(millis() - ts_oled > 100)
-	{
+	if (millis() - ts_oled > 100) {
 		ts_oled = millis();
 		/*
-		if(nsec::g::waitingForDisconnect == false)	//only show "pairing" if you just disconnected. After pairing is completed, "nsec::g::waitingForDisconnect" flag will be asserted. Another message will be shown
+		if(nsec::g::waitingForDisconnect == false)	//only show "pairing" if you just
+		disconnected. After pairing is completed, "nsec::g::waitingForDisconnect" flag will
+		be asserted. Another message will be shown
 		{
 			if		(commLeftConnected==true)
 			{
@@ -207,8 +203,7 @@ void loop()
 	}
 }
 
-
-//FUNCTION DECLARATION
+// FUNCTION DECLARATION
 void softSerialRoutine()
 {
 	static bool pingpongSelector = false;
@@ -217,8 +212,7 @@ void softSerialRoutine()
 	static char receivedLeft[MAX_MESSAGE_LENGTH];
 
 	static uint32_t ts_loop = 0;
-	if(millis() - ts_loop > 1000)
-	{
+	if (millis() - ts_loop > 1000) {
 		ts_loop = millis();
 
 		sending = millis();
@@ -227,18 +221,16 @@ void softSerialRoutine()
 	}
 
 	static uint32_t ts_pingpong = 0;
-	if(millis() - ts_pingpong > 200)
-	{
+	if (millis() - ts_pingpong > 200) {
 		ts_pingpong = millis();
 		pingpongSelector = !pingpongSelector;
 	}
 
 	static uint32_t ts_display = 0;
-	if(millis() - ts_display > 100)
-	{
+	if (millis() - ts_display > 100) {
 		ts_display = millis();
 		g_display.clearDisplay();
-		g_display.setCursor(0,0);
+		g_display.setCursor(0, 0);
 		g_display.print("broadcast:");
 		g_display.println(sending);
 		g_display.print("\nLeft RX:");
@@ -248,57 +240,44 @@ void softSerialRoutine()
 		g_display.display();
 	}
 
-
 	static char msgRxRight[MAX_MESSAGE_LENGTH];
 	static unsigned int msgRxRight_pos = 0;
 	static char msgRxLeft[MAX_MESSAGE_LENGTH];
 	static unsigned int msgRxLeft_pos = 0;
-	if(pingpongSelector == false)
-	{
+	if (pingpongSelector == false) {
 		g_rightSerial.listen();
-		while(g_rightSerial.available() > 0)
-		{
+		while (g_rightSerial.available() > 0) {
 			char inByte = g_rightSerial.read();
-			if ( inByte != '\n' && (msgRxRight_pos < MAX_MESSAGE_LENGTH - 1) )
-			{
-				msgRxRight[msgRxRight_pos] = inByte; //Add the incoming byte to our message
+			if (inByte != '\n' && (msgRxRight_pos < MAX_MESSAGE_LENGTH - 1)) {
+				msgRxRight[msgRxRight_pos] = inByte; // Add the incoming byte to our
+								     // message
 				msgRxRight_pos++;
-			}
-			else
-			{
-				msgRxRight[msgRxRight_pos] = '\0';	//Add null character to string
-				msgRxRight_pos = 0;				//Reset for the next message
-				for(int i=0; i<MAX_MESSAGE_LENGTH; i++)
-				{
+			} else {
+				msgRxRight[msgRxRight_pos] = '\0'; // Add null character to string
+				msgRxRight_pos = 0; // Reset for the next message
+				for (int i = 0; i < MAX_MESSAGE_LENGTH; i++) {
 					receivedRight[i] = msgRxRight[i];
 				}
 			}
 		}
-	}
-	else
-	{
+	} else {
 		g_leftSerial.listen();
-		while(g_leftSerial.available() > 0)
-		{
+		while (g_leftSerial.available() > 0) {
 			char inByte = g_leftSerial.read();
-			if ( inByte != '\n' && (msgRxLeft_pos < MAX_MESSAGE_LENGTH - 1) )
-			{
-				msgRxLeft[msgRxLeft_pos] = inByte; //Add the incoming byte to our message
+			if (inByte != '\n' && (msgRxLeft_pos < MAX_MESSAGE_LENGTH - 1)) {
+				msgRxLeft[msgRxLeft_pos] = inByte; // Add the incoming byte to our
+								   // message
 				msgRxLeft_pos++;
-			}
-			else
-			{
-				msgRxLeft[msgRxLeft_pos] = '\0';	//Add null character to string
-				msgRxLeft_pos = 0;				//Reset for the next message
-				for(int i=0; i<MAX_MESSAGE_LENGTH; i++)
-				{
+			} else {
+				msgRxLeft[msgRxLeft_pos] = '\0'; // Add null character to string
+				msgRxLeft_pos = 0; // Reset for the next message
+				for (int i = 0; i < MAX_MESSAGE_LENGTH; i++) {
 					receivedLeft[i] = msgRxLeft[i];
 				}
 			}
 		}
 	}
 }
-
 
 /*
  * Loading bar for connection, wait for 8 seconds?
@@ -308,31 +287,29 @@ void incrementLoadingBar()
 	uint32_t ts_loadingStartTime = 0;
 	uint32_t ts_loadingNextIncrement = 0;
 
-	if (nsec::g::currentlyLoading == false)
-	{
+	if (nsec::g::currentlyLoading == false) {
 		nsec::g::currentlyLoading = true;
 		ts_loadingStartTime = millis();
 		ts_loadingNextIncrement = ts_loadingStartTime + 1000;
-		g_pixels.fill(g_pixels.Color(0,0,0), 8, 15);	//clear bottom row
+		g_pixels.fill(g_pixels.Color(0, 0, 0), 8, 15); // clear bottom row
 		g_pixels.setPixelColor(15, g_pixels.Color(30, 0, 30));
 		g_pixels.show();
 	}
 
-	if ((millis() > ts_loadingNextIncrement) && (nsec::g::waitingForDisconnect == false))
-	{
-		if (nsec::g::loadingBarPos < 8)
-		{
-			ts_loadingNextIncrement = millis() + 1000;	//next increment is in 1 seconds
+	if ((millis() > ts_loadingNextIncrement) && (nsec::g::waitingForDisconnect == false)) {
+		if (nsec::g::loadingBarPos < 8) {
+			ts_loadingNextIncrement = millis() + 1000; // next increment is in 1 seconds
 			nsec::g::loadingBarPos++;
-			g_pixels.fill(g_pixels.Color(0, 0, 0), 8, 15);	//clear bottom row
-			g_pixels.fill(g_pixels.Color(30, 0, 30), 15-nsec::g::loadingBarPos+1, nsec::g::loadingBarPos);
+			g_pixels.fill(g_pixels.Color(0, 0, 0), 8, 15); // clear bottom row
+			g_pixels.fill(g_pixels.Color(30, 0, 30),
+				      15 - nsec::g::loadingBarPos + 1,
+				      nsec::g::loadingBarPos);
 			g_pixels.show();
-		}
-		else
-		{
+		} else {
 			nsec::g::currentLevel++;
-			if(nsec::g::currentLevel>=200)
-				nsec::g::currentLevel = 199;		//cap level at 199. No more additional LED animation after 199
+			if (nsec::g::currentLevel >= 200)
+				nsec::g::currentLevel = 199; // cap level at 199. No more additional
+							     // LED animation after 199
 			nsec::g::waitingForDisconnect = true;
 
 			/*
