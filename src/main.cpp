@@ -18,8 +18,8 @@ SoftwareSerial g_rightSerial(SIG_R2, SIG_R1); // RX, TX
 SoftwareSerial g_leftSerial(SIG_L1, SIG_L2); // RX, TX
 
 // PROTOTYPE FUNCTION
-void softSerialRoutine(void);
-void incrementLoadingBar(void);
+void softSerialRoutine();
+void incrementLoadingBar();
 
 // VARIABLE
 #define MAX_MESSAGE_LENGTH 8
@@ -76,20 +76,8 @@ void loop()
 	softSerialRoutine();
 
 	// NSEC COMMUNICATION
-	bool commLeftConnected = false;
-	bool commRightConnected = false;
-
-	if (digitalRead(SIG_L3) == LOW) // scan left port
-		commLeftConnected = true;
-	else {
-		commLeftConnected = false;
-	}
-
-	if (digitalRead(SIG_R2) == LOW) // scan right port
-		commRightConnected = true;
-	else {
-		commRightConnected = false;
-	}
+	const bool commLeftConnected = digitalRead(SIG_L3) == LOW;
+	const bool commRightConnected = digitalRead(SIG_R2) == LOW;
 
 	//--------------------------------------------
 	// DEBUG OUTPUT
@@ -132,16 +120,16 @@ void loop()
 	static uint32_t ts_neopix = 0;
 	if (millis() - ts_neopix > 1) {
 		ts_neopix = millis();
-		if (commLeftConnected == true) {
-			if (nsec::g::waitingForDisconnect == false) {
+		if (commLeftConnected) {
+			if (!nsec::g::waitingForDisconnect) {
 				incrementLoadingBar();
 				neopix_connectLeft();
 			} else {
 				neopix_success();
 			}
 
-		} else if (commRightConnected == true) {
-			if (nsec::g::waitingForDisconnect == false) {
+		} else if (commRightConnected) {
+			if (!nsec::g::waitingForDisconnect) {
 				neopix_connectRight();
 				incrementLoadingBar();
 			} else {
@@ -244,10 +232,10 @@ void softSerialRoutine()
 	static unsigned int msgRxRight_pos = 0;
 	static char msgRxLeft[MAX_MESSAGE_LENGTH];
 	static unsigned int msgRxLeft_pos = 0;
-	if (pingpongSelector == false) {
+	if (!pingpongSelector) {
 		g_rightSerial.listen();
 		while (g_rightSerial.available() > 0) {
-			char inByte = g_rightSerial.read();
+			char const inByte = g_rightSerial.read();
 			if (inByte != '\n' && (msgRxRight_pos < MAX_MESSAGE_LENGTH - 1)) {
 				msgRxRight[msgRxRight_pos] = inByte; // Add the incoming byte to our
 								     // message
@@ -263,7 +251,7 @@ void softSerialRoutine()
 	} else {
 		g_leftSerial.listen();
 		while (g_leftSerial.available() > 0) {
-			char inByte = g_leftSerial.read();
+			char const inByte = g_leftSerial.read();
 			if (inByte != '\n' && (msgRxLeft_pos < MAX_MESSAGE_LENGTH - 1)) {
 				msgRxLeft[msgRxLeft_pos] = inByte; // Add the incoming byte to our
 								   // message
@@ -287,7 +275,7 @@ void incrementLoadingBar()
 	uint32_t ts_loadingStartTime = 0;
 	uint32_t ts_loadingNextIncrement = 0;
 
-	if (nsec::g::currentlyLoading == false) {
+	if (!nsec::g::currentlyLoading) {
 		nsec::g::currentlyLoading = true;
 		ts_loadingStartTime = millis();
 		ts_loadingNextIncrement = ts_loadingStartTime + 1000;
@@ -296,7 +284,7 @@ void incrementLoadingBar()
 		g_pixels.show();
 	}
 
-	if ((millis() > ts_loadingNextIncrement) && (nsec::g::waitingForDisconnect == false)) {
+	if ((millis() > ts_loadingNextIncrement) && (!nsec::g::waitingForDisconnect)) {
 		if (nsec::g::loadingBarPos < 8) {
 			ts_loadingNextIncrement = millis() + 1000; // next increment is in 1 seconds
 			nsec::g::loadingBarPos++;

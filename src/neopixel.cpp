@@ -85,9 +85,10 @@ void neopix_idle()
 								// ON
 		{
 			// led_ID is the current LED index that we are update.
-			uint8_t led_ID = (startPosition + i) % 16; // This is going over every
-								   // single LED that needs to be on
-								   // based on the current LVL
+			uint8_t const led_ID = (startPosition + i) % 16; // This is going over every
+									 // single LED that needs to
+									 // be on based on the
+									 // current LVL
 
 			/*
 			if(led_ID > 15)
