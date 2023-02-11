@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 #include "globals.hpp"
+#include "ringbuffer.hpp"
 
 void setup()
 {

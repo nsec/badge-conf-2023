@@ -23,7 +23,10 @@ compiledb:
 check:
 	pio test -e native_tests $(VERBOSE)
 
+check-embedded:
+	pio test -e embedded_tests -v
+
 reuse:
 	reuse lint
 
-.PHONY: build flash fuses compiledb check reuse
+.PHONY: build flash fuses compiledb check check-embedded reuse
