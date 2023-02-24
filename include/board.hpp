@@ -17,6 +17,8 @@
 #define BTN_DOWN  A2
 #define BTN_LEFT  A3
 #define BTN_RIGHT A0
+#define BTN_OK    A7
+#define BTN_CANCEL A6
 
 /*
  * NeoPixels

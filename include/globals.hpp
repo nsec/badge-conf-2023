@@ -6,15 +6,16 @@
 #define NSEC_GLOBALS_HPP
 
 #include "stdint.h"
+#include "scheduler.hpp"
 #include "badge.hpp"
 #include "config.hpp"
 
 namespace nsec::g {
-extern uint8_t currentLevel;
 extern bool currentlyLoading;
 extern bool waitingForDisconnect;
 extern uint8_t loadingBarPos;
 
+extern scheduling::scheduler<config::scheduler::max_scheduled_task_count> the_scheduler;
 extern runtime::badge the_badge;
 } // namespace nsec::g
 

@@ -5,7 +5,6 @@
 #include "board.hpp"
 #include "display.hpp"
 #include "globals.hpp"
-#include "neopixel.hpp"
 
 #include <Arduino.h>
 #include <ArduinoUniqueID.h>
@@ -31,9 +30,6 @@ void setup()
 	g_rightSerial.begin(4800);
 	g_leftSerial.begin(4800);
 
-	// NEOPIXEL INIT
-	neopix_init();
-
 	// DISPLAY INIT
 	nsec::display::init();
 
@@ -56,70 +52,7 @@ void loop()
 	const bool commLeftConnected = digitalRead(SIG_L3) == LOW;
 	const bool commRightConnected = digitalRead(SIG_R2) == LOW;
 
-	//--------------------------------------------
-	// DEBUG OUTPUT
-	static uint32_t ts_uart = 0;
-	if (millis() - ts_uart > 100) {
-		ts_uart = millis();
-
-		// cheat code
-		if (digitalRead(BTN_UP) == LOW) {
-			Serial.print("\t Level Up");
-
-			if (nsec::g::currentLevel < 199) {
-				nsec::g::currentLevel++;
-			}
-
-			g_display.clearDisplay();
-			g_display.setCursor(0, 0);
-			g_display.println();
-			g_display.print(F("LVL="));
-			g_display.print(nsec::g::currentLevel);
-			g_display.display();
-		} else if (digitalRead(BTN_DOWN) == LOW) {
-			Serial.print("\t Level Down");
-
-			if (nsec::g::currentLevel > 1) {
-				nsec::g::currentLevel--;
-			}
-
-			g_display.clearDisplay();
-			g_display.setCursor(0, 0);
-			g_display.println();
-			g_display.print(F("LVL="));
-			g_display.print(nsec::g::currentLevel);
-			g_display.display();
-		}
-	}
-
-	//--------------------------------------------
-	// NEOPIXEL UPDATE
-	static uint32_t ts_neopix = 0;
-	if (millis() - ts_neopix > 1) {
-		ts_neopix = millis();
-		if (commLeftConnected) {
-			if (!nsec::g::waitingForDisconnect) {
-				incrementLoadingBar();
-				neopix_connectLeft();
-			} else {
-				neopix_success();
-			}
-
-		} else if (commRightConnected) {
-			if (!nsec::g::waitingForDisconnect) {
-				neopix_connectRight();
-				incrementLoadingBar();
-			} else {
-				neopix_success();
-			}
-		} else {
-			neopix_idle();
-
-			nsec::g::waitingForDisconnect = false; // clear loading bar variables
-			nsec::g::currentlyLoading = false;
-			nsec::g::loadingBarPos = 0;
-		}
-	}
+	nsec::g::the_scheduler.tick(millis());
 }
 
 // FUNCTION DECLARATION
@@ -194,42 +127,6 @@ void softSerialRoutine()
 					receivedLeft[i] = msgRxLeft[i];
 				}
 			}
-		}
-	}
-}
-
-/*
- * Loading bar for connection, wait for 8 seconds?
- */
-void incrementLoadingBar()
-{
-	uint32_t ts_loadingStartTime = 0;
-	uint32_t ts_loadingNextIncrement = 0;
-
-	if (!nsec::g::currentlyLoading) {
-		nsec::g::currentlyLoading = true;
-		ts_loadingStartTime = millis();
-		ts_loadingNextIncrement = ts_loadingStartTime + 1000;
-		g_pixels.fill(g_pixels.Color(0, 0, 0), 8, 15); // clear bottom row
-		g_pixels.setPixelColor(15, g_pixels.Color(30, 0, 30));
-		g_pixels.show();
-	}
-
-	if ((millis() > ts_loadingNextIncrement) && (!nsec::g::waitingForDisconnect)) {
-		if (nsec::g::loadingBarPos < 8) {
-			ts_loadingNextIncrement = millis() + 1000; // next increment is in 1 seconds
-			nsec::g::loadingBarPos++;
-			g_pixels.fill(g_pixels.Color(0, 0, 0), 8, 15); // clear bottom row
-			g_pixels.fill(g_pixels.Color(30, 0, 30),
-				      15 - nsec::g::loadingBarPos + 1,
-				      nsec::g::loadingBarPos);
-			g_pixels.show();
-		} else {
-			nsec::g::currentLevel++;
-			if (nsec::g::currentLevel >= 200)
-				nsec::g::currentLevel = 199; // cap level at 199. No more additional
-							     // LED animation after 199
-			nsec::g::waitingForDisconnect = true;
 		}
 	}
 }
