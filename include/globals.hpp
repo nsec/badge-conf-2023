@@ -6,14 +6,16 @@
 #define NSEC_GLOBALS_HPP
 
 #include "stdint.h"
+#include "badge.hpp"
+#include "config.hpp"
 
-namespace nsec {
-namespace g {
+namespace nsec::g {
 extern uint8_t currentLevel;
 extern bool currentlyLoading;
 extern bool waitingForDisconnect;
 extern uint8_t loadingBarPos;
-} // namespace g
-} // namespace nsec
+
+extern runtime::badge the_badge;
+} // namespace nsec::g
 
 #endif /* NSEC_GLOBALS_HPP */

@@ -8,3 +8,4 @@ uint8_t nsec::g::currentLevel = 1;
 bool nsec::g::currentlyLoading = false;
 bool nsec::g::waitingForDisconnect = false;
 uint8_t nsec::g::loadingBarPos = 0;
+nsec::runtime::badge the_badge;

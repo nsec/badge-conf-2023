@@ -26,26 +26,7 @@ void incrementLoadingBar();
 
 void setup()
 {
-	// GPIO INIT
-	pinMode(LED_DBG, OUTPUT);
-
-	/* Buttons */
-	pinMode(BTN_RIGHT, INPUT_PULLUP);
-	pinMode(BTN_UP, INPUT_PULLUP);
-	pinMode(BTN_DOWN, INPUT_PULLUP);
-	pinMode(BTN_LEFT, INPUT_PULLUP);
-
-	/* Software serial */
-	pinMode(SIG_R2, INPUT_PULLUP);
-	pinMode(SIG_R3, OUTPUT);
-	digitalWrite(SIG_R3, LOW);
-
-	pinMode(SIG_L2, OUTPUT);
-	digitalWrite(SIG_L2, LOW);
-	pinMode(SIG_L3, INPUT_PULLUP);
-
-	// SERIAL INIT
-	Serial.begin(38400);
+	nsec::g::the_badge.setup();
 
 	g_rightSerial.begin(4800);
 	g_leftSerial.begin(4800);
