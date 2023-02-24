@@ -60,10 +60,6 @@ void setup()
 	g_display.setTextColor(SSD1306_WHITE);
 	g_display.clearDisplay();
 	g_display.setTextSize(1);
-	/*
-	g_display.print(F("John Smith"));
-	g_display.startscrollleft(0x00, 0x0F);
-	*/
 	g_display.display(); // Show initial text
 
 	UniqueIDdump(Serial);
