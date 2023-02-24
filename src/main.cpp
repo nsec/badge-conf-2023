@@ -154,41 +154,6 @@ void loop()
 			nsec::g::loadingBarPos = 0;
 		}
 	}
-
-	//--------------------------------------------
-	// DISPLAY UPDATE
-	static uint32_t ts_oled = 0;
-	if (millis() - ts_oled > 100) {
-		ts_oled = millis();
-		/*
-		if(nsec::g::waitingForDisconnect == false)	//only show "pairing" if you just
-		disconnected. After pairing is completed, "nsec::g::waitingForDisconnect" flag will
-		be asserted. Another message will be shown
-		{
-			if		(commLeftConnected==true)
-			{
-				g_display.stopscroll();
-				g_display.clearDisplay();
-				g_display.setTextSize(2);
-				g_display.setCursor(0,0);
-				g_display.println(F("<<<PAIRING"));
-				g_display.display();
-			}
-			else if (commRightConnected==true)
-			{
-				g_display.stopscroll();
-				g_display.clearDisplay();
-				g_display.setTextSize(2);
-				g_display.setCursor(0,0);
-				g_display.println(F("PAIRING>>>"));
-				g_display.display();
-			}
-			else
-			{
-			}
-		}
-		*/
-	}
 }
 
 // FUNCTION DECLARATION
