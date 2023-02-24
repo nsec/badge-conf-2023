@@ -1,5 +1,11 @@
-Nsec 2023 Conference Badge Test Firmware
-----------------------------------------
+<!--
+SPDX-FileCopyrightText: 2023 NorthSec
+
+SPDX-License-Identifier: MIT
+-->
+
+Nsec 2023 Conference Badge Firmware
+-----------------------------------
 
 Run this once on a fresh board to set the fuses:
 

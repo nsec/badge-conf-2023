@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2023 NorthSec
+#
+# SPDX-License-Identifier: MIT
 
 ENV = default
 
@@ -15,4 +18,7 @@ fuses:
 compiledb:
 	pio run -e $(ENV) -t compiledb
 
-.PHONY: build flash fuses compiledb
+reuse:
+	reuse lint
+
+.PHONY: build flash fuses compiledb reuse

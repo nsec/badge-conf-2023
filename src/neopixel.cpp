@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2023 NorthSec
+//
+// SPDX-License-Identifier: MIT
+
 #include "board.hpp"
 #include "neopixel.hpp"
 #include "globals.hpp"

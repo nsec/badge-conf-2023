@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2023 NorthSec
+//
+// SPDX-License-Identifier: MIT
+
 #ifndef NSEC_BOARD_HPP
 #define NSEC_BOARD_HPP
 

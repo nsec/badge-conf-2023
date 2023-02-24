@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2023 NorthSec
+//
+// SPDX-License-Identifier: MIT
+
 #ifndef NSEC_NEOPIXEL_HPP
 #define NSEC_NEOPIXEL_HPP
 
