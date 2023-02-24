@@ -133,17 +133,6 @@ void loop()
 			}
 		} else {
 			neopix_idle();
-			/*
-			if(nsec::g::waitingForDisconnect == true)	//if you just disconnect
-			after pairing successfully. Return to showing the name
-			{
-				g_display.clearDisplay();
-				g_display.setTextSize(2); // Draw 2X-scale text
-				g_display.print(F("John Smith"));
-				g_display.display();      // Show initial text
-				g_display.startscrollleft(0x00, 0x0F);
-			}
-			*/
 
 			nsec::g::waitingForDisconnect = false; // clear loading bar variables
 			nsec::g::currentlyLoading = false;
