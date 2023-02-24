@@ -264,16 +264,6 @@ void incrementLoadingBar()
 				nsec::g::currentLevel = 199; // cap level at 199. No more additional
 							     // LED animation after 199
 			nsec::g::waitingForDisconnect = true;
-
-			/*
-			g_display.clearDisplay();
-			g_display.setTextSize(2);
-			g_display.setCursor(0,0);
-			g_display.println(F("YAY LVL++"));
-			g_display.print(F("LVL"));
-			g_display.println(nsec::g::currentLevel);
-			g_display.display();
-			*/
 		}
 	}
 }
