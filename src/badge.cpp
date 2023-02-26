@@ -29,6 +29,7 @@ void nr::badge::setup()
 
 	_button_watcher.setup();
 	_strip_animator.setup();
+	_renderer.setup();
 	set_social_level(1);
 
 	// Init software serial for both sides of the badge.

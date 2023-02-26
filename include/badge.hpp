@@ -9,6 +9,7 @@
 
 #include "led/strip_animator.hpp"
 #include "button/watcher.hpp"
+#include "display/renderer.hpp"
 
 namespace nsec::runtime {
 
@@ -37,6 +38,7 @@ private:
 	uint8_t _social_level;
 	led::strip_animator _strip_animator;
 	button::watcher _button_watcher;
+	display::renderer _renderer;
 };
 } // namespace nsec::runtime
 

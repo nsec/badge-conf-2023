@@ -1,9 +1,8 @@
-// SPDX-FileCopyrightText: 2023 NorthSec
+﻿// SPDX-FileCopyrightText: 2023 NorthSec
 //
 // SPDX-License-Identifier: MIT
 
 #include "board.hpp"
-#include "display.hpp"
 #include "globals.hpp"
 
 #include <Arduino.h>
@@ -29,15 +28,6 @@ void setup()
 
 	g_rightSerial.begin(4800);
 	g_leftSerial.begin(4800);
-
-	// DISPLAY INIT
-	nsec::display::init();
-
-	// OLED INIT
-	g_display.setTextColor(SSD1306_WHITE);
-	g_display.clearDisplay();
-	g_display.setTextSize(1);
-	g_display.display(); // Show initial text
 
 	UniqueIDdump(Serial);
 
@@ -76,20 +66,6 @@ void softSerialRoutine()
 	if (millis() - ts_pingpong > 200) {
 		ts_pingpong = millis();
 		pingpongSelector = !pingpongSelector;
-	}
-
-	static uint32_t ts_display = 0;
-	if (millis() - ts_display > 100) {
-		ts_display = millis();
-		g_display.clearDisplay();
-		g_display.setCursor(0, 0);
-		g_display.print("broadcast:");
-		g_display.println(sending);
-		g_display.print("\nLeft RX:");
-		g_display.println(receivedLeft);
-		g_display.print("Right RX:");
-		g_display.println(receivedRight);
-		g_display.display();
 	}
 
 	static char msgRxRight[MAX_MESSAGE_LENGTH];
