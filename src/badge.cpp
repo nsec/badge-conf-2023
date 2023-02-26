@@ -29,7 +29,7 @@ void nr::badge::setup()
 
 	_button_watcher.setup();
 	_strip_animator.setup();
-	_strip_animator.set_current_animation_idle(1);
+	set_social_level(1);
 
 	// Init software serial for both sides of the badge.
 	pinMode(SIG_R2, INPUT_PULLUP);
