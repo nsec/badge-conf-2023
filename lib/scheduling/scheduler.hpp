@@ -66,7 +66,8 @@ public:
 	 * a regular task and enqueue it manually by providing a relative time
 	 * as the deadline.
 	 */
-	explicit periodic_task(relative_time_ms period_ms) noexcept : _period_ms{ period_ms }
+	explicit periodic_task(relative_time_ms period_ms) noexcept :
+		_period_ms{ period_ms }, _killed{ false }
 	{
 	}
 
@@ -90,7 +91,8 @@ protected:
 	}
 
 	// Effective at the end of the next tick.
-	void period_ms(relative_time_ms new_period) noexcept {
+	void period_ms(relative_time_ms new_period) noexcept
+	{
 		_period_ms = new_period;
 	}
 
@@ -100,8 +102,8 @@ private:
 		return !_killed;
 	}
 
-	relative_time_ms _period_ms;
-	bool _killed = false;
+	relative_time_ms _period_ms : 31;
+	bool _killed : 1;
 };
 
 template <unsigned int max_scheduled_tasks>
