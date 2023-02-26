@@ -61,13 +61,13 @@ nb::watcher::debouncer::debouncer()
 
 void nb::watcher::debouncer::transition_to_state(nb::watcher::debouncer::state new_state)
 {
-	_state = static_cast<uint8_t>(new_state);
+	_state = new_state;
 	_ticks_in_state = 0;
 }
 
 nb::watcher::debouncer::event nb::watcher::debouncer::update(bool button_state)
 {
-	const auto state_on_entry = static_cast<state>(_state);
+	const auto state_on_entry = _state;
 
 	_ticks_in_state++;
 

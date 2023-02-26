@@ -91,12 +91,8 @@ private:
 
 		void transition_to_state(state new_state);
 
-		/*
-		 * _state contains values from `state`. However storing state as a 4-bit bitfield
-		 * results in a nasty warning that not all values of 'state' fit in 4 bits.
-		 */
-		uint8_t _state;
-		// Ticks since transition into state
+		state _state;
+		// Ticks since transition into state.
 		uint8_t _ticks_in_state;
 	} _button_debouncers[static_cast<size_t>(id::CANCEL) + 1];
 	new_button_event_notifier _notify_new_event;
