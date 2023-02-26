@@ -7,9 +7,11 @@
 #ifndef NSEC_RUNTIME_BADGE_HPP
 #define NSEC_RUNTIME_BADGE_HPP
 
-#include "led/strip_animator.hpp"
 #include "button/watcher.hpp"
+#include "display/idle.hpp"
 #include "display/renderer.hpp"
+#include "display/screen.hpp"
+#include "led/strip_animator.hpp"
 
 namespace nsec::runtime {
 
@@ -32,12 +34,20 @@ public:
 private:
 	// Handle new button event
 	void on_button_event(button::id button, button::event event) noexcept;
-
 	void set_social_level(uint8_t new_level);
+	void relase_focus_current_screen() noexcept;
+	void set_focused_screen(display::screen& focused_screen) noexcept;
 
 	uint8_t _social_level;
-	led::strip_animator _strip_animator;
+
 	button::watcher _button_watcher;
+
+	// screens
+	display::idle_screen _idle_screen;
+	display::screen *_focused_screen;
+
+	// displays
+	led::strip_animator _strip_animator;
 	display::renderer _renderer;
 };
 } // namespace nsec::runtime

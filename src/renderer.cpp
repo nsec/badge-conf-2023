@@ -9,10 +9,22 @@
 #include "globals.hpp"
 
 namespace nd = nsec::display;
+namespace ns = nsec::scheduling;
 
-nd::renderer::renderer() noexcept :
+namespace {
+void show_frametime(Adafruit_SSD1306& canvas, nsec::scheduling::relative_time_ms frame_time)
+{
+	canvas.setCursor(0, 0);
+	canvas.print("frame time: ");
+	canvas.print(frame_time, 10);
+	canvas.printf("ms");
+}
+} // namespace
+
+nd::renderer::renderer(nd::screen **focused_screen) noexcept :
 	periodic_task(nsec::config::display::refresh_period_ms),
-	_display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET)
+	_display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET),
+	_focused_screen{ focused_screen }
 {
 	nsec::g::the_scheduler.schedule_task(*this);
 }
@@ -28,13 +40,11 @@ void nd::renderer::setup() noexcept
 
 void nd::renderer::run(scheduling::absolute_time_ms current_time_ms) noexcept
 {
-	const auto entry = millis();
 	_display.clearDisplay();
-	_display.setCursor(0, 0);
-	_display.print("frame time: ");
-	_display.print(_last_frame_time_ms, 10);
-	_display.printf("ms");
-	_display.display();
+	const auto entry = millis();
+	focused_screen().render(current_time_ms, _display);
 	const auto exit = millis();
+	_display.display();
+
 	_last_frame_time_ms = exit - entry;
 }

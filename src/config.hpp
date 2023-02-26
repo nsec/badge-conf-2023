@@ -35,8 +35,8 @@ static_assert(button_down_repeat_delay_ms % polling_period_ms == 0);
 }; // namespace nsec::config::button
 
 namespace nsec::config::display {
-// Gives a very cinematic 5 fps
-constexpr nsec::scheduling::relative_time_ms refresh_period_ms = 200;
+// Gives a very cinematic ~16 fps
+constexpr nsec::scheduling::relative_time_ms refresh_period_ms = 60;
 } // namespace nsec::config::display
 
 #endif // NSEC_CONFIG_HPP

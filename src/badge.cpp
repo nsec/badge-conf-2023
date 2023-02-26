@@ -11,15 +11,24 @@
 #include <Arduino.h>
 
 namespace nr = nsec::runtime;
+namespace nd = nsec::display;
 
 nr::badge::badge() :
-	_button_watcher({ [](nsec::button::id id, nsec::button::event event, void *data) {
-				 auto *badge = reinterpret_cast<class badge *>(data);
+	_button_watcher{ { [](nsec::button::id id, nsec::button::event event, void *data) {
+				  auto *badge = reinterpret_cast<class badge *>(data);
 
-				 badge->on_button_event(id, event);
-			 },
-			  this })
+				  badge->on_button_event(id, event);
+			  },
+			   this } },
+	_idle_screen{ { [](void *data) {
+			       auto *badge = reinterpret_cast<class badge *>(data);
+
+			       badge->relase_focus_current_screen();
+		       },
+			this } },
+	_renderer{ &_focused_screen }
 {
+	set_focused_screen(_idle_screen);
 }
 
 void nr::badge::setup()
@@ -79,4 +88,13 @@ void nr::badge::set_social_level(uint8_t new_level)
 
 	_social_level = new_level;
 	_strip_animator.set_current_animation_idle(_social_level);
+}
+
+void nr::badge::set_focused_screen(nd::screen& newly_focused_screen) noexcept
+{
+	_focused_screen = &newly_focused_screen;
+}
+
+void nr::badge::relase_focus_current_screen() noexcept
+{
 }
