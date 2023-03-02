@@ -56,15 +56,6 @@ void nr::badge::setup()
 
 void nr::badge::on_button_event(nsec::button::id button, nsec::button::event event) noexcept
 {
-	const char *button_names[]{
-		"Up", "Right", "Down", "Left", "Ok", "Cancel",
-	};
-	const char *event_names[]{ "up", "down", "down repeat" };
-
-	Serial.printf("Button '%s' event %s\r\n",
-		      button_names[static_cast<size_t>(button)],
-		      event_names[static_cast<size_t>(event)]);
-
 	if (event == nsec::button::event::UP) {
 		return;
 	}
