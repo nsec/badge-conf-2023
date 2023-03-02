@@ -59,7 +59,7 @@ void nd::idle_screen::render(scheduling::absolute_time_ms current_time_ms,
 		char local_text[max_text_length];
 
 		strncpy_P(local_text, (const char *) text, max_text_length);
-		canvas.getTextBounds("nsec.io", 0, 0, &x, &y, &text_width, &text_height);
+		canvas.getTextBounds(local_text, 0, 0, &x, &y, &text_width, &text_height);
 		_text_width = text_width;
 		_text_height = text_height;
 	}
