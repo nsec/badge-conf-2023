@@ -56,6 +56,10 @@ void nr::badge::setup()
 
 void nr::badge::on_button_event(nsec::button::id button, nsec::button::event event) noexcept
 {
+	// Forward the event to the focused screen.
+	_focused_screen->button_event(button, event);
+
+	// The rest is temporary to easily simulate level up/down.
 	if (event == nsec::button::event::UP) {
 		return;
 	}
