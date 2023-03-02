@@ -53,7 +53,7 @@ void nd::idle_screen::render(scheduling::absolute_time_ms current_time_ms,
 	const auto y_increment = _moving_down ? _velocity_y : -_velocity_y;
 
 	// Initialize the bounding-box on first frame
-	if (__builtin_expect(_text_width == 0, 1)) {
+	if (_text_width == 0) {
 		int16_t x, y;
 		uint16_t text_width, text_height;
 		char local_text[max_text_length];
