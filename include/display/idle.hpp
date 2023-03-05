@@ -29,7 +29,7 @@ public:
 	};
 
 	void button_event(button::id id, button::event event) noexcept override;
-	void render(scheduling::absolute_time_ms current_time_ms,
+	void _render(scheduling::absolute_time_ms current_time_ms,
 		    Adafruit_SSD1306& canvas) noexcept override;
 
 private:

@@ -8,6 +8,7 @@
 #define NSEC_BUTTON_WATCHER_HPP
 
 #include <scheduler.hpp>
+
 #include <stdint.h>
 
 namespace nsec::button {

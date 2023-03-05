@@ -32,11 +32,13 @@ static_assert(button_down_first_repeat_delay_ms % polling_period_ms == 0);
 constexpr nsec::scheduling::relative_time_ms button_down_repeat_delay_ms = 30;
 static_assert(button_down_repeat_delay_ms % polling_period_ms == 0);
 
-}; // namespace nsec::config::button
+} // namespace nsec::config::button
 
 namespace nsec::config::display {
 // Gives a very cinematic ~16 fps
 constexpr nsec::scheduling::relative_time_ms refresh_period_ms = 60;
+
+constexpr unsigned int menu_font_size = 1;
 } // namespace nsec::config::display
 
 #endif // NSEC_CONFIG_HPP

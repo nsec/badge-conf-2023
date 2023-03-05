@@ -40,6 +40,10 @@ void nd::renderer::setup() noexcept
 
 void nd::renderer::run(scheduling::absolute_time_ms current_time_ms) noexcept
 {
+	if (!focused_screen().is_damaged()) {
+		return;
+	}
+
 	_display.clearDisplay();
 	const auto entry = millis();
 	focused_screen().render(current_time_ms, _display);

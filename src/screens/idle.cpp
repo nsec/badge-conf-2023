@@ -14,14 +14,6 @@ constexpr auto min_velocity = 1;
 constexpr auto max_velocity = 4;
 constexpr auto max_text_length = 32;
 
-namespace {
-template <typename Type>
-auto clamp(const Type& lower_bound, const Type& upper_bound, const Type& value)
-{
-	return max(lower_bound, min(value, upper_bound));
-}
-} // namespace
-
 nd::idle_screen::idle_screen(const screen::release_focus_notifier& release_focus_notifier) noexcept
 	:
 	screen(release_focus_notifier),
@@ -37,6 +29,9 @@ nd::idle_screen::idle_screen(const screen::release_focus_notifier& release_focus
 
 void nd::idle_screen::button_event(nb::id id, nb::event event) noexcept
 {
+	if (id == nb::id::CANCEL && event != nb::event::UP) {
+		_release_focus();
+	}
 }
 
 void nd::idle_screen::randomize_velocity() noexcept
@@ -45,7 +40,7 @@ void nd::idle_screen::randomize_velocity() noexcept
 	_velocity_y = static_cast<int8_t>(random(min_velocity, max_velocity));
 }
 
-void nd::idle_screen::render(scheduling::absolute_time_ms current_time_ms,
+void nd::idle_screen::_render(scheduling::absolute_time_ms current_time_ms,
 			     Adafruit_SSD1306& canvas) noexcept
 {
 	const auto text = F("nsec.io");
@@ -73,12 +68,12 @@ void nd::idle_screen::render(scheduling::absolute_time_ms current_time_ms,
 		_moving_down = !_moving_down;
 	}
 
-	_pos_x = clamp(static_cast<int16_t>(0),
-		       static_cast<int16_t>(width() - _text_width),
-		       static_cast<int16_t>(_pos_x));
-	_pos_y = clamp(static_cast<int16_t>(0),
-		       static_cast<int16_t>(height() - _text_height),
-		       static_cast<int16_t>(_pos_y));
+	_pos_x = constrain(static_cast<int16_t>(_pos_x),
+			   static_cast<int16_t>(0),
+			   static_cast<int16_t>(width() - _text_width));
+	_pos_y = constrain(static_cast<int16_t>(_pos_y),
+			   static_cast<int16_t>(0),
+			   static_cast<int16_t>(height() - _text_height));
 
 	canvas.setCursor(_pos_x, _pos_y);
 	canvas.setTextColor(SSD1306_WHITE, SSD1306_BLACK);
@@ -88,4 +83,7 @@ void nd::idle_screen::render(scheduling::absolute_time_ms current_time_ms,
 
 	_pos_x += x_increment;
 	_pos_y += y_increment;
+
+	// This screen is always "damaged" since it changes on every tick.
+	damage();
 }

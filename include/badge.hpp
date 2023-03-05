@@ -11,6 +11,7 @@
 #include "display/idle.hpp"
 #include "display/renderer.hpp"
 #include "display/screen.hpp"
+#include "display/menu.hpp"
 #include "led/strip_animator.hpp"
 
 namespace nsec::runtime {
@@ -44,6 +45,7 @@ private:
 
 	// screens
 	display::idle_screen _idle_screen;
+	display::menu_screen _menu_screen;
 	display::screen *_focused_screen;
 
 	// displays
