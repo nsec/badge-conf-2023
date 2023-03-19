@@ -81,6 +81,7 @@ void nd::idle_screen::render(scheduling::absolute_time_ms current_time_ms,
 		       static_cast<int16_t>(_pos_y));
 
 	canvas.setCursor(_pos_x, _pos_y);
+	canvas.setTextColor(SSD1306_WHITE, SSD1306_BLACK);
 	canvas.setTextWrap(false);
 	canvas.setTextSize(text_size);
 	canvas.print(text);
