@@ -19,6 +19,10 @@ namespace nsec::config::social {
 constexpr uint8_t max_level = 200;
 }
 
+namespace nsec::config::user {
+constexpr uint8_t name_max_length = 64;
+}
+
 namespace nsec::config::button {
 constexpr nsec::scheduling::relative_time_ms polling_period_ms = 10;
 
@@ -39,6 +43,8 @@ namespace nsec::config::display {
 constexpr nsec::scheduling::relative_time_ms refresh_period_ms = 60;
 
 constexpr unsigned int menu_font_size = 1;
+
+constexpr nsec::scheduling::absolute_time_ms prompt_cycle_time = 2000;
 } // namespace nsec::config::display
 
 #endif // NSEC_CONFIG_HPP

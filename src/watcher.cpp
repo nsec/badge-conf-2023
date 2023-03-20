@@ -65,7 +65,7 @@ void nb::watcher::debouncer::transition_to_state(nb::watcher::debouncer::state n
 	_ticks_in_state = 0;
 }
 
-nb::watcher::debouncer::event nb::watcher::debouncer::update(bool button_state)
+nb::watcher::debouncer::event nb::watcher::debouncer::update(bool button_state) noexcept
 {
 	const auto state_on_entry = _state;
 
