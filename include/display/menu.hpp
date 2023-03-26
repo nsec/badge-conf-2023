@@ -85,8 +85,8 @@ private:
 	bool _layout_constraints_initialized : 1;
 	struct {
 		struct {
-			unsigned int width : 4;
-			unsigned int height : 4;
+			unsigned int width : 5;
+			unsigned int height : 5;
 		} glyph_size;
 		unsigned int _lines_per_screen:4;
 		unsigned int _chars_per_screen:5;
