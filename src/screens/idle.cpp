@@ -5,6 +5,7 @@
  */
 
 #include "display/idle.hpp"
+#include "display/utils.hpp"
 
 namespace nd = nsec::display;
 namespace nb = nsec::button;

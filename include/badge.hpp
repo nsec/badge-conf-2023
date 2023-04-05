@@ -8,14 +8,15 @@
 #define NSEC_RUNTIME_BADGE_HPP
 
 #include "button/watcher.hpp"
+#include "config.hpp"
 #include "display/idle.hpp"
+#include "display/menu/main_menu_choices.hpp"
+#include "display/menu/menu.hpp"
 #include "display/renderer.hpp"
 #include "display/screen.hpp"
-#include "display/menu/menu.hpp"
-#include "display/menu/main_menu_choices.hpp"
 #include "display/string_property_editor.hpp"
 #include "led/strip_animator.hpp"
-#include "config.hpp"
+#include "network/network_handler.hpp"
 
 namespace nsec::runtime {
 
@@ -39,9 +40,16 @@ public:
 private:
 	// Handle new button event
 	void on_button_event(button::id button, button::event event) noexcept;
-	void set_social_level(uint8_t new_level);
+	void set_social_level(uint8_t new_level) noexcept;
+
 	void relase_focus_current_screen() noexcept;
 	void set_focused_screen(display::screen& focused_screen) noexcept;
+
+	void on_pairing_begin() noexcept;
+	void on_pairing_end(unsigned int our_peer_id) noexcept;
+	void on_message_received(communication::peer_relative_position relative_position,
+				 communication::message::type message_type,
+				 uint8_t *message) noexcept;
 
 	uint8_t _social_level;
 	char _user_name[nsec::config::user::name_max_length];
@@ -58,6 +66,9 @@ private:
 	// displays
 	led::strip_animator _strip_animator;
 	display::renderer _renderer;
+
+	// network
+	communication::network_handler _network_handler;
 
 	// menu choices
 	display::main_menu_choices _main_menu_choices;

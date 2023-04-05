@@ -18,7 +18,7 @@ public:
 	public:
 		class choice {
 		public:
-			using menu_choice_action = nsec::callback;
+			using menu_choice_action = nsec::callback<void>;
 
 			choice(const __FlashStringHelper *name, const menu_choice_action& action) :
 				name{ name }, _action{ action }

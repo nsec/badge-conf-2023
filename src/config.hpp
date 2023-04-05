@@ -7,6 +7,7 @@
 #ifndef NSEC_CONFIG_HPP
 #define NSEC_CONFIG_HPP
 
+#include "board.hpp"
 #include "scheduler.hpp"
 
 #include <stdint.h>
@@ -46,5 +47,22 @@ constexpr unsigned int menu_font_size = 1;
 
 constexpr nsec::scheduling::absolute_time_ms prompt_cycle_time = 2000;
 } // namespace nsec::config::display
+
+namespace nsec::config::communication {
+// Size reserved for user protocol messages (without any encryption/signing overhead)
+constexpr size_t protocol_buffer_size = 24;
+constexpr unsigned int software_serial_speed = 4800;
+
+constexpr unsigned int connection_sense_pin_left = SIG_L3;
+constexpr unsigned int connection_sense_pin_right = SIG_R2;
+
+constexpr unsigned int serial_rx_pin_left = SIG_L1;
+constexpr unsigned int serial_tx_pin_left = SIG_L2;
+constexpr unsigned int serial_rx_pin_right = SIG_R2;
+constexpr unsigned int serial_tx_pin_right = SIG_R1;
+
+constexpr nsec::scheduling::relative_time_ms network_handler_base_period_ms = 100;
+
+} // namespace nsec::communication
 
 #endif // NSEC_CONFIG_HPP

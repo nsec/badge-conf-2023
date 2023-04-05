@@ -59,7 +59,7 @@ void delete_character(char *str)
 } // anonymous namespace
 
 nd::string_property_editor_screen::prompt_cycle_task::prompt_cycle_task(
-	const nsec::callback& action) :
+	const nsec::callback<void>& action) :
 	ns::periodic_task(config::display::prompt_cycle_time), _run{ action }
 {
 }

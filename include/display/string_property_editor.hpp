@@ -36,7 +36,7 @@ public:
 	void focused() noexcept override;
 
 	// Clean-up the current property (make it null-terminated).
-	void clean_up_property();
+	void clean_up_property() noexcept;
 
 private:
 	enum class move_direction { LEFT, RIGHT };
@@ -49,11 +49,11 @@ private:
 
 	class prompt_cycle_task : public nsec::scheduling::periodic_task {
 	public:
-		explicit prompt_cycle_task(const nsec::callback& action);
+		explicit prompt_cycle_task(const nsec::callback<void>& action);
 		void run(nsec::scheduling::absolute_time_ms current_time) noexcept override;
 
 	private:
-		nsec::callback _run;
+		nsec::callback<void> _run;
 	};
 
 	void _initialize_layout(Adafruit_SSD1306& canvas) noexcept;

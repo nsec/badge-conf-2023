@@ -13,6 +13,7 @@
 
 namespace nr = nsec::runtime;
 namespace nd = nsec::display;
+namespace nc = nsec::communication;
 
 namespace {
 const char set_name_prompt[] PROGMEM = "Enter your name";
@@ -50,6 +51,28 @@ nr::badge::badge() :
 				       },
 					this } },
 	_renderer{ &_focused_screen },
+	_network_handler{ { [](void *data) {
+				   auto *badge = reinterpret_cast<class badge *>(data);
+
+				   badge->on_pairing_begin();
+			   },
+			    this },
+			  { [](void *data, unsigned int id) {
+				   auto *badge = reinterpret_cast<class badge *>(data);
+
+				   badge->on_pairing_end(id);
+			   },
+			    this },
+			  { [](void *data,
+			       communication::peer_relative_position relative_position,
+			       communication::message::type message_type,
+			       uint8_t *message) {
+				   auto *badge = reinterpret_cast<class badge *>(data);
+
+				   badge->on_message_received(
+					   relative_position, message_type, message);
+			   },
+			    this } },
 	_main_menu_choices{ { [](void *data) {
 				     auto *badge = reinterpret_cast<class badge *>(data);
 
@@ -146,7 +169,7 @@ void nr::badge::relase_focus_current_screen() noexcept
 {
 	if (_focused_screen == &_idle_screen || _focused_screen == &_string_property_edit_screen) {
 		if (_focused_screen == &_string_property_edit_screen) {
-			//_string_property_edit_screen.clean_up_property();
+			_string_property_edit_screen.clean_up_property();
 		}
 
 		_menu_screen.set_choices(_main_menu_choices);
@@ -154,4 +177,18 @@ void nr::badge::relase_focus_current_screen() noexcept
 	} else if (_focused_screen == &_menu_screen) {
 		set_focused_screen(_idle_screen);
 	}
+}
+
+void nr::badge::on_pairing_begin() noexcept
+{
+}
+
+void nr::badge::on_pairing_end(unsigned int our_peer_id) noexcept
+{
+}
+
+void nr::badge::on_message_received(nc::peer_relative_position relative_position,
+				    communication::message::type message_type,
+				    uint8_t *message) noexcept
+{
 }
