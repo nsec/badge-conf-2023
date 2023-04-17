@@ -148,7 +148,8 @@ public:
   ~Adafruit_SSD1306(void);
 
   bool begin(uint8_t switchvcc = SSD1306_SWITCHCAPVCC, uint8_t i2caddr = 0,
-             bool reset = true, bool periphBegin = true);
+             bool reset = true, bool periphBegin = true,
+             uint8_t *staticBuffer = nullptr);
   void display(void);
   void clearDisplay(void);
   void invertDisplay(bool i);
@@ -188,6 +189,7 @@ protected:
   int8_t
       csPin; ///< (Chip Select Pin) set when using SPI set during construction.
   int8_t rstPin; ///< Display reset pin assignment. Set during construction.
+  bool isBufferDynamicallyAllocated; ///< Is buffer allocated and managed by us.
 
 #ifdef HAVE_PORTREG
   PortReg *mosiPort, *clkPort, *dcPort, *csPort;

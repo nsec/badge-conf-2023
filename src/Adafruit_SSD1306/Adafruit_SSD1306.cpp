@@ -174,7 +174,8 @@ Adafruit_SSD1306::Adafruit_SSD1306(uint8_t w, uint8_t h, TwoWire *twi,
                                    int8_t rst_pin, uint32_t clkDuring,
                                    uint32_t clkAfter)
     : Adafruit_GFX(w, h), spi(NULL), wire(twi ? twi : &Wire), buffer(NULL),
-      mosiPin(-1), clkPin(-1), dcPin(-1), csPin(-1), rstPin(rst_pin)
+      mosiPin(-1), clkPin(-1), dcPin(-1), csPin(-1), rstPin(rst_pin),
+      isBufferDynamicallyAllocated(false)
 #if ARDUINO >= 157
       ,
       wireClk(clkDuring), restoreClk(clkAfter)
@@ -214,7 +215,7 @@ Adafruit_SSD1306::Adafruit_SSD1306(uint8_t w, uint8_t h, int8_t mosi_pin,
                                    int8_t rst_pin, int8_t cs_pin)
     : Adafruit_GFX(w, h), spi(NULL), wire(NULL), buffer(NULL),
       mosiPin(mosi_pin), clkPin(sclk_pin), dcPin(dc_pin), csPin(cs_pin),
-      rstPin(rst_pin) {}
+      rstPin(rst_pin), isBufferDynamicallyAllocated(false) {}
 
 /*!
     @brief  Constructor for SPI SSD1306 displays, using native hardware SPI.
@@ -247,7 +248,7 @@ Adafruit_SSD1306::Adafruit_SSD1306(uint8_t w, uint8_t h, SPIClass *spi_ptr,
                                    uint32_t bitrate)
     : Adafruit_GFX(w, h), spi(spi_ptr ? spi_ptr : &SPI), wire(NULL),
       buffer(NULL), mosiPin(-1), clkPin(-1), dcPin(dc_pin), csPin(cs_pin),
-      rstPin(rst_pin) {
+      rstPin(rst_pin), isBufferDynamicallyAllocated(false) {
 #ifdef SPI_HAS_TRANSACTION
   spiSettings = SPISettings(bitrate, MSBFIRST, SPI_MODE0);
 #endif
@@ -283,7 +284,7 @@ Adafruit_SSD1306::Adafruit_SSD1306(int8_t mosi_pin, int8_t sclk_pin,
                                    int8_t dc_pin, int8_t rst_pin, int8_t cs_pin)
     : Adafruit_GFX(SSD1306_LCDWIDTH, SSD1306_LCDHEIGHT), spi(NULL), wire(NULL),
       buffer(NULL), mosiPin(mosi_pin), clkPin(sclk_pin), dcPin(dc_pin),
-      csPin(cs_pin), rstPin(rst_pin) {}
+      csPin(cs_pin), rstPin(rst_pin), isBufferDynamicallyAllocated(false) {}
 
 /*!
     @brief  DEPRECATED constructor for SPI SSD1306 displays, using native
@@ -309,7 +310,7 @@ Adafruit_SSD1306::Adafruit_SSD1306(int8_t mosi_pin, int8_t sclk_pin,
 Adafruit_SSD1306::Adafruit_SSD1306(int8_t dc_pin, int8_t rst_pin, int8_t cs_pin)
     : Adafruit_GFX(SSD1306_LCDWIDTH, SSD1306_LCDHEIGHT), spi(&SPI), wire(NULL),
       buffer(NULL), mosiPin(-1), clkPin(-1), dcPin(dc_pin), csPin(cs_pin),
-      rstPin(rst_pin) {
+      rstPin(rst_pin), isBufferDynamicallyAllocated(false) {
 #ifdef SPI_HAS_TRANSACTION
   spiSettings = SPISettings(8000000, MSBFIRST, SPI_MODE0);
 #endif
@@ -332,13 +333,13 @@ Adafruit_SSD1306::Adafruit_SSD1306(int8_t dc_pin, int8_t rst_pin, int8_t cs_pin)
 Adafruit_SSD1306::Adafruit_SSD1306(int8_t rst_pin)
     : Adafruit_GFX(SSD1306_LCDWIDTH, SSD1306_LCDHEIGHT), spi(NULL), wire(&Wire),
       buffer(NULL), mosiPin(-1), clkPin(-1), dcPin(-1), csPin(-1),
-      rstPin(rst_pin) {}
+      rstPin(rst_pin), isBufferDynamicallyAllocated(false) {}
 
 /*!
     @brief  Destructor for Adafruit_SSD1306 object.
 */
 Adafruit_SSD1306::~Adafruit_SSD1306(void) {
-  if (buffer) {
+  if (buffer && isBufferDynamicallyAllocated) {
     free(buffer);
     buffer = NULL;
   }
@@ -492,10 +493,15 @@ void Adafruit_SSD1306::ssd1306_command(uint8_t c) {
     @note   MUST call this function before any drawing or updates!
 */
 bool Adafruit_SSD1306::begin(uint8_t vcs, uint8_t addr, bool reset,
-                             bool periphBegin) {
+                             bool periphBegin, uint8_t *staticBuffer) {
+  if (!staticBuffer) {
+    if ((!buffer) && !(buffer = (uint8_t *)malloc(WIDTH * ((HEIGHT + 7) / 8))))
+      return false;
 
-  if ((!buffer) && !(buffer = (uint8_t *)malloc(WIDTH * ((HEIGHT + 7) / 8))))
-    return false;
+    isBufferDynamicallyAllocated = true;
+  } else {
+    buffer = staticBuffer;
+  }
 
   clearDisplay();
 
