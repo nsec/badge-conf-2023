@@ -144,11 +144,7 @@ void nr::badge::set_focused_screen(nd::screen& newly_focused_screen) noexcept
 
 void nr::badge::relase_focus_current_screen() noexcept
 {
-	Serial.println("relase_focus_current_screen");
 	if (_focused_screen == &_idle_screen || _focused_screen == &_string_property_edit_screen) {
-		// if (_focused_screen == &_idle_screen) {
-		Serial.println("setting menu screen focus");
-
 		if (_focused_screen == &_string_property_edit_screen) {
 			//_string_property_edit_screen.clean_up_property();
 		}
@@ -156,7 +152,6 @@ void nr::badge::relase_focus_current_screen() noexcept
 		_menu_screen.set_choices(_main_menu_choices);
 		set_focused_screen(_menu_screen);
 	} else if (_focused_screen == &_menu_screen) {
-		Serial.println("setting idle screen focus");
 		set_focused_screen(_idle_screen);
 	}
 }

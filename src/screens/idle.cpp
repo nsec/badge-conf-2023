@@ -79,7 +79,7 @@ void nd::idle_screen::_render(scheduling::absolute_time_ms current_time_ms,
 	canvas.setTextColor(SSD1306_WHITE, SSD1306_BLACK);
 	canvas.setTextWrap(false);
 	canvas.setTextSize(text_size);
-	canvas.print(text);
+	nd::utils::draw_string(canvas, text, 10, false);
 
 	_pos_x += x_increment;
 	_pos_y += y_increment;

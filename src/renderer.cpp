@@ -11,16 +11,6 @@
 namespace nd = nsec::display;
 namespace ns = nsec::scheduling;
 
-namespace {
-void show_frametime(Adafruit_SSD1306& canvas, nsec::scheduling::relative_time_ms frame_time)
-{
-	canvas.setCursor(0, 0);
-	canvas.print("frame time: ");
-	canvas.print(frame_time, 10);
-	canvas.printf("ms");
-}
-} // namespace
-
 nd::renderer::renderer(nd::screen **focused_screen) noexcept :
 	periodic_task(nsec::config::display::refresh_period_ms),
 	_display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET),
