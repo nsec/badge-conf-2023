@@ -9,6 +9,7 @@
 
 #include "scheduler.hpp"
 #include "screen.hpp"
+#include "board.hpp"
 
 #include "Adafruit_SSD1306/Adafruit_SSD1306.h"
 
@@ -36,7 +37,7 @@ private:
 		return **_focused_screen;
 	}
 
-	// Note that Adafruit_SSD1306 dynamically allocates a 624 byte buffer.
+	uint8_t _frameBuffer[SCREEN_WIDTH * ((SCREEN_HEIGHT + 7) / 8)];
 	Adafruit_SSD1306 _display;
 	scheduling::relative_time_ms _last_frame_time_ms = 0;
 

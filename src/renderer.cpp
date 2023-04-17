@@ -21,7 +21,7 @@ nd::renderer::renderer(nd::screen **focused_screen) noexcept :
 
 void nd::renderer::setup() noexcept
 {
-	_display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS);
+	_display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS, true, true, _frameBuffer);
 	_display.setTextColor(SSD1306_WHITE);
 	_display.clearDisplay();
 	_display.setTextSize(1);
