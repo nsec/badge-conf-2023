@@ -10,7 +10,7 @@
 #include "scheduler.hpp"
 #include "screen.hpp"
 
-#include <Adafruit_SSD1306.h>
+#include "Adafruit_SSD1306/Adafruit_SSD1306.h"
 
 namespace nsec::display {
 
