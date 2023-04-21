@@ -38,12 +38,13 @@ public:
 	// Setup hardware.
 	void setup();
 
+	void relase_focus_current_screen() noexcept;
+
 private:
 	// Handle new button event
 	void on_button_event(button::id button, button::event event) noexcept;
 	void set_social_level(uint8_t new_level) noexcept;
 
-	void relase_focus_current_screen() noexcept;
 	void set_focused_screen(display::screen& focused_screen) noexcept;
 
 	void on_pairing_begin() noexcept;
@@ -52,11 +53,11 @@ private:
 				 communication::message::type message_type,
 				 uint8_t *message) noexcept;
 
-	uint8_t _social_level;
+	uint8_t _social_level:7;
+	uint8_t _button_had_non_repeat_event_since_screen_focus_change;
 	char _user_name[nsec::config::user::name_max_length];
 
 	button::watcher _button_watcher;
-	uint8_t _button_had_non_repeat_event_since_screen_focus_change;
 
 	// screens
 	display::idle_screen _idle_screen;

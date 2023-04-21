@@ -25,10 +25,7 @@ public:
 	// Callable that will be invoked when a focused screen is damaged and should be re-rendered.
 	using damage_notifier = nsec::callback<void>;
 
-	explicit screen(const release_focus_notifier& release_focus_notifier) noexcept :
-		_release_focus{ release_focus_notifier }
-	{
-	}
+	explicit screen() noexcept = default;
 
 	// Deactivate copy and assignment.
 	screen(const screen&) = delete;
@@ -79,7 +76,8 @@ protected:
 		_is_damaged = true;
 	}
 
-	release_focus_notifier _release_focus;
+	void _release_focus() noexcept;
+
 	// A screen is only redrawn if it is damaged
 	bool _is_damaged : 1;
 };

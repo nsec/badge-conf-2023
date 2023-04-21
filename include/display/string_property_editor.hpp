@@ -15,8 +15,7 @@ namespace nsec::display {
 
 class string_property_editor_screen : public screen {
 public:
-	explicit string_property_editor_screen(
-		const screen::release_focus_notifier& release_focus_notifier) noexcept;
+	explicit string_property_editor_screen() noexcept;
 
 	/* Deactivate copy and assignment. */
 	string_property_editor_screen(const string_property_editor_screen&) = delete;

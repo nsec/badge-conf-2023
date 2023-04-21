@@ -14,6 +14,7 @@
 namespace nr = nsec::runtime;
 namespace nd = nsec::display;
 namespace nc = nsec::communication;
+namespace nb = nsec::button;
 
 namespace {
 const char set_name_prompt[] PROGMEM = "Enter your name";
@@ -26,36 +27,10 @@ const __FlashStringHelper *as_flash_string(const char *str)
 
 nr::badge::badge() :
 	_user_name{ "Kassandra Lapointe-Chagnon" },
-	_button_watcher{ { [](nsec::button::id id, nsec::button::event event, void *data) {
-				  auto *badge = reinterpret_cast<class badge *>(data);
-
-				  badge->on_button_event(id, event);
-			  },
-			   this } },
-	_idle_screen{ { [](void *data) {
-			       auto *badge = reinterpret_cast<class badge *>(data);
-
-			       badge->relase_focus_current_screen();
-		       },
-			this } },
-	_menu_screen{ { [](void *data) {
-			       auto *badge = reinterpret_cast<class badge *>(data);
-
-			       badge->relase_focus_current_screen();
-		       },
-			this } },
-	_string_property_edit_screen{ { [](void *data) {
-					       auto *badge = reinterpret_cast<class badge *>(data);
-
-					       badge->relase_focus_current_screen();
-				       },
-					this } },
-	_splash_screen{ { [](void *data) {
-			       auto *badge = reinterpret_cast<class badge *>(data);
-
-			       badge->relase_focus_current_screen();
-		       },
-			this } },
+	_button_watcher(
+		nb::new_button_event_notifier{ [](nsec::button::id id, nsec::button::event event) {
+			nsec::g::the_badge.on_button_event(id, event);
+		} }),
 	_renderer{ &_focused_screen },
 	_network_handler{ { [](void *data) {
 				   auto *badge = reinterpret_cast<class badge *>(data);
@@ -173,7 +148,8 @@ void nr::badge::set_focused_screen(nd::screen& newly_focused_screen) noexcept
 
 void nr::badge::relase_focus_current_screen() noexcept
 {
-	if (_focused_screen == &_idle_screen || _focused_screen == &_string_property_edit_screen) {
+	if (_focused_screen == &_idle_screen || _focused_screen == &_string_property_edit_screen ||
+	    _focused_screen == &_splash_screen) {
 		if (_focused_screen == &_string_property_edit_screen) {
 			_string_property_edit_screen.clean_up_property();
 		}

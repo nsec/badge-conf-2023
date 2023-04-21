@@ -70,9 +70,8 @@ void nd::string_property_editor_screen::prompt_cycle_task::run(
 	_run();
 }
 
-nd::string_property_editor_screen::string_property_editor_screen(
-	const screen::release_focus_notifier& release_focus_notifier) noexcept :
-	screen(release_focus_notifier),
+nd::string_property_editor_screen::string_property_editor_screen() noexcept :
+	screen(),
 	_prompt{ nullptr },
 	_property{},
 	_focused_character{ 0 },

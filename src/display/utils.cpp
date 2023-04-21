@@ -60,7 +60,6 @@ void _draw_string(Adafruit_SSD1306& canvas,
 		canvas.write(current_char);
 		current_ptr++;
 	}
-
 }
 } // anonymous namespace
 

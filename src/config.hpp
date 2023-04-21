@@ -17,11 +17,11 @@ constexpr unsigned int max_scheduled_task_count = 16;
 }
 
 namespace nsec::config::social {
-constexpr uint8_t max_level = 200;
+constexpr uint8_t max_level = 128;
 }
 
 namespace nsec::config::user {
-constexpr uint8_t name_max_length = 64;
+constexpr uint8_t name_max_length = 32;
 }
 
 namespace nsec::config::button {

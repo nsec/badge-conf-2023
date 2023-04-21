@@ -56,7 +56,7 @@ public:
 		virtual const choice& operator[](unsigned int) const noexcept = 0;
 	};
 
-	explicit menu_screen(const screen::release_focus_notifier& release_focus_notifier) noexcept;
+	explicit menu_screen() noexcept;
 
 	/* Deactivate copy and assignment. */
 	menu_screen(const menu_screen&) = delete;

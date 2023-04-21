@@ -7,13 +7,15 @@
 #ifndef NSEC_DISPLAY_SPLASH_SCREEN_HPP
 #define NSEC_DISPLAY_SPLASH_SCREEN_HPP
 
+#include "callback.hpp"
 #include "display/screen.hpp"
+#include "scheduler.hpp"
 
 namespace nsec::display {
 
 class splash_screen : public screen {
 public:
-	explicit splash_screen(const screen::release_focus_notifier& release_focus_notifier) noexcept;
+	explicit splash_screen() noexcept;
 
 	/* Deactivate copy and assignment. */
 	splash_screen(const splash_screen&) = delete;
@@ -24,7 +26,17 @@ public:
 
 	void button_event(button::id id, button::event event) noexcept override;
 	void _render(scheduling::absolute_time_ms current_time_ms,
-		    Adafruit_SSD1306& canvas) noexcept override;
+		     Adafruit_SSD1306& canvas) noexcept override;
+	void focused() noexcept override;
+
+private:
+	class one_shot_timer_task : public nsec::scheduling::task {
+	public:
+		one_shot_timer_task() = default;
+		void run(nsec::scheduling::absolute_time_ms current_time) noexcept override;
+	};
+
+	one_shot_timer_task _timer;
 };
 } // namespace nsec::display
 

@@ -4,19 +4,16 @@
  * Copyright 2023 Jérémie Galarneau <jeremie.galarneau@gmail.com>
  */
 
+#include "Adafruit_SSD1306/Adafruit_SSD1306.h"
 #include "config.hpp"
 #include "display/menu/menu.hpp"
 #include "display/utils.hpp"
-
-#include "Adafruit_SSD1306/Adafruit_SSD1306.h"
 
 namespace nd = nsec::display;
 namespace ndu = nsec::display::utils;
 namespace nb = nsec::button;
 
-nd::menu_screen::menu_screen(const screen::release_focus_notifier& release_focus_notifier) noexcept
-	:
-	screen(release_focus_notifier)
+nd::menu_screen::menu_screen() noexcept : screen()
 {
 }
 
@@ -134,12 +131,12 @@ void nd::menu_screen::_render(scheduling::absolute_time_ms current_time_ms,
 		// If there are choices remaining, the cursor is already in the right place on the
 		// Y-axis (last line).
 		ndu::draw_arrow_glyph(canvas,
-				 last_char_x_position,
-				 canvas.getCursorY(),
-				 _layout_constraints.glyph_size.width,
-				 _layout_constraints.glyph_size.height,
-				 indicator_color,
-				 ndu::arrow_glyph_direction::DOWN);
+				      last_char_x_position,
+				      canvas.getCursorY(),
+				      _layout_constraints.glyph_size.width,
+				      _layout_constraints.glyph_size.height,
+				      indicator_color,
+				      ndu::arrow_glyph_direction::DOWN);
 	}
 
 	if (draw_up_indicator) {
@@ -149,11 +146,11 @@ void nd::menu_screen::_render(scheduling::absolute_time_ms current_time_ms,
 			SSD1306_WHITE;
 
 		ndu::draw_arrow_glyph(canvas,
-				 last_char_x_position,
-				 0,
-				 _layout_constraints.glyph_size.width,
-				 _layout_constraints.glyph_size.height,
-				 indicator_color,
-				 ndu::arrow_glyph_direction::UP);
+				      last_char_x_position,
+				      0,
+				      _layout_constraints.glyph_size.width,
+				      _layout_constraints.glyph_size.height,
+				      indicator_color,
+				      ndu::arrow_glyph_direction::UP);
 	}
 }
