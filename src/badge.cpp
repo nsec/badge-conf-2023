@@ -50,6 +50,12 @@ nr::badge::badge() :
 					       badge->relase_focus_current_screen();
 				       },
 					this } },
+	_splash_screen{ { [](void *data) {
+			       auto *badge = reinterpret_cast<class badge *>(data);
+
+			       badge->relase_focus_current_screen();
+		       },
+			this } },
 	_renderer{ &_focused_screen },
 	_network_handler{ { [](void *data) {
 				   auto *badge = reinterpret_cast<class badge *>(data);
@@ -84,7 +90,7 @@ nr::badge::badge() :
 			     },
 			      this } }
 {
-	set_focused_screen(_idle_screen);
+	set_focused_screen(_splash_screen);
 }
 
 void nr::badge::setup()
