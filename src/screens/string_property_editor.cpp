@@ -239,7 +239,9 @@ void nd::string_property_editor_screen::focused() noexcept
 
 void nd::string_property_editor_screen::clean_up_property() noexcept
 {
-	for (size_t i = _property.size - 1; i >= 0; i--) {
+	int i = _property.size - 1;
+
+	while (i-- > 0) {
 		if (_property.value[i] == ' ') {
 			_property.value[i] = '\0';
 		} else {
