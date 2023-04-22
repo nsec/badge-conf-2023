@@ -10,12 +10,12 @@
 namespace ndu = nsec::display::utils;
 
 namespace {
-static inline char to_char(const char *src)
+inline char to_char(const char *src)
 {
 	return *src;
 }
 
-static inline char to_char(const __FlashStringHelper *src)
+inline char to_char(const __FlashStringHelper *src)
 {
 	return pgm_read_byte(reinterpret_cast<PGM_P>(src));
 }
