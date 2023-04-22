@@ -148,16 +148,16 @@ void nr::badge::set_focused_screen(nd::screen& newly_focused_screen) noexcept
 
 void nr::badge::relase_focus_current_screen() noexcept
 {
-	if (_focused_screen == &_idle_screen || _focused_screen == &_string_property_edit_screen ||
-	    _focused_screen == &_splash_screen) {
+	if (_focused_screen == &_menu_screen) {
+		_scroll_screen.set_property(_user_name);
+		set_focused_screen(_scroll_screen);
+	} else {
 		if (_focused_screen == &_string_property_edit_screen) {
 			_string_property_edit_screen.clean_up_property();
 		}
 
 		_menu_screen.set_choices(_main_menu_choices);
 		set_focused_screen(_menu_screen);
-	} else if (_focused_screen == &_menu_screen) {
-		set_focused_screen(_idle_screen);
 	}
 }
 
