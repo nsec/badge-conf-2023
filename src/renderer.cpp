@@ -11,9 +11,14 @@
 namespace nd = nsec::display;
 namespace ns = nsec::scheduling;
 
+namespace {
+constexpr uint16_t render_time_sampling_period = 50;
+};
+
 nd::renderer::renderer(nd::screen **focused_screen) noexcept :
 	periodic_task(nsec::config::display::refresh_period_ms),
 	_display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET),
+	_render_time_sampling_counter{ 0 },
 	_focused_screen{ focused_screen }
 {
 	nsec::g::the_scheduler.schedule_task(*this);
@@ -34,11 +39,20 @@ void nd::renderer::run(scheduling::absolute_time_ms current_time_ms) noexcept
 		return;
 	}
 
-	_display.clearDisplay();
 	const auto entry = millis();
+
+	_display.clearDisplay();
 	focused_screen().render(current_time_ms, _display);
 	const auto exit = millis();
 	_display.display();
 
-	_last_frame_time_ms = exit - entry;
+	if (_render_time_sampling_counter == render_time_sampling_period) {
+		const auto last_frame_duration_ms = exit - entry;
+
+		Serial.print(F("Frame time (ms): "));
+		Serial.println(last_frame_duration_ms);
+		_render_time_sampling_counter = 0;
+	} else {
+		_render_time_sampling_counter++;
+	}
 }

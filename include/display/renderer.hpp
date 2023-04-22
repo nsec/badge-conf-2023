@@ -39,7 +39,7 @@ private:
 
 	uint8_t _frameBuffer[SCREEN_WIDTH * ((SCREEN_HEIGHT + 7) / 8)];
 	Adafruit_SSD1306 _display;
-	scheduling::relative_time_ms _last_frame_time_ms = 0;
+	uint8_t _render_time_sampling_counter;
 
 	screen **const _focused_screen;
 };
