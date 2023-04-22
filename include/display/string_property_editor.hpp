@@ -30,7 +30,7 @@ public:
 
 	void set_property(const __FlashStringHelper *prompt,
 			  char *property,
-			  size_t property_size) noexcept;
+			  uint8_t property_size) noexcept;
 
 	void focused() noexcept override;
 
@@ -63,7 +63,7 @@ private:
 	const __FlashStringHelper *_prompt;
 	struct {
 		char *value;
-		size_t size;
+		uint8_t size;
 	} _property;
 
 	uint8_t _focused_character;
