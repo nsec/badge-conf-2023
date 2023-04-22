@@ -54,7 +54,7 @@ private:
 				 communication::message::type message_type,
 				 uint8_t *message) noexcept;
 
-	uint8_t _social_level:7;
+	uint8_t _social_level : 7;
 	uint8_t _button_had_non_repeat_event_since_screen_focus_change;
 	char _user_name[nsec::config::user::name_max_length];
 
