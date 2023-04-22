@@ -43,9 +43,12 @@ namespace nsec::config::display {
 // Gives a very cinematic ~16 fps
 constexpr nsec::scheduling::relative_time_ms refresh_period_ms = 60;
 
-constexpr unsigned int menu_font_size = 1;
+constexpr uint8_t menu_font_size = 1;
+constexpr uint8_t scroll_font_size = 3;
 
 constexpr nsec::scheduling::absolute_time_ms prompt_cycle_time = 2000;
+
+constexpr uint8_t scroll_pixels_per_second = 50;
 } // namespace nsec::config::display
 
 namespace nsec::config::communication {

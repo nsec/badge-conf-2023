@@ -14,6 +14,7 @@
 #include "display/menu/menu.hpp"
 #include "display/renderer.hpp"
 #include "display/screen.hpp"
+#include "display/scroll.hpp"
 #include "display/splash.hpp"
 #include "display/string_property_editor.hpp"
 #include "led/strip_animator.hpp"
@@ -64,6 +65,7 @@ private:
 	display::menu_screen _menu_screen;
 	display::string_property_editor_screen _string_property_edit_screen;
 	display::splash_screen _splash_screen;
+	display::scroll_screen _scroll_screen;
 	display::screen *_focused_screen;
 
 	// displays
