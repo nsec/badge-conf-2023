@@ -4,22 +4,24 @@
 
 ENV = default
 
+VERBOSE = -v
+
 all: build
 
 build:
-	pio run -e $(ENV)
+	pio run -e $(ENV) $(VERBOSE)
 
 flash:
-	pio run -e $(ENV) -t upload
+	pio run -e $(ENV) $(VERBOSE) -t upload -v
 
 fuses:
-	pio run -e $(ENV) -t fuses
+	pio run -e $(ENV) $(VERBOSE) -t fuses
 
 compiledb:
-	pio run -e $(ENV) -t compiledb
+	pio run -e $(ENV) $(VERBOSE) -t compiledb
 
 check:
-	pio test -e native_tests
+	pio test -e native_tests $(VERBOSE)
 
 reuse:
 	reuse lint
