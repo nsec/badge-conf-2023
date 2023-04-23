@@ -48,11 +48,14 @@ private:
 
 	void set_focused_screen(display::screen& focused_screen) noexcept;
 
+	// Handle network events
+	void on_disconnection() noexcept;
 	void on_pairing_begin() noexcept;
-	void on_pairing_end(unsigned int our_peer_id) noexcept;
-	void on_message_received(communication::peer_relative_position relative_position,
-				 communication::message::type message_type,
-				 uint8_t *message) noexcept;
+	void on_pairing_end(nsec::communication::peer_id_t our_peer_id,
+			    uint8_t peer_count) noexcept;
+	nsec::communication::network_handler::application_message_action
+	on_message_received(communication::message::type message_type,
+			    const uint8_t *message) noexcept;
 
 	uint8_t _social_level : 7;
 	uint8_t _button_had_non_repeat_event_since_screen_focus_change;

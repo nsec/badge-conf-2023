@@ -51,12 +51,17 @@ constexpr uint8_t scroll_pixels_per_second = 80;
 } // namespace nsec::config::display
 
 namespace nsec::config::communication {
-// Size reserved for user protocol messages (without any encryption/signing overhead)
-constexpr size_t protocol_buffer_size = 24;
-constexpr unsigned int software_serial_speed = 4800;
+// Size reserved for protocol messages (without any encryption/signing overhead)
+constexpr size_t protocol_max_message_size = 16;
+constexpr unsigned int software_serial_speed = 38400;
+/*
+* Applications may define messages >= application_message_type_range_begin.
+* IDs under this range are reserved by the wire protocol.
+*/
+constexpr uint8_t application_message_type_range_begin = 10;
 
 constexpr unsigned int connection_sense_pin_left = SIG_L3;
-constexpr unsigned int connection_sense_pin_right = SIG_R2;
+constexpr unsigned int connection_sense_pin_right = SIG_R3;
 
 constexpr unsigned int serial_rx_pin_left = SIG_L1;
 constexpr unsigned int serial_tx_pin_left = SIG_L2;
@@ -64,6 +69,7 @@ constexpr unsigned int serial_rx_pin_right = SIG_R2;
 constexpr unsigned int serial_tx_pin_right = SIG_R1;
 
 constexpr nsec::scheduling::relative_time_ms network_handler_base_period_ms = 100;
+constexpr nsec::scheduling::relative_time_ms network_handler_timeout_ms = 15000;
 
 } // namespace nsec::communication
 

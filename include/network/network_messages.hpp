@@ -7,17 +7,16 @@
 #ifndef NSEC_NETWORK_MESSAGES_HPP
 #define NSEC_NETWORK_MESSAGES_HPP
 
-#include <stdint.h>
+#include "config.hpp"
 
 #include <ArduinoUniqueID.h>
+#include <stdint.h>
 
 namespace nsec::communication::message {
 
 enum class type {
-	ACK = 0,
-	RESET = 1,
-	ANNOUNCE_PEER = 2,
-	ANNOUNCE_PEER_STOP = 3,
+	SOME_APPLICATION_MESSAGE_TYPE =
+		nsec::config::communication::application_message_type_range_begin,
 };
 
 struct header {

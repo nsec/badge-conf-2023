@@ -8,6 +8,7 @@
 #include "board.hpp"
 #include "display/menu/menu.hpp"
 #include "globals.hpp"
+#include "network/network_messages.hpp"
 
 #include <Arduino.h>
 
@@ -35,23 +36,27 @@ nr::badge::badge() :
 	_network_handler{ { [](void *data) {
 				   auto *badge = reinterpret_cast<class badge *>(data);
 
+				   badge->on_disconnection();
+			   },
+			    this },
+			  { [](void *data) {
+				   auto *badge = reinterpret_cast<class badge *>(data);
+
 				   badge->on_pairing_begin();
 			   },
 			    this },
-			  { [](void *data, unsigned int id) {
+			  { [](void *data, nc::peer_id_t id, uint8_t peer_count) {
 				   auto *badge = reinterpret_cast<class badge *>(data);
 
-				   badge->on_pairing_end(id);
+				   badge->on_pairing_end(id, peer_count);
 			   },
 			    this },
 			  { [](void *data,
-			       communication::peer_relative_position relative_position,
-			       communication::message::type message_type,
-			       uint8_t *message) {
+			       nsec::communication::message::type message_type,
+			       const uint8_t *message) {
 				   auto *badge = reinterpret_cast<class badge *>(data);
 
-				   badge->on_message_received(
-					   relative_position, message_type, message);
+				   return badge->on_message_received(message_type, message);
 			   },
 			    this } },
 	_main_menu_choices{ { [](void *data) {
@@ -78,14 +83,7 @@ void nr::badge::setup()
 	_renderer.setup();
 	set_social_level(1);
 
-	// Init software serial for both sides of the badge.
-	pinMode(SIG_R2, INPUT_PULLUP);
-	pinMode(SIG_R3, OUTPUT);
-	digitalWrite(SIG_R3, LOW);
-
-	pinMode(SIG_L2, OUTPUT);
-	pinMode(SIG_L3, INPUT_PULLUP);
-	digitalWrite(SIG_L2, LOW);
+	_network_handler.setup();
 
 	// Hardware serial init (through USB-C connector).
 	Serial.begin(38400);
@@ -161,16 +159,26 @@ void nr::badge::relase_focus_current_screen() noexcept
 	}
 }
 
+void nr::badge::on_disconnection() noexcept
+{
+	Serial.println(F("Connection lost"));
+}
+
 void nr::badge::on_pairing_begin() noexcept
 {
 }
 
-void nr::badge::on_pairing_end(unsigned int our_peer_id) noexcept
+void nr::badge::on_pairing_end(nc::peer_id_t our_peer_id, uint8_t peer_count) noexcept
 {
+	Serial.print(F("Connected to network: peer_id="));
+	Serial.print(int(our_peer_id));
+	Serial.print(F(", peer_count="));
+	Serial.println(int(peer_count));
 }
 
-void nr::badge::on_message_received(nc::peer_relative_position relative_position,
-				    communication::message::type message_type,
-				    uint8_t *message) noexcept
+nc::network_handler::application_message_action
+nr::badge::on_message_received(communication::message::type message_type,
+			       const uint8_t *message) noexcept
 {
+	return nc::network_handler::application_message_action::SWALLOW;
 }
