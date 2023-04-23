@@ -42,12 +42,38 @@ private:
 			const __FlashStringHelper *flash_value;
 		};
 		bool is_value_in_ram : 1;
-		uint8_t char_count : 7;
+		uint8_t renderable_character_count : 7;
 	} _property;
 
+	enum class render_state {
+		FRAME_SETUP = 0,
+		FIRST_VISIBLE_CHARACTER_RENDERING = 1,
+		VISIBLE_CHARACTER_CHUNK_RENDERING = 2,
+		SEPARATOR_RENDERING = 3,
+	};
+
+	render_state _render_state() const noexcept
+	{
+		return static_cast<render_state>(_frame_render_state);
+	}
+
+	void _render_state(render_state state) noexcept
+	{
+		_frame_render_state = static_cast<uint8_t>(state);
+		if (state == render_state::FRAME_SETUP ||
+		    state == render_state::SEPARATOR_RENDERING) {
+			_current_character_offset = 0;
+		}
+	}
+
+	char _property_character_at_offset(uint8_t offset) const noexcept;
+	void _render_current_property_character(Adafruit_SSD1306& canvas) const noexcept;
+
 	bool _layout_initialized : 1;
-	uint16_t _scroll_character_width : 5;
+	unsigned int _scroll_character_width : 5;
 	unsigned int _scroll_character_y_offset : 5;
+	uint8_t _frame_render_state : 2;
+	uint8_t _current_character_offset;
 };
 } // namespace nsec::display
 

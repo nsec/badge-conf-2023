@@ -12,7 +12,7 @@ namespace nd = nsec::display;
 namespace ns = nsec::scheduling;
 
 namespace {
-constexpr uint16_t render_time_sampling_period = 1;
+constexpr uint16_t render_time_sampling_period = 300;
 };
 
 nd::renderer::renderer(nd::screen **focused_screen) noexcept :
@@ -55,7 +55,7 @@ void nd::renderer::run(scheduling::absolute_time_ms current_time_ms) noexcept
 	if (++_render_time_sampling_counter == render_time_sampling_period) {
 		const auto last_frame_duration_ms = exit - entry;
 
-		//Serial.print(F("Frame time (ms): "));
+		Serial.print(F("Frame time (ms): "));
 		Serial.println(last_frame_duration_ms);
 		_render_time_sampling_counter = 0;
 	}

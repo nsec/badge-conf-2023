@@ -35,7 +35,7 @@ const __FlashStringHelper *as_flash_string(const char *str)
 }
 
 template <typename StringType>
-unsigned int property_displayable_length(const StringType *property)
+unsigned int property_renderable_character_count(const StringType *property)
 {
 	unsigned int length = 0;
 	auto current_ptr = reinterpret_cast<const char *>(property);
@@ -66,6 +66,7 @@ unsigned int window_offset_from_frame_time(nsec::scheduling::absolute_time_ms ti
 
 nd::scroll_screen::scroll_screen() noexcept : screen()
 {
+	_cleared_on_every_frame = false;
 	set_property(as_flash_string(default_property));
 }
 
@@ -83,6 +84,25 @@ void nd::scroll_screen::button_event(nb::id id, nb::event event) noexcept
 	}
 }
 
+char nd::scroll_screen::_property_character_at_offset(uint8_t offset) const noexcept
+{
+	return _property.is_value_in_ram ?
+		to_char(_property.ram_value + offset) :
+		to_char(as_flash_string(reinterpret_cast<const char *>(_property.flash_value) +
+					offset));
+}
+
+void nd::scroll_screen::_render_current_property_character(Adafruit_SSD1306& canvas) const noexcept
+{
+	canvas.drawChar(canvas.getCursorX(),
+			canvas.getCursorY(),
+			_property_character_at_offset(_current_character_offset),
+			SSD1306_WHITE,
+			SSD1306_BLACK,
+			nsec::config::display::scroll_font_size);
+	canvas.setCursor(canvas.getCursorX() + _scroll_character_width, canvas.getCursorY());
+}
+
 void nd::scroll_screen::_render(scheduling::absolute_time_ms current_time_ms,
 				Adafruit_SSD1306& canvas) noexcept
 {
@@ -90,31 +110,70 @@ void nd::scroll_screen::_render(scheduling::absolute_time_ms current_time_ms,
 		_initialize_layout(canvas);
 	}
 
-	// Compute x offset of the viewport according to the time
-	const unsigned int window_offset = window_offset_from_frame_time(
-		current_time_ms, _scroll_character_width, _property.char_count);
+	switch (_render_state()) {
+	case render_state::FRAME_SETUP:
+	{
+		// Compute x offset of the viewport according to the time.
+		const unsigned int window_offset =
+			window_offset_from_frame_time(current_time_ms,
+						      _scroll_character_width,
+						      _property.renderable_character_count);
 
-	canvas.setTextSize(nsec::config::display::scroll_font_size);
-	canvas.setCursor(-static_cast<int16_t>(window_offset), _scroll_character_y_offset);
-	canvas.setTextWrap(false);
+		canvas.setTextSize(nsec::config::display::scroll_font_size);
+		canvas.setCursor(-static_cast<int16_t>(window_offset), _scroll_character_y_offset);
+		canvas.setTextWrap(false);
+		canvas.clearDisplay();
+		_render_state(render_state::FIRST_VISIBLE_CHARACTER_RENDERING);
+		break;
+	}
+	case render_state::FIRST_VISIBLE_CHARACTER_RENDERING:
+	{
+		// "Render" characters until we step into the visible area.
+		while (canvas.getCursorX() < 0) {
+			_render_current_property_character(canvas);
+			_current_character_offset++;
 
-	bool first_pass = true;
-	while (canvas.getCursorX() < canvas.width()) {
-		if (!first_pass) {
-			canvas.setCursor(canvas.getCursorX() + repeat_separator_padding,
-					 canvas.getCursorY());
-			canvas.print(as_flash_string(repeat_separator));
-			canvas.setCursor(canvas.getCursorX() + repeat_separator_padding,
-					 canvas.getCursorY());
+			if (_current_character_offset == _property.renderable_character_count) {
+				break;
+			}
 		}
 
-		if (_property.is_value_in_ram) {
-			canvas.print(_property.ram_value);
+		_render_state(_current_character_offset < _property.renderable_character_count ?
+				      render_state::VISIBLE_CHARACTER_CHUNK_RENDERING :
+				      render_state::SEPARATOR_RENDERING);
+		break;
+	}
+	case render_state::VISIBLE_CHARACTER_CHUNK_RENDERING:
+		_render_current_property_character(canvas);
+		_current_character_offset++;
+		if (canvas.getCursorX() < width()) {
+			_render_state(_current_character_offset <
+						      _property.renderable_character_count ?
+					      render_state::VISIBLE_CHARACTER_CHUNK_RENDERING :
+					      render_state::SEPARATOR_RENDERING);
 		} else {
-			canvas.print(_property.flash_value);
+			// Frame completed.
+			_render_state(render_state::FRAME_SETUP);
+			canvas.display();
 		}
 
-		first_pass = false;
+		break;
+	case render_state::SEPARATOR_RENDERING:
+		canvas.setCursor(canvas.getCursorX() + repeat_separator_padding,
+				 canvas.getCursorY());
+		canvas.print(as_flash_string(repeat_separator));
+		canvas.setCursor(canvas.getCursorX() + repeat_separator_padding,
+				 canvas.getCursorY());
+
+		if (canvas.getCursorX() < width()) {
+			_render_state(render_state::VISIBLE_CHARACTER_CHUNK_RENDERING);
+		} else {
+			// Frame completed.
+			_render_state(render_state::FRAME_SETUP);
+			canvas.display();
+		}
+
+		break;
 	}
 
 	damage();
@@ -124,18 +183,19 @@ void nd::scroll_screen::set_property(const __FlashStringHelper *property) noexce
 {
 	_property.flash_value = property;
 	_property.is_value_in_ram = false;
-	_property.char_count = property_displayable_length(property);
+	_property.renderable_character_count = property_renderable_character_count(property);
 }
 
 void nd::scroll_screen::set_property(const char *property) noexcept
 {
 	_property.ram_value = property;
 	_property.is_value_in_ram = true;
-	_property.char_count = property_displayable_length(property);
+	_property.renderable_character_count = property_renderable_character_count(property);
 }
 
 void nd::scroll_screen::focused() noexcept
 {
+	_render_state(render_state::FRAME_SETUP);
 	screen::focused();
 }
 
