@@ -9,10 +9,9 @@
 
 #include "../board.hpp"
 #include "../button/watcher.hpp"
+#include "Adafruit_SSD1306/Adafruit_SSD1306.h"
 #include "callback.hpp"
 #include "scheduler.hpp"
-
-#include "Adafruit_SSD1306/Adafruit_SSD1306.h"
 
 namespace nsec::display {
 
@@ -25,7 +24,7 @@ public:
 	// Callable that will be invoked when a focused screen is damaged and should be re-rendered.
 	using damage_notifier = nsec::callback<void>;
 
-	explicit screen() noexcept = default;
+	explicit screen() noexcept;
 
 	// Deactivate copy and assignment.
 	screen(const screen&) = delete;
@@ -55,6 +54,11 @@ public:
 		_render(current_time_ms, canvas);
 	}
 
+	bool cleared_on_every_frame() const noexcept
+	{
+		return _cleared_on_every_frame;
+	}
+
 protected:
 	// Rendering method implemented by derived classes
 	virtual void _render(scheduling::absolute_time_ms current_time_ms,
@@ -80,6 +84,7 @@ protected:
 
 	// A screen is only redrawn if it is damaged
 	bool _is_damaged : 1;
+	bool _cleared_on_every_frame : 1;
 };
 } // namespace nsec::display
 
