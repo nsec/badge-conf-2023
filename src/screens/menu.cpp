@@ -5,109 +5,14 @@
  */
 
 #include "config.hpp"
-#include "display/menu.hpp"
+#include "display/menu/menu.hpp"
+#include "display/utils.hpp"
 
 #include <Adafruit_SSD1306.h>
 
 namespace nd = nsec::display;
+namespace ndu = nsec::display::utils;
 namespace nb = nsec::button;
-
-namespace {
-static inline char to_char(const char *src)
-{
-	return *src;
-}
-
-static inline char to_char(const __FlashStringHelper *src)
-{
-	return pgm_read_byte(reinterpret_cast<PGM_P>(src));
-}
-
-// Assumes the cursor position is already set.
-// Hand-rolled since the canvas Print interface does not allow us to bound the printed length of
-// a string stored in program memory.
-template <typename StringType>
-void draw_string(Adafruit_SSD1306& canvas,
-		 const StringType *str,
-		 unsigned int max_char_count) noexcept
-{
-	auto current_ptr = reinterpret_cast<const char *>(str);
-	auto limit_ptr = reinterpret_cast<const char *>(str) + max_char_count;
-
-	bool draw_elipsis = true;
-	while (current_ptr != limit_ptr) {
-		if (to_char(reinterpret_cast<const StringType *>(current_ptr)) == '\0') {
-			draw_elipsis = false;
-			break;
-		}
-
-		current_ptr++;
-	}
-
-	current_ptr = reinterpret_cast<const char *>(str);
-	while (current_ptr != limit_ptr) {
-		auto current_char = to_char(reinterpret_cast<const StringType *>(current_ptr));
-		if (current_char == '\0') {
-			return;
-		}
-
-		if ((limit_ptr - current_ptr) <= 3 && draw_elipsis) {
-			current_char = '.';
-		}
-
-		canvas.write(current_char);
-		current_ptr++;
-	}
-}
-
-enum class arrow_glyph_direction { UP, DOWN };
-
-// Position is in top-left coordinates and indicated the position of the glyph
-// this indicator replaces
-void draw_arrow_glyph(Adafruit_SSD1306& canvas,
-		      unsigned int glyph_x,
-		      unsigned int glyph_y,
-		      unsigned int glyph_width,
-		      unsigned int glyph_heigth,
-		      unsigned int glyph_color,
-		      arrow_glyph_direction direction)
-{
-	if (glyph_width & 1) {
-		glyph_x = glyph_x + 1;
-		glyph_width--;
-	}
-
-	int line_draw_direction;
-	unsigned int first_line_drawn;
-	if (direction == arrow_glyph_direction::UP) {
-		line_draw_direction = 1;
-		first_line_drawn = glyph_y;
-	} else {
-		line_draw_direction = -1;
-		first_line_drawn = glyph_y + glyph_heigth - 1;
-	}
-
-	unsigned int current_line_width = 1;
-	auto line_being_drawn = first_line_drawn;
-	auto current_line_triangle_start = glyph_x + (glyph_width / 2);
-
-	for (auto lines_drawn = 0U; lines_drawn < glyph_heigth; lines_drawn++) {
-		if (current_line_width > glyph_width) {
-			break;
-		}
-
-		canvas.writeFastHLine(current_line_triangle_start,
-				      line_being_drawn,
-				      current_line_width,
-				      glyph_color);
-
-		// Triangle slope is fixed to 1 pixel per line (on each side).
-		current_line_triangle_start--;
-		current_line_width += 2;
-		line_being_drawn += line_draw_direction;
-	}
-}
-} // namespace
 
 nd::menu_screen::menu_screen(const screen::release_focus_notifier& release_focus_notifier) noexcept
 	:
@@ -157,7 +62,9 @@ void nd::menu_screen::_initialize_layout_constraints(Adafruit_SSD1306& canvas) n
 	int x, y;
 	unsigned int text_width, text_height;
 
+	canvas.setTextSize(config::display::menu_font_size);
 	canvas.getTextBounds("a", 0, 0, &x, &y, &text_width, &text_height);
+
 	_layout_constraints.glyph_size.height = text_height;
 	_layout_constraints.glyph_size.width = text_width;
 	_layout_constraints._lines_per_screen = canvas.height() / text_height;
@@ -210,7 +117,7 @@ void nd::menu_screen::_render(scheduling::absolute_time_ms current_time_ms,
 			canvas.setTextColor(SSD1306_WHITE, SSD1306_BLACK);
 		}
 
-		draw_string(canvas, (*_choices)[choice_being_drawn_idx].name, max_line_length);
+		ndu::draw_string(canvas, (*_choices)[choice_being_drawn_idx].name, max_line_length);
 		y_position += _layout_constraints.glyph_size.height;
 	}
 
@@ -226,13 +133,13 @@ void nd::menu_screen::_render(scheduling::absolute_time_ms current_time_ms,
 
 		// If there are choices remaining, the cursor is already in the right place on the
 		// Y-axis (last line).
-		draw_arrow_glyph(canvas,
+		ndu::draw_arrow_glyph(canvas,
 				 last_char_x_position,
 				 canvas.getCursorY(),
 				 _layout_constraints.glyph_size.width,
 				 _layout_constraints.glyph_size.height,
 				 indicator_color,
-				 arrow_glyph_direction::DOWN);
+				 ndu::arrow_glyph_direction::DOWN);
 	}
 
 	if (draw_up_indicator) {
@@ -241,12 +148,12 @@ void nd::menu_screen::_render(scheduling::absolute_time_ms current_time_ms,
 			SSD1306_BLACK :
 			SSD1306_WHITE;
 
-		draw_arrow_glyph(canvas,
+		ndu::draw_arrow_glyph(canvas,
 				 last_char_x_position,
 				 0,
 				 _layout_constraints.glyph_size.width,
 				 _layout_constraints.glyph_size.height,
 				 indicator_color,
-				 arrow_glyph_direction::UP);
+				 ndu::arrow_glyph_direction::UP);
 	}
 }

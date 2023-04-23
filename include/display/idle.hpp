@@ -22,12 +22,6 @@ public:
 	idle_screen& operator=(idle_screen&&) = delete;
 	~idle_screen() override = default;
 
-	enum class result {
-		OK,
-		/* Screen wants to hand-off focus. */
-		QUIT,
-	};
-
 	void button_event(button::id id, button::event event) noexcept override;
 	void _render(scheduling::absolute_time_ms current_time_ms,
 		    Adafruit_SSD1306& canvas) noexcept override;
