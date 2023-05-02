@@ -25,16 +25,15 @@ using peer_id_t = uint8_t;
 
 class network_handler : public scheduling::periodic_task {
 public:
-	using disconnection_notifier = nsec::callback<void>;
-	using pairing_begin_notifier = nsec::callback<void>;
+	using disconnection_notifier = void (*)();
+	using pairing_begin_notifier = void (*)();
 	// void (our_peer_id, peer count)
-	using pairing_end_notifier = nsec::callback<void, peer_id_t, uint8_t>;
+	using pairing_end_notifier = void (*)(peer_id_t, uint8_t);
 
 	enum class application_message_action { SWALLOW, FORWARD, RESET };
 	// application_message_action (relative_position_of_peer, message_type, message_payload)
-	using message_received_notifier = nsec::callback<application_message_action,
-							 nsec::communication::message::type,
-							 const uint8_t *>;
+	using message_received_notifier =
+		application_message_action (*)(nsec::communication::message::type, const uint8_t *);
 
 	network_handler(disconnection_notifier,
 			pairing_begin_notifier,
@@ -60,7 +59,12 @@ protected:
 	void run(scheduling::absolute_time_ms current_time_ms) noexcept override;
 
 private:
-	enum class link_position { UNKNOWN = 0b00, LEFT_MOST = 0b01, RIGHT_MOST = 0b10, MIDDLE = 0b11 };
+	enum class link_position {
+		UNKNOWN = 0b00,
+		LEFT_MOST = 0b01,
+		RIGHT_MOST = 0b10,
+		MIDDLE = 0b11
+	};
 	enum class wire_protocol_state {
 		UNCONNECTED = 0,
 		/* Wait for boards to listen before left-most initiates the discovery. */
