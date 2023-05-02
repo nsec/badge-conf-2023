@@ -14,7 +14,7 @@
 #include <stdint.h>
 
 namespace nsec::config::scheduler {
-constexpr unsigned int max_scheduled_task_count = 16;
+constexpr unsigned int max_scheduled_task_count = 10;
 }
 
 namespace nsec::config::social {
