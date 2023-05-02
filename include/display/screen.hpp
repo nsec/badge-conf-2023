@@ -19,11 +19,6 @@ using pixel_dimension = uint8_t;
 
 class screen {
 public:
-	// Callable that will be invoked when a focused screen wishes to relinquish the focus.
-	using release_focus_notifier = nsec::callback<void>;
-	// Callable that will be invoked when a focused screen is damaged and should be re-rendered.
-	using damage_notifier = nsec::callback<void>;
-
 	explicit screen() noexcept;
 
 	// Deactivate copy and assignment.
