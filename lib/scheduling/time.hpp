@@ -11,7 +11,7 @@
 namespace nsec::scheduling {
 
 using absolute_time_ms = unsigned long;
-using relative_time_ms = unsigned long;
+using relative_time_ms = unsigned short;
 
 } // namespace nsec::scheduling
 

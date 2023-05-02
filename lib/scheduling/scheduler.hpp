@@ -13,6 +13,8 @@
 #define NSEC_SCHEDULING_SCHEDULER_HPP
 
 #include <stddef.h>
+#include <stdint.h>
+
 #include "time.hpp"
 
 namespace nsec::scheduling {
@@ -100,7 +102,7 @@ private:
 		return !_killed;
 	}
 
-	relative_time_ms _period_ms : 31;
+	relative_time_ms _period_ms : 15;
 	bool _killed : 1;
 };
 
@@ -136,7 +138,7 @@ public:
 
 			if (!task) {
 				/* No task left to run... Rest in peace. */
-				return -1UL;
+				return UINT16_MAX;
 			}
 
 			if (task->_next_scheduled_time <= _last_tick_ms) {
