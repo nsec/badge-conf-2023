@@ -175,20 +175,24 @@ constexpr uint8_t wire_protocol_magic_2 = 0b11111010;
 
 struct wire_msg_header {
 	// Message start with a 16-bit magic number to re-sync on message frames.
-	// uint16_t magic;
 	uint8_t type;
-	// 16-bit fletcher checksum, see
-	// https://en.wikipedia.org/wiki/Fletcher%27s_checksum#Fletcher-16
-	//uint16_t checksum;
-};
+
+	/*
+	 * 16-bit fletcher checksum, see
+	 * https://en.wikipedia.org/wiki/Fletcher%27s_checksum#Fletcher-16
+	 *
+	 * Checksum includes: type and payload bytes
+	 */
+	uint16_t checksum;
+} __attribute__((packed));
 
 struct wire_msg_announce {
 	uint8_t peer_id;
-};
+} __attribute__((packed));
 
 struct wire_msg_announce_reply {
 	uint8_t peer_count;
-};
+} __attribute__((packed));
 
 uint8_t wire_msg_payload_size(uint8_t type)
 {
@@ -206,17 +210,23 @@ uint8_t wire_msg_payload_size(uint8_t type)
 	}
 }
 
-uint16_t fletcher16_checksum(const uint8_t *data, uint8_t size)
-{
-	uint8_t sum_low = 0, sum_high = 0;
-
-	for (uint8_t i = 0; i < size; i++) {
-		sum_low += data[i];
-		sum_high += sum_low;
+class fletcher16_checksumer {
+public:
+	void push(uint8_t value)
+	{
+		_sum_low += value;
+		_sum_high += _sum_low;
 	}
 
-	return (uint16_t(sum_high) << 8) | uint16_t(sum_low);
-}
+	uint16_t checksum() const noexcept
+	{
+		return (uint16_t(_sum_high) << 8) | uint16_t(_sum_low);
+	}
+
+private:
+	uint8_t _sum_low = 0;
+	uint8_t _sum_high = 0;
+};
 
 void send_wire_magic(SoftwareSerial& serial) noexcept
 {
@@ -224,9 +234,9 @@ void send_wire_magic(SoftwareSerial& serial) noexcept
 	serial.write(wire_protocol_magic_2);
 }
 
-void send_wire_header(SoftwareSerial& serial, uint8_t msg_type) noexcept
+void send_wire_header(SoftwareSerial& serial, uint8_t msg_type, uint16_t checksum) noexcept
 {
-	const wire_msg_header header = { .type = msg_type };
+	const wire_msg_header header = { .type = msg_type, .checksum = checksum };
 
 	logging::log_wire_msg_type(msg_type, F("Sending"));
 	send_wire_magic(serial);
@@ -235,21 +245,28 @@ void send_wire_header(SoftwareSerial& serial, uint8_t msg_type) noexcept
 
 void send_wire_msg(SoftwareSerial& serial,
 		   uint8_t msg_type,
-		   const uint8_t *msg,
-		   uint8_t msg_payload_size) noexcept
+		   const uint8_t *msg = nullptr,
+		   uint8_t msg_payload_size = 0) noexcept
 {
-	send_wire_header(serial, msg_type);
+	fletcher16_checksumer checksummer;
+
+	checksummer.push(msg_type);
+	for (uint8_t i = 0; i < msg_payload_size; i++) {
+		checksummer.push(msg[i]);
+	}
+
+	send_wire_header(serial, msg_type, checksummer.checksum());
 	serial.write(msg, msg_payload_size);
 }
 
 void send_wire_reset_msg(SoftwareSerial& serial) noexcept
 {
-	send_wire_header(serial, uint8_t(wire_msg_type::RESET));
+	send_wire_msg(serial, uint8_t(wire_msg_type::RESET));
 }
 
 void send_wire_monitor_msg(SoftwareSerial& serial) noexcept
 {
-	send_wire_header(serial, uint8_t(wire_msg_type::MONITOR));
+	send_wire_msg(serial, uint8_t(wire_msg_type::MONITOR));
 }
 
 void send_wire_announce_msg(SoftwareSerial& serial, nc::peer_id_t peer_id) noexcept
@@ -599,25 +616,23 @@ nc::network_handler::_handle_incoming_data(SoftwareSerial& serial) noexcept
 		}
 		case message_reception_state::RECEIVE_HEADER:
 		{
+			if (serial.available() < sizeof(wire_msg_header)) {
+				return handle_incoming_data_result::INCOMPLETE;
+			}
+
 			const wire_msg_header header = { .type = uint8_t(serial.peek()) };
 
 			const auto msg_type = header.type;
 			logging::log_wire_msg_type(msg_type, F("Received"));
 
 			const auto msg_payload_size = wire_msg_payload_size(msg_type);
-			if (msg_payload_size != 0) {
-				_message_reception_state(message_reception_state::RECEIVE_PAYLOAD);
-				/*
-				 * Keep the payload and the header's type byte which will allow
-				 * us to dispatch the message.
-				 */
-				_payload_bytes_to_receive = msg_payload_size + 1;
-			} else {
-				// This is a payload-less message; it is ready for consumption.
-				_message_reception_state(
-					message_reception_state::RECEIVE_MAGIC_BYTE_1);
-				return handle_incoming_data_result::COMPLETE;
-			}
+			_message_reception_state(message_reception_state::RECEIVE_PAYLOAD);
+			/*
+			 * Keep the payload and the header's type byte which will allow
+			 * us to dispatch the message, and the checksym, which will allow us
+			 * to validate the message.
+			 */
+			_payload_bytes_to_receive = msg_payload_size + sizeof(header);
 
 			break;
 		}
@@ -893,11 +908,25 @@ void nc::network_handler::_run_wire_protocol(ns::absolute_time_ms current_time_m
 
 		// A complete message is available.
 		const uint8_t message_type = uint8_t(listening_serial.read());
+		const uint16_t checksum = uint16_t(listening_serial.read()) |
+			uint16_t(listening_serial.read()) << 8;
 		const auto payload_size = wire_msg_payload_size(message_type);
 
-		uint8_t message_buffer[nsec::config::communication::protocol_max_message_size];
+		uint8_t message_buffer[nsec::config::communication::protocol_max_message_size -
+				       sizeof(wire_msg_header)];
 		if (payload_size != 0) {
 			listening_serial.readBytes(message_buffer, payload_size);
+		}
+
+		// Validate checksum
+		fletcher16_checksumer checksummer;
+		checksummer.push(message_type);
+		for (uint8_t i = 0; i < payload_size; i++) {
+			checksummer.push(message_buffer[i]);
+		}
+
+		if (checksum != checksummer.checksum()) {
+			Serial.println(F("Checksum failed"));
 		}
 
 		if (_wire_protocol_state() == wire_protocol_state::DISCOVERY) {

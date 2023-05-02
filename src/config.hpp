@@ -51,8 +51,8 @@ constexpr uint8_t scroll_pixels_per_second = 80;
 } // namespace nsec::config::display
 
 namespace nsec::config::communication {
-// Size reserved for protocol messages (without any encryption/signing overhead)
-constexpr size_t protocol_max_message_size = 16;
+// Size reserved for protocol messages
+constexpr size_t protocol_max_message_size = 20;
 constexpr unsigned int software_serial_speed = 38400;
 /*
 * Applications may define messages >= application_message_type_range_begin.
