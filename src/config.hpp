@@ -8,8 +8,9 @@
 #define NSEC_CONFIG_HPP
 
 #include "board.hpp"
-#include "scheduler.hpp"
+#include "time.hpp"
 
+#include <stddef.h>
 #include <stdint.h>
 
 namespace nsec::config::scheduler {

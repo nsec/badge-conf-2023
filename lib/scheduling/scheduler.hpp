@@ -13,11 +13,9 @@
 #define NSEC_SCHEDULING_SCHEDULER_HPP
 
 #include <stddef.h>
+#include "time.hpp"
 
 namespace nsec::scheduling {
-
-using absolute_time_ms = unsigned long;
-using relative_time_ms = unsigned long;
 
 template <unsigned int>
 class scheduler;
