@@ -22,21 +22,20 @@ enum class event { UP, DOWN, DOWN_REPEAT };
  */
 class new_button_event_notifier {
 public:
-	using new_button_event_cb = void (*)(id id, event event, void *data);
+	using new_button_event_cb = void (*)(id id, event event);
 
-	new_button_event_notifier(new_button_event_cb function, void *data) noexcept :
-		_function{ function }, _user_data{ data }
+	explicit new_button_event_notifier(new_button_event_cb function) noexcept :
+		_function{ function }
 	{
 	}
 
 	void operator()(id id, event event) const
 	{
-		_function(id, event, _user_data);
+		_function(id, event);
 	}
 
 private:
 	new_button_event_cb _function;
-	void *_user_data;
 };
 
 /*

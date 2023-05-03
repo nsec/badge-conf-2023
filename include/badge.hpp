@@ -8,14 +8,17 @@
 #define NSEC_RUNTIME_BADGE_HPP
 
 #include "button/watcher.hpp"
+#include "config.hpp"
 #include "display/idle.hpp"
+#include "display/menu/main_menu_choices.hpp"
+#include "display/menu/menu.hpp"
 #include "display/renderer.hpp"
 #include "display/screen.hpp"
-#include "display/menu/menu.hpp"
-#include "display/menu/main_menu_choices.hpp"
+#include "display/scroll.hpp"
+#include "display/splash.hpp"
 #include "display/string_property_editor.hpp"
 #include "led/strip_animator.hpp"
-#include "config.hpp"
+#include "network/network_handler.hpp"
 
 namespace nsec::runtime {
 
@@ -36,28 +39,41 @@ public:
 	// Setup hardware.
 	void setup();
 
+	void relase_focus_current_screen() noexcept;
+
 private:
 	// Handle new button event
 	void on_button_event(button::id button, button::event event) noexcept;
-	void set_social_level(uint8_t new_level);
-	void relase_focus_current_screen() noexcept;
+	void set_social_level(uint8_t new_level) noexcept;
+
 	void set_focused_screen(display::screen& focused_screen) noexcept;
 
-	uint8_t _social_level;
+	void on_pairing_begin() noexcept;
+	void on_pairing_end(unsigned int our_peer_id) noexcept;
+	void on_message_received(communication::peer_relative_position relative_position,
+				 communication::message::type message_type,
+				 uint8_t *message) noexcept;
+
+	uint8_t _social_level : 7;
+	uint8_t _button_had_non_repeat_event_since_screen_focus_change;
 	char _user_name[nsec::config::user::name_max_length];
 
 	button::watcher _button_watcher;
-	uint8_t _button_had_non_repeat_event_since_screen_focus_change;
 
 	// screens
 	display::idle_screen _idle_screen;
 	display::menu_screen _menu_screen;
 	display::string_property_editor_screen _string_property_edit_screen;
+	display::splash_screen _splash_screen;
+	display::scroll_screen _scroll_screen;
 	display::screen *_focused_screen;
 
 	// displays
 	led::strip_animator _strip_animator;
 	display::renderer _renderer;
+
+	// network
+	communication::network_handler _network_handler;
 
 	// menu choices
 	display::main_menu_choices _main_menu_choices;

@@ -49,17 +49,39 @@ char cycle_character(char current_character, cycle_character_direction direction
 	return current_character;
 }
 
+void replace_nulls_by_spaces(char *property, uint8_t property_size)
+{
+	bool found_null = false;
+
+	for (uint8_t i = 0; i < property_size; i++) {
+		found_null |= property[i] == '\0';
+		if (found_null) {
+			property[i] = ' ';
+			continue;
+		}
+	}
+}
+
 void delete_character(char *str)
 {
 	while (*str != '\0') {
 		*str = *(str + 1);
 		str++;
 	}
+
+	*(str - 1) = ' ';
+}
+
+[[maybe_unused]] void print_property(const char *property)
+{
+	Serial.print(F("String property is: ["));
+	Serial.print(property);
+	Serial.println(F("]"));
 }
 } // anonymous namespace
 
 nd::string_property_editor_screen::prompt_cycle_task::prompt_cycle_task(
-	const nsec::callback& action) :
+	const nsec::callback<void>& action) :
 	ns::periodic_task(config::display::prompt_cycle_time), _run{ action }
 {
 }
@@ -70,9 +92,8 @@ void nd::string_property_editor_screen::prompt_cycle_task::run(
 	_run();
 }
 
-nd::string_property_editor_screen::string_property_editor_screen(
-	const screen::release_focus_notifier& release_focus_notifier) noexcept :
-	screen(release_focus_notifier),
+nd::string_property_editor_screen::string_property_editor_screen() noexcept :
+	screen(),
 	_prompt{ nullptr },
 	_property{},
 	_focused_character{ 0 },
@@ -187,8 +208,8 @@ void nd::string_property_editor_screen::_render(scheduling::absolute_time_ms cur
 	canvas.setTextColor(SSD1306_WHITE, SSD1306_BLACK);
 
 	// draw right arrow
-	if (static_cast<unsigned int>(_first_drawn_character + _edit_characters_per_screen) <
-	    _property.size - 1) {
+	if (static_cast<uint8_t>(_first_drawn_character + _edit_characters_per_screen) <
+	    static_cast<uint8_t>(_property.size - 1)) {
 		ndu::draw_arrow_glyph(canvas,
 				      (_edit_character_width * _edit_characters_per_screen) +
 					      _edit_character_x_offset,
@@ -213,22 +234,13 @@ void nd::string_property_editor_screen::_render(scheduling::absolute_time_ms cur
 
 void nd::string_property_editor_screen::set_property(const __FlashStringHelper *prompt,
 						     char *property,
-						     size_t property_size) noexcept
+						     uint8_t property_size) noexcept
 {
 	_prompt = prompt;
 	_property = { property, property_size };
 
-	bool found_null = false;
-
 	// Convert tail end of string property to spaces instead of nulls.
-	for (size_t i = 0; i < property_size; i++) {
-		found_null |= property[i] == '\0';
-		if (found_null) {
-			property[i] = ' ';
-			continue;
-		}
-	}
-
+	replace_nulls_by_spaces(property, property_size);
 	property[property_size - 1] = '\0';
 }
 
@@ -240,13 +252,17 @@ void nd::string_property_editor_screen::focused() noexcept
 
 void nd::string_property_editor_screen::clean_up_property() noexcept
 {
-	for (size_t i = _property.size - 1; i >= 0; i--) {
+	int i = _property.size - 1;
+
+	while (i-- > 0) {
 		if (_property.value[i] == ' ') {
 			_property.value[i] = '\0';
 		} else {
 			break;
 		}
 	}
+
+	print_property(_property.value);
 }
 
 void nd::string_property_editor_screen::_initialize_layout(Adafruit_SSD1306& canvas) noexcept

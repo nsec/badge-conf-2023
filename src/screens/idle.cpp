@@ -5,6 +5,7 @@
  */
 
 #include "display/idle.hpp"
+#include "display/utils.hpp"
 
 namespace nd = nsec::display;
 namespace nb = nsec::button;
@@ -14,9 +15,8 @@ constexpr auto min_velocity = 1;
 constexpr auto max_velocity = 4;
 constexpr auto max_text_length = 32;
 
-nd::idle_screen::idle_screen(const screen::release_focus_notifier& release_focus_notifier) noexcept
-	:
-	screen(release_focus_notifier),
+nd::idle_screen::idle_screen() noexcept :
+	screen(),
 	_pos_x{ 0 },
 	_pos_y{ 0 },
 	_text_width{ 0 },
@@ -41,7 +41,7 @@ void nd::idle_screen::randomize_velocity() noexcept
 }
 
 void nd::idle_screen::_render(scheduling::absolute_time_ms current_time_ms,
-			     Adafruit_SSD1306& canvas) noexcept
+			      Adafruit_SSD1306& canvas) noexcept
 {
 	const auto text = F("nsec.io");
 	const auto x_increment = _moving_right ? _velocity_x : -_velocity_x;
@@ -79,7 +79,7 @@ void nd::idle_screen::_render(scheduling::absolute_time_ms current_time_ms,
 	canvas.setTextColor(SSD1306_WHITE, SSD1306_BLACK);
 	canvas.setTextWrap(false);
 	canvas.setTextSize(text_size);
-	canvas.print(text);
+	nd::utils::draw_string(canvas, text, 10, false);
 
 	_pos_x += x_increment;
 	_pos_y += y_increment;

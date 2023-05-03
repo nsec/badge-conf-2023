@@ -13,6 +13,8 @@
 
 namespace nr = nsec::runtime;
 namespace nd = nsec::display;
+namespace nc = nsec::communication;
+namespace nb = nsec::button;
 
 namespace {
 const char set_name_prompt[] PROGMEM = "Enter your name";
@@ -25,31 +27,33 @@ const __FlashStringHelper *as_flash_string(const char *str)
 
 nr::badge::badge() :
 	_user_name{ "Kassandra Lapointe-Chagnon" },
-	_button_watcher{ { [](nsec::button::id id, nsec::button::event event, void *data) {
-				  auto *badge = reinterpret_cast<class badge *>(data);
-
-				  badge->on_button_event(id, event);
-			  },
-			   this } },
-	_idle_screen{ { [](void *data) {
-			       auto *badge = reinterpret_cast<class badge *>(data);
-
-			       badge->relase_focus_current_screen();
-		       },
-			this } },
-	_menu_screen{ { [](void *data) {
-			       auto *badge = reinterpret_cast<class badge *>(data);
-
-			       badge->relase_focus_current_screen();
-		       },
-			this } },
-	_string_property_edit_screen{ { [](void *data) {
-					       auto *badge = reinterpret_cast<class badge *>(data);
-
-					       badge->relase_focus_current_screen();
-				       },
-					this } },
+	_button_watcher(
+		nb::new_button_event_notifier{ [](nsec::button::id id, nsec::button::event event) {
+			nsec::g::the_badge.on_button_event(id, event);
+		} }),
 	_renderer{ &_focused_screen },
+	_network_handler{ { [](void *data) {
+				   auto *badge = reinterpret_cast<class badge *>(data);
+
+				   badge->on_pairing_begin();
+			   },
+			    this },
+			  { [](void *data, unsigned int id) {
+				   auto *badge = reinterpret_cast<class badge *>(data);
+
+				   badge->on_pairing_end(id);
+			   },
+			    this },
+			  { [](void *data,
+			       communication::peer_relative_position relative_position,
+			       communication::message::type message_type,
+			       uint8_t *message) {
+				   auto *badge = reinterpret_cast<class badge *>(data);
+
+				   badge->on_message_received(
+					   relative_position, message_type, message);
+			   },
+			    this } },
 	_main_menu_choices{ { [](void *data) {
 				     auto *badge = reinterpret_cast<class badge *>(data);
 
@@ -61,7 +65,7 @@ nr::badge::badge() :
 			     },
 			      this } }
 {
-	set_focused_screen(_idle_screen);
+	set_focused_screen(_splash_screen);
 }
 
 void nr::badge::setup()
@@ -144,19 +148,29 @@ void nr::badge::set_focused_screen(nd::screen& newly_focused_screen) noexcept
 
 void nr::badge::relase_focus_current_screen() noexcept
 {
-	Serial.println("relase_focus_current_screen");
-	if (_focused_screen == &_idle_screen || _focused_screen == &_string_property_edit_screen) {
-		// if (_focused_screen == &_idle_screen) {
-		Serial.println("setting menu screen focus");
-
+	if (_focused_screen == &_menu_screen) {
+		_scroll_screen.set_property(_user_name);
+		set_focused_screen(_scroll_screen);
+	} else {
 		if (_focused_screen == &_string_property_edit_screen) {
-			//_string_property_edit_screen.clean_up_property();
+			_string_property_edit_screen.clean_up_property();
 		}
 
 		_menu_screen.set_choices(_main_menu_choices);
 		set_focused_screen(_menu_screen);
-	} else if (_focused_screen == &_menu_screen) {
-		Serial.println("setting idle screen focus");
-		set_focused_screen(_idle_screen);
 	}
+}
+
+void nr::badge::on_pairing_begin() noexcept
+{
+}
+
+void nr::badge::on_pairing_end(unsigned int our_peer_id) noexcept
+{
+}
+
+void nr::badge::on_message_received(nc::peer_relative_position relative_position,
+				    communication::message::type message_type,
+				    uint8_t *message) noexcept
+{
 }

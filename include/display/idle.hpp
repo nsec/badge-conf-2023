@@ -13,7 +13,7 @@ namespace nsec::display {
 
 class idle_screen : public screen {
 public:
-	explicit idle_screen(const screen::release_focus_notifier& release_focus_notifier) noexcept;
+	explicit idle_screen() noexcept;
 
 	/* Deactivate copy and assignment. */
 	idle_screen(const idle_screen&) = delete;

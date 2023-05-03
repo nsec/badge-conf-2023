@@ -9,10 +9,9 @@
 
 #include "../board.hpp"
 #include "../button/watcher.hpp"
+#include "Adafruit_SSD1306/Adafruit_SSD1306.h"
 #include "callback.hpp"
 #include "scheduler.hpp"
-
-#include <Adafruit_SSD1306.h>
 
 namespace nsec::display {
 
@@ -21,14 +20,11 @@ using pixel_dimension = uint8_t;
 class screen {
 public:
 	// Callable that will be invoked when a focused screen wishes to relinquish the focus.
-	using release_focus_notifier = nsec::callback;
+	using release_focus_notifier = nsec::callback<void>;
 	// Callable that will be invoked when a focused screen is damaged and should be re-rendered.
-	using damage_notifier = nsec::callback;
+	using damage_notifier = nsec::callback<void>;
 
-	explicit screen(const release_focus_notifier& release_focus_notifier) noexcept :
-		_release_focus{ release_focus_notifier }
-	{
-	}
+	explicit screen() noexcept;
 
 	// Deactivate copy and assignment.
 	screen(const screen&) = delete;
@@ -58,6 +54,11 @@ public:
 		_render(current_time_ms, canvas);
 	}
 
+	bool cleared_on_every_frame() const noexcept
+	{
+		return _cleared_on_every_frame;
+	}
+
 protected:
 	// Rendering method implemented by derived classes
 	virtual void _render(scheduling::absolute_time_ms current_time_ms,
@@ -79,9 +80,11 @@ protected:
 		_is_damaged = true;
 	}
 
-	release_focus_notifier _release_focus;
+	void _release_focus() noexcept;
+
 	// A screen is only redrawn if it is damaged
 	bool _is_damaged : 1;
+	bool _cleared_on_every_frame : 1;
 };
 } // namespace nsec::display
 

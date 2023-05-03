@@ -18,7 +18,7 @@ public:
 	public:
 		class choice {
 		public:
-			using menu_choice_action = nsec::callback;
+			using menu_choice_action = nsec::callback<void>;
 
 			choice(const __FlashStringHelper *name, const menu_choice_action& action) :
 				name{ name }, _action{ action }
@@ -56,7 +56,7 @@ public:
 		virtual const choice& operator[](unsigned int) const noexcept = 0;
 	};
 
-	explicit menu_screen(const screen::release_focus_notifier& release_focus_notifier) noexcept;
+	explicit menu_screen() noexcept;
 
 	/* Deactivate copy and assignment. */
 	menu_screen(const menu_screen&) = delete;

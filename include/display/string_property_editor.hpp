@@ -15,8 +15,7 @@ namespace nsec::display {
 
 class string_property_editor_screen : public screen {
 public:
-	explicit string_property_editor_screen(
-		const screen::release_focus_notifier& release_focus_notifier) noexcept;
+	explicit string_property_editor_screen() noexcept;
 
 	/* Deactivate copy and assignment. */
 	string_property_editor_screen(const string_property_editor_screen&) = delete;
@@ -31,12 +30,12 @@ public:
 
 	void set_property(const __FlashStringHelper *prompt,
 			  char *property,
-			  size_t property_size) noexcept;
+			  uint8_t property_size) noexcept;
 
 	void focused() noexcept override;
 
 	// Clean-up the current property (make it null-terminated).
-	void clean_up_property();
+	void clean_up_property() noexcept;
 
 private:
 	enum class move_direction { LEFT, RIGHT };
@@ -49,11 +48,11 @@ private:
 
 	class prompt_cycle_task : public nsec::scheduling::periodic_task {
 	public:
-		explicit prompt_cycle_task(const nsec::callback& action);
+		explicit prompt_cycle_task(const nsec::callback<void>& action);
 		void run(nsec::scheduling::absolute_time_ms current_time) noexcept override;
 
 	private:
-		nsec::callback _run;
+		nsec::callback<void> _run;
 	};
 
 	void _initialize_layout(Adafruit_SSD1306& canvas) noexcept;
@@ -64,7 +63,7 @@ private:
 	const __FlashStringHelper *_prompt;
 	struct {
 		char *value;
-		size_t size;
+		uint8_t size;
 	} _property;
 
 	uint8_t _focused_character;
