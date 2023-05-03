@@ -66,19 +66,38 @@ private:
 		MIDDLE = 0b11
 	};
 	enum class wire_protocol_state {
-		UNCONNECTED = 0,
-		/* Wait for boards to listen before left-most initiates the discovery. */
-		WAIT_TO_SEND_ANNOUNCE = 1,
-		/* Discover neighbours, establish peer count, and peer id. */
-		DISCOVERY = 2,
-		/* Application controlled with automatic monitoring. */
-		RUNNING = 3,
+		UNCONNECTED,
+		/* Wait for boards to listen before left-most node initiates the discovery. */
+		WAIT_TO_INITIATE_DISCOVERY,
+		INITIATE_DISCOVERY,
+		SEND_MONITOR_AFTER_INITIAL_ANNOUNCE,
+		/* Discover left neighbours. */
+		DISCOVERY_RECEIVE_ANNOUNCE,
+		DISCOVERY_RECEIVE_MONITOR_AFTER_ANNOUNCE,
+		DISCOVERY_SEND_ANNOUNCE,
+		DISCOVERY_SEND_MONITOR_AFTER_ANNOUNCE,
+		DISCOVERY_RECEIVE_ANNOUNCE_REPLY,
+		DISCOVERY_RECEIVE_MONITOR_AFTER_ANNOUNCE_REPLY,
+		DISCOVERY_SEND_ANNOUNCE_REPLY,
+		DISCOVERY_SEND_MONITOR_AFTER_ANNOUNCE_REPLY,
+		/* Waiting for messages and forwarding as needed. */
+		RUNNING_RECEIVE_MESSAGE,
+		RUNNING_SEND_MESSAGE,
+		RUNNING_SEND_APP_MESSAGE,
+		RUNNING_SEND_MONITOR,
+
 	};
 	enum class message_reception_state {
 		RECEIVE_MAGIC_BYTE_1,
 		RECEIVE_MAGIC_BYTE_2,
 		RECEIVE_HEADER,
 		RECEIVE_PAYLOAD,
+	};
+	enum class message_transmission_state {
+		NONE,
+		ATTEMPT_SEND,
+		// On timeout, retransmit
+		WAIT_CONFIRMATION,
 	};
 
 	link_position _position() const noexcept;
@@ -99,10 +118,13 @@ private:
 	message_reception_state _message_reception_state() const noexcept;
 	void _message_reception_state(message_reception_state new_state) noexcept;
 
-	peer_relative_position _pending_outgoing_message_direction() const noexcept;
-	uint8_t _pending_outgoing_message_size() const noexcept;
-	bool _has_pending_outgoing_message() const noexcept;
-	void _clear_pending_outgoing_message() noexcept;
+	message_transmission_state _message_transmission_state() const noexcept;
+	void _message_transmission_state(message_transmission_state new_state) noexcept;
+
+	peer_relative_position _pending_outgoing_app_message_direction() const noexcept;
+	uint8_t _pending_outgoing_app_message_size() const noexcept;
+	bool _has_pending_outgoing_app_message() const noexcept;
+	void _clear_pending_outgoing_app_message() noexcept;
 
 	enum class check_connections_result {
 		NO_CHANGE,
@@ -112,39 +134,25 @@ private:
 
 	void _detect_and_set_position() noexcept;
 	void _run_wire_protocol(nsec::scheduling::absolute_time_ms current_time_ms) noexcept;
-	void _handle_monitor_message(scheduling::absolute_time_ms current_time_ms) noexcept;
 	void _reset() noexcept;
 
 	bool _sense_is_left_connected() const noexcept;
 	bool _sense_is_right_connected() const noexcept;
 
-	enum class handle_message_result {
-		SWALLOW = int(application_message_action::SWALLOW),
-		FORWARD = int(application_message_action::FORWARD),
-		RESET,
-		SEND_ANNOUNCE,
-		SEND_ANNOUNCE_REPLY,
-		// Neighbor handed the talking stick to us.
-		END_OF_PEER_TURN,
-	};
-
-	void _wire_protocol_discovery_handle_message(
-		uint8_t type,
-		const uint8_t *msg,
-		scheduling::absolute_time_ms current_time_ms) noexcept;
-	void _wire_protocol_running_handle_message(
-		uint8_t type,
-		const uint8_t *msg,
-		scheduling::absolute_time_ms current_time_ms) noexcept;
-
-	enum class handle_incoming_data_result {
+	enum class handle_reception_result {
 		INCOMPLETE,
 		COMPLETE,
+		CORRUPTED,
 	};
-	handle_incoming_data_result _handle_incoming_data(SoftwareSerial&) noexcept;
+	handle_reception_result _handle_reception(SoftwareSerial&,
+						  uint8_t& message_type,
+						  uint8_t *message_payload) noexcept;
 
+	static bool _is_wire_protocol_in_a_reception_state(wire_protocol_state state) noexcept;
+	static bool _is_wire_protocol_in_a_running_state(wire_protocol_state state) noexcept;
 	static void _log_wire_protocol_state(wire_protocol_state state) noexcept;
 	static void _log_message_reception_state(message_reception_state state) noexcept;
+	static void _log_message_transmission_state(message_transmission_state state) noexcept;
 
 	// Event handlers
 	disconnection_notifier _notify_unconnected;
@@ -154,7 +162,7 @@ private:
 
 	SoftwareSerial _left_serial;
 	SoftwareSerial _right_serial;
-	nsec::scheduling::absolute_time_ms _last_monitor_message_received_time_ms;
+	nsec::scheduling::absolute_time_ms _last_message_received_time_ms;
 
 	uint8_t _is_left_connected : 1;
 	uint8_t _is_right_connected : 1;
@@ -162,11 +170,11 @@ private:
 	// Storage for a link_position enum
 	uint8_t _current_position : 2;
 	// Storage for a wire_protocol_state enum
-	uint8_t _current_wire_protocol_state : 2;
+	uint8_t _current_wire_protocol_state : 4;
 	// Storage for a peer_relative_location enum. Indicates the direction of the
 	// wave front by the time we get the next message.
 	uint8_t _current_wave_front_direction : 1;
-	// Number of ticks in the current wire protocol state (only used by the wait state).
+	// Number of ticks in the current wire protocol states (used by states that need to wait).
 	uint8_t _ticks_in_wire_state : 2;
 	// Storage for a peer_relative_location enum
 	uint8_t _current_listening_side : 1;
@@ -177,17 +185,25 @@ private:
 	uint8_t _peer_count : 5;
 
 	// Storage for a message_reception_state enum
-	uint8_t _current_message_reception_state : 2;
+	uint8_t _current_message_reception_state : 3;
 	// Number of bytes left to receive for the current message
 	uint8_t _payload_bytes_to_receive : 5;
+	// Storage for a message_transmission_state enum
+	uint8_t _current_message_transmission_state : 2;
+	uint8_t _message_being_sent_size : 5;
 
+	// App-level enqueued message
 	// Storage for a peer_relative_location enum
-	uint8_t _current_pending_outgoing_message_direction : 1;
-	uint8_t _current_pending_outgoing_message_size : 5;
+	uint8_t _current_pending_outgoing_app_message_direction : 1;
+	uint8_t _current_pending_outgoing_app_message_size : 5;
 	// Buffered outgoing message type and payload.
-	uint8_t _current_pending_outgoing_message_type : 5;
-	uint8_t _current_pending_outgoing_message_payload
+	uint8_t _current_pending_outgoing_app_message_type : 5;
+
+	uint8_t _current_pending_outgoing_app_message_payload
 		[nsec::config::communication::protocol_max_message_size];
+
+	// Message currently being sent and potentially retransmitted.
+	uint8_t _message_being_sent[nsec::config::communication::protocol_max_message_size];
 };
 } // namespace nsec::communication
 

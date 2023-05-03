@@ -69,7 +69,7 @@ constexpr unsigned int serial_tx_pin_left = SIG_L2;
 constexpr unsigned int serial_rx_pin_right = SIG_R2;
 constexpr unsigned int serial_tx_pin_right = SIG_R1;
 
-constexpr nsec::scheduling::relative_time_ms network_handler_base_period_ms = 100;
+constexpr nsec::scheduling::relative_time_ms network_handler_base_period_ms = 1000;
 constexpr nsec::scheduling::relative_time_ms network_handler_timeout_ms = 15000;
 
 } // namespace nsec::communication

@@ -9,7 +9,7 @@
 #include "globals.hpp"
 #include "network/network_handler.hpp"
 
-#define NETWORK_VERBOSE_LOG 0
+#define NETWORK_VERBOSE_LOG 1
 
 namespace ns = nsec::scheduling;
 namespace nc = nsec::communication;
@@ -22,6 +22,7 @@ enum class wire_msg_type : uint8_t {
 	RESET = 4,
 	ANNOUNCE = 5,
 	ANNOUNCE_REPLY = 6,
+	OK = 7,
 
 	// Application messages (forwarded to the application layer)
 	// ...
@@ -36,16 +37,16 @@ const char right_str[] PROGMEM = "right";
 const char unknown_str[] PROGMEM = "UNKNOWN";
 const char unconnected_str[] PROGMEM = "UNCONNECTED";
 
-// Wire protocol states
-const char wait_to_send_announce_str[] PROGMEM = "WAIT_TO_SEND_ANNOUNCE";
-const char discovery_str[] PROGMEM = "DISCOVERY";
-const char running_str[] PROGMEM = "RUNNING";
-
 // Message reception states
 const char magic_byte_1_str[] PROGMEM = "RECEIVE_MAGIC_BYTE_1";
 const char magic_byte_2_str[] PROGMEM = "RECEIVE_MAGIC_BYTE_2";
 const char receive_header_str[] PROGMEM = "RECEIVE_HEADER";
 const char receive_payload_str[] PROGMEM = "RECEIVE_PAYLOAD";
+
+// Message transmission state
+const char none_str[] PROGMEM = "NONE";
+const char attempt_send_str[] PROGMEM = "ATTEMPT_SEND";
+const char wait_confirmation_str[] PROGMEM = "WAIT_CONFIRMATION";
 
 // Wire message types
 const char monitor_str[] PROGMEM = "MONITOR";
@@ -335,25 +336,39 @@ nc::network_handler::link_position nc::network_handler::_position() const noexce
 #if NETWORK_VERBOSE_LOG == 1
 void nc::network_handler::_log_wire_protocol_state(wire_protocol_state state) noexcept
 {
-	const __FlashStringHelper *str;
+	const __FlashStringHelper *state_name_str[] = {
+		[uint8_t(wire_protocol_state::UNCONNECTED)] = F("UNCONNECTED"),
+		[uint8_t(wire_protocol_state::WAIT_TO_INITIATE_DISCOVERY)] =
+			F("WAIT_TO_INITIATE_DISCOVERY"),
+		[uint8_t(wire_protocol_state::INITIATE_DISCOVERY)] = F("INITIATE_DISCOVERY"),
+		[uint8_t(wire_protocol_state::SEND_MONITOR_AFTER_INITIAL_ANNOUNCE)] =
+			F("SEND_MONITOR_AFTER_INITIAL_ANNOUNCE"),
+		[uint8_t(wire_protocol_state::DISCOVERY_RECEIVE_ANNOUNCE)] =
+			F("DISCOVERY_RECEIVE_ANNOUNCE"),
+		[uint8_t(wire_protocol_state::DISCOVERY_RECEIVE_MONITOR_AFTER_ANNOUNCE)] =
+			F("DISCOVERY_RECEIVE_MONITOR_AFTER_ANNOUNCE"),
+		[uint8_t(wire_protocol_state::DISCOVERY_SEND_ANNOUNCE)] =
+			F("DISCOVERY_SEND_ANNOUNCE"),
+		[uint8_t(wire_protocol_state::DISCOVERY_SEND_MONITOR_AFTER_ANNOUNCE)] =
+			F("DISCOVERY_SEND_MONITOR_AFTER_ANNOUNCE"),
+		[uint8_t(wire_protocol_state::DISCOVERY_RECEIVE_ANNOUNCE_REPLY)] =
+			F("DISCOVERY_RECEIVE_ANNOUNCE_REPLY"),
+		[uint8_t(wire_protocol_state::DISCOVERY_RECEIVE_MONITOR_AFTER_ANNOUNCE_REPLY)] =
+			F("DISCOVERY_RECEIVE_MONITOR_AFTER_ANNOUNCE_REPLY"),
+		[uint8_t(wire_protocol_state::DISCOVERY_SEND_ANNOUNCE_REPLY)] =
+			F("DISCOVERY_SEND_ANNOUNCE_REPLY"),
+		[uint8_t(wire_protocol_state::DISCOVERY_SEND_MONITOR_AFTER_ANNOUNCE_REPLY)] =
+			F("DISCOVERY_SEND_MONITOR_AFTER_ANNOUNCE_REPLY"),
+		[uint8_t(wire_protocol_state::RUNNING_RECEIVE_MESSAGE)] =
+			F("RUNNING_RECEIVE_MESSAGE"),
+		[uint8_t(wire_protocol_state::RUNNING_SEND_MESSAGE)] = F("RUNNING_SEND_MESSAGE"),
+		[uint8_t(wire_protocol_state::RUNNING_SEND_APP_MESSAGE)] =
+			F("RUNNING_SEND_APP_MESSAGE"),
+		[uint8_t(wire_protocol_state::RUNNING_SEND_MONITOR)] = F("RUNNING_SEND_MONITOR"),
+	};
 
 	Serial.print(F("Protocol state: "));
-	switch (state) {
-	case wire_protocol_state::UNCONNECTED:
-		str = logging::as_flash_string(logging::unconnected_str);
-		break;
-	case wire_protocol_state::WAIT_TO_SEND_ANNOUNCE:
-		str = logging::as_flash_string(logging::wait_to_send_announce_str);
-		break;
-	case wire_protocol_state::DISCOVERY:
-		str = logging::as_flash_string(logging::discovery_str);
-		break;
-	case wire_protocol_state::RUNNING:
-		str = logging::as_flash_string(logging::running_str);
-		break;
-	}
-
-	Serial.println(str);
+	Serial.println(state_name_str[uint8_t(state)]);
 }
 
 void nc::network_handler::_log_message_reception_state(message_reception_state state) noexcept
@@ -378,6 +393,26 @@ void nc::network_handler::_log_message_reception_state(message_reception_state s
 
 	Serial.println(str);
 }
+
+void nc::network_handler::_log_message_transmission_state(message_transmission_state state) noexcept
+{
+	const __FlashStringHelper *str;
+
+	Serial.print(F("Msg transmission state: "));
+	switch (state) {
+	case message_transmission_state::NONE:
+		str = logging::as_flash_string(logging::none_str);
+		break;
+	case message_transmission_state::ATTEMPT_SEND:
+		str = logging::as_flash_string(logging::attempt_send_str);
+		break;
+	case message_transmission_state::WAIT_CONFIRMATION:
+		str = logging::as_flash_string(logging::wait_confirmation_str);
+		break;
+	}
+
+	Serial.println(str);
+}
 #else /* NETWORK_VERBOSE_LOG */
 void nc::network_handler::_log_wire_protocol_state(wire_protocol_state state) noexcept
 {
@@ -385,15 +420,14 @@ void nc::network_handler::_log_wire_protocol_state(wire_protocol_state state) no
 void nc::network_handler::_log_message_reception_state(message_reception_state state) noexcept
 {
 }
+void nc::network_handler::_log_message_transmission_state(message_transmission_state state) noexcept
+{
+}
 #endif
 
 void nc::network_handler::_reset() noexcept
 {
 	logging::log_network_reset();
-
-	if (_wire_protocol_state() != wire_protocol_state::UNCONNECTED) {
-		send_wire_reset_msg(_listening_side_serial());
-	}
 
 	_position(link_position::UNKNOWN);
 	_wire_protocol_state(wire_protocol_state::UNCONNECTED);
@@ -424,6 +458,23 @@ nc::network_handler::check_connections_result nc::network_handler::_check_connec
 
 	if (!topology_changed) {
 		return check_connections_result::NO_CHANGE;
+	} else {
+		SoftwareSerial *destination_serial;
+		switch (_position()) {
+		case link_position::LEFT_MOST:
+			destination_serial = &_right_serial;
+			break;
+		case link_position::RIGHT_MOST:
+			destination_serial = &_left_serial;
+			break;
+		default:
+			destination_serial = nullptr;
+		}
+
+		if (_wire_protocol_state() != wire_protocol_state::UNCONNECTED && destination_serial) {
+			// Bypass the "send" state machine since this is just a hint to speed up recovery.
+			send_wire_reset_msg(*destination_serial);
+		}		
 	}
 
 	logging::log_connector_states(left_is_connected, right_is_connected);
@@ -445,14 +496,14 @@ void nc::network_handler::_position(link_position new_position) noexcept
 		_listening_side(peer_relative_position::RIGHT);
 		// We are peer 0 (i.e. the left-most node) and will
 		// initiate the discovery.
-		_wire_protocol_state(wire_protocol_state::WAIT_TO_SEND_ANNOUNCE);
+		_wire_protocol_state(wire_protocol_state::WAIT_TO_INITIATE_DISCOVERY);
 		_peer_id = 0;
 		break;
 	case link_position::RIGHT_MOST:
 	case link_position::MIDDLE:
 		// A peer on our left will initiate the discovery: wait for the message.
 		_listening_side(peer_relative_position::LEFT);
-		_wire_protocol_state(wire_protocol_state::DISCOVERY);
+		_wire_protocol_state(wire_protocol_state::DISCOVERY_RECEIVE_ANNOUNCE);
 		break;
 	}
 }
@@ -495,6 +546,14 @@ nc::network_handler::wire_protocol_state nc::network_handler::_wire_protocol_sta
 	return wire_protocol_state(_current_wire_protocol_state);
 }
 
+bool nc::network_handler::_is_wire_protocol_in_a_running_state(wire_protocol_state state) noexcept
+{
+	return state == wire_protocol_state::RUNNING_RECEIVE_MESSAGE ||
+		state == wire_protocol_state::RUNNING_SEND_MESSAGE ||
+		state == wire_protocol_state::RUNNING_SEND_APP_MESSAGE ||
+		state == wire_protocol_state::RUNNING_SEND_MONITOR;
+}
+
 void nc::network_handler::_wire_protocol_state(wire_protocol_state state) noexcept
 {
 	const auto previous_protocol_state = wire_protocol_state(_current_wire_protocol_state);
@@ -502,27 +561,27 @@ void nc::network_handler::_wire_protocol_state(wire_protocol_state state) noexce
 	_current_wire_protocol_state = uint8_t(state);
 	_ticks_in_wire_state = 0;
 	// Reset timeout timestamp.
-	_last_monitor_message_received_time_ms = millis();
+	_last_message_received_time_ms = millis();
 
 	if (previous_protocol_state != _wire_protocol_state()) {
 		// Log the state change.
 		_log_wire_protocol_state(_wire_protocol_state());
 	}
 
-	if (previous_protocol_state == wire_protocol_state::RUNNING &&
+	if (_is_wire_protocol_in_a_running_state(previous_protocol_state) &&
 	    state == wire_protocol_state::UNCONNECTED) {
 		_notify_unconnected();
 	}
 
 	if (state == wire_protocol_state::UNCONNECTED) {
-		_current_pending_outgoing_message_size = 0;
+		_current_pending_outgoing_app_message_size = 0;
 		// We are a sad and lonely node hacking together a network protocol.
 		_peer_count = 1;
 		// Unknown peer id.
 		_peer_id = 0;
 		_wave_front_direction(peer_relative_position::RIGHT);
 		_message_reception_state(message_reception_state::RECEIVE_MAGIC_BYTE_1);
-		_clear_pending_outgoing_message();
+		_clear_pending_outgoing_app_message();
 
 		/* Empty the serial buffers. */
 		while (_left_serial.available()) {
@@ -531,7 +590,11 @@ void nc::network_handler::_wire_protocol_state(wire_protocol_state state) noexce
 		while (_right_serial.available()) {
 			_right_serial.read();
 		}
-	} else if (state == wire_protocol_state::RUNNING) {
+	}
+
+	if (!_is_wire_protocol_in_a_running_state(previous_protocol_state) &&
+	    _is_wire_protocol_in_a_running_state(state)) {
+		// Discovery has completed.
 		_notify_pairing_end(_peer_id, _peer_count);
 	}
 }
@@ -558,24 +621,37 @@ void nc::network_handler::_message_reception_state(message_reception_state new_s
 	_log_message_reception_state(new_state);
 }
 
-nc::peer_relative_position nc::network_handler::_pending_outgoing_message_direction() const noexcept
+nc::network_handler::message_transmission_state
+nc::network_handler::_message_transmission_state() const noexcept
 {
-	return peer_relative_position(_current_pending_outgoing_message_direction);
+	return message_transmission_state(_current_message_transmission_state);
 }
 
-uint8_t nc::network_handler::_pending_outgoing_message_size() const noexcept
+void nc::network_handler::_message_transmission_state(message_transmission_state new_state) noexcept
 {
-	return _current_pending_outgoing_message_size;
+	_current_message_transmission_state = uint8_t(new_state);
+	_log_message_transmission_state(new_state);
 }
 
-bool nc::network_handler::_has_pending_outgoing_message() const noexcept
+nc::peer_relative_position
+nc::network_handler::_pending_outgoing_app_message_direction() const noexcept
 {
-	return _pending_outgoing_message_size();
+	return peer_relative_position(_current_pending_outgoing_app_message_direction);
 }
 
-void nc::network_handler::_clear_pending_outgoing_message() noexcept
+uint8_t nc::network_handler::_pending_outgoing_app_message_size() const noexcept
 {
-	_current_pending_outgoing_message_size = 0;
+	return _current_pending_outgoing_app_message_size;
+}
+
+bool nc::network_handler::_has_pending_outgoing_app_message() const noexcept
+{
+	return _pending_outgoing_app_message_size();
+}
+
+void nc::network_handler::_clear_pending_outgoing_app_message() noexcept
+{
+	_current_pending_outgoing_app_message_size = 0;
 }
 
 SoftwareSerial& nc::network_handler::_listening_side_serial() noexcept
@@ -583,8 +659,8 @@ SoftwareSerial& nc::network_handler::_listening_side_serial() noexcept
 	return _listening_side() == peer_relative_position::LEFT ? _left_serial : _right_serial;
 }
 
-nc::network_handler::handle_incoming_data_result
-nc::network_handler::_handle_incoming_data(SoftwareSerial& serial) noexcept
+nc::network_handler::handle_reception_result nc::network_handler::_handle_reception(
+	SoftwareSerial& serial, uint8_t& message_type, uint8_t *message_payload) noexcept
 {
 	if (serial.overflow()) {
 		logging::log_serial_overflow();
@@ -617,8 +693,8 @@ nc::network_handler::_handle_incoming_data(SoftwareSerial& serial) noexcept
 		}
 		case message_reception_state::RECEIVE_HEADER:
 		{
-			if (serial.available() < sizeof(wire_msg_header)) {
-				return handle_incoming_data_result::INCOMPLETE;
+			if (serial.available() < int(sizeof(wire_msg_header))) {
+				return handle_reception_result::INCOMPLETE;
 			}
 
 			const wire_msg_header header = { .type = uint8_t(serial.peek()) };
@@ -634,122 +710,45 @@ nc::network_handler::_handle_incoming_data(SoftwareSerial& serial) noexcept
 			 * to validate the message.
 			 */
 			_payload_bytes_to_receive = msg_payload_size + sizeof(header);
-
 			break;
 		}
 		case message_reception_state::RECEIVE_PAYLOAD:
 		{
 			if (serial.available() < _payload_bytes_to_receive) {
-				return handle_incoming_data_result::INCOMPLETE;
+				return handle_reception_result::INCOMPLETE;
 			}
 
+			// Get ready to receive the beginning of the next message.
 			_message_reception_state(message_reception_state::RECEIVE_MAGIC_BYTE_1);
-			return handle_incoming_data_result::COMPLETE;
-		}
-		}
-	}
 
-	return handle_incoming_data_result::INCOMPLETE;
-}
+			message_type = uint8_t(serial.read());
+			const uint16_t checksum = uint16_t(serial.read()) |
+				uint16_t(serial.read()) << 8;
+			const auto payload_size = wire_msg_payload_size(message_type);
 
-// Message handler in the "discovery" protocol state.
-void nc::network_handler::_wire_protocol_discovery_handle_message(
-	uint8_t msg_type, const uint8_t *msg_payload, ns::absolute_time_ms current_time_ms) noexcept
-{
-	switch (wire_msg_type(msg_type)) {
-	case wire_msg_type::ANNOUNCE:
-	{
-		if (_wave_front_direction() != peer_relative_position::RIGHT) {
-			// Invalid message, must come from the left.
-			_reset();
-			return;
-		}
-
-		const auto *announce_msg = reinterpret_cast<const wire_msg_announce *>(msg_payload);
-		/*
-		 * Tentative for the moment; confirmed on announce reply of if we are the right-most
-		 * node.
-		 */
-		_peer_id = announce_msg->peer_id + 1;
-		_peer_count = _peer_id + 1;
-
-		/*
-		 * In case this was the last announce message before the monitor message, enqueue
-		 * our own announcement.
-		 */
-		_clear_pending_outgoing_message();
-		enqueue_message_result enqueue_result;
-
-		if (_position() == link_position::MIDDLE) {
-			const wire_msg_announce our_annouce_msg = { .peer_id = _peer_id };
-
-			enqueue_result =
-				enqueue_message(peer_relative_position::RIGHT,
-						uint8_t(wire_msg_type::ANNOUNCE),
-						reinterpret_cast<const uint8_t *>(&our_annouce_msg),
-						sizeof(our_annouce_msg));
-		} else {
-			// We are the right-most node, enqueue the announce reply.
-			const wire_msg_announce_reply announce_reply_msg = { .peer_count =
-										     _peer_count };
-
-			enqueue_result = enqueue_message(
-				peer_relative_position::LEFT,
-				uint8_t(wire_msg_type::ANNOUNCE_REPLY),
-				reinterpret_cast<const uint8_t *>(&announce_reply_msg),
-				sizeof(announce_reply_msg));
-			_wire_protocol_state(wire_protocol_state::RUNNING);
-		}
-
-		if (enqueue_result != enqueue_message_result::QUEUED) {
-			_reset();
-		}
-
-		break;
-	}
-	case wire_msg_type::ANNOUNCE_REPLY:
-	{
-		if (_wave_front_direction() != peer_relative_position::LEFT) {
-			// Invalid message, must come from the right.
-			_reset();
-			return;
-		}
-
-		const auto *announce_reply_msg =
-			reinterpret_cast<const wire_msg_announce_reply *>(msg_payload);
-		if (_peer_id >= announce_reply_msg->peer_count) {
-			// Invalid value.
-			_reset();
-			return;
-		}
-
-		_peer_count = announce_reply_msg->peer_count;
-		_wire_protocol_state(wire_protocol_state::RUNNING);
-
-		if (_position() != link_position::LEFT_MOST) {
-			// Forward the announce reply message and send it when it's our turn to
-			// broadcast.
-			const auto result = enqueue_message(peer_relative_position::LEFT,
-							    uint8_t(wire_msg_type::ANNOUNCE_REPLY),
-							    msg_payload,
-							    sizeof(*announce_reply_msg));
-
-			if (result != enqueue_message_result::QUEUED) {
-				_reset();
+			if (payload_size != 0) {
+				serial.readBytes(message_payload, payload_size);
 			}
-		}
 
-		break;
+			// Validate checksum.
+			fletcher16_checksumer checksummer;
+			checksummer.push(message_type);
+			for (uint8_t i = 0; i < payload_size; i++) {
+				checksummer.push(message_payload[i]);
+			}
+
+			if (checksum != checksummer.checksum()) {
+				Serial.println(F("Checksum failed"));
+			}
+
+			return checksum == checksummer.checksum() ?
+				handle_reception_result::COMPLETE :
+				handle_reception_result::CORRUPTED;
+		}
+		}
 	}
-	case wire_msg_type::MONITOR:
-		_handle_monitor_message(current_time_ms);
-		return;
-	case wire_msg_type::RESET:
-	default:
-		// Invalid message during the discovery state.
-		_reset();
-		return;
-	}
+
+	return handle_reception_result::INCOMPLETE;
 }
 
 nc::network_handler::enqueue_message_result
@@ -758,8 +757,8 @@ nc::network_handler::enqueue_message(peer_relative_position direction,
 				     const uint8_t *msg_payload,
 				     uint8_t payload_size)
 {
-	if (_has_pending_outgoing_message() ||
-	    payload_size > sizeof(_current_pending_outgoing_message_payload)) {
+	if (_has_pending_outgoing_app_message() ||
+	    payload_size > sizeof(_current_pending_outgoing_app_message_payload)) {
 		return enqueue_message_result::FULL;
 	}
 
@@ -772,103 +771,26 @@ nc::network_handler::enqueue_message(peer_relative_position direction,
 		return enqueue_message_result::UNCONNECTED;
 	}
 
-	_current_pending_outgoing_message_direction = uint8_t(direction);
-	_current_pending_outgoing_message_size = payload_size;
-	_current_pending_outgoing_message_type = msg_type;
-	memcpy(_current_pending_outgoing_message_payload, msg_payload, payload_size);
+	_current_pending_outgoing_app_message_direction = uint8_t(direction);
+	_current_pending_outgoing_app_message_size = payload_size;
+	_current_pending_outgoing_app_message_type = msg_type;
+	memcpy(_current_pending_outgoing_app_message_payload, msg_payload, payload_size);
 	return enqueue_message_result::QUEUED;
 }
 
-void nc::network_handler::_handle_monitor_message(ns::absolute_time_ms current_time_ms) noexcept
+bool nc::network_handler::_is_wire_protocol_in_a_reception_state(wire_protocol_state state) noexcept
 {
-	_last_monitor_message_received_time_ms = current_time_ms;
-	SoftwareSerial *destination_serial;
-
-	// Temporary, for debugging purposes.
-	digitalWrite(LED_DBG, HIGH);
-
-	switch (_position()) {
-	case link_position::LEFT_MOST:
-		destination_serial = &_right_serial;
-		_reverse_wave_front_direction();
-		break;
-	case link_position::RIGHT_MOST:
-		destination_serial = &_left_serial;
-		_reverse_wave_front_direction();
-		break;
-	case link_position::MIDDLE:
-		destination_serial = _wave_front_direction() == peer_relative_position::LEFT ?
-			&_left_serial :
-			&_right_serial;
-		_reverse_listening_side();
-	default:
-		// Unreachable.
-		break;
-	}
-
-	if (_has_pending_outgoing_message() &&
-	    _pending_outgoing_message_direction() == _wave_front_direction()) {
-		send_wire_msg(*destination_serial,
-			      _current_pending_outgoing_message_type,
-			      _current_pending_outgoing_message_payload,
-			      _current_pending_outgoing_message_size);
-		_clear_pending_outgoing_message();
-	}
-
-	// We are done broadcasting.
-	send_wire_monitor_msg(*destination_serial);
-
-	if (_position() == link_position::MIDDLE) {
-		// Next message will come from the other side.
-		_reverse_wave_front_direction();
-	}
-}
-
-// Message handler in the "running" protocol state.
-void nc::network_handler::_wire_protocol_running_handle_message(
-	uint8_t msg_type, const uint8_t *msg_payload, ns::absolute_time_ms current_time_ms) noexcept
-{
-	if (msg_type >= nsec::config::communication::application_message_type_range_begin) {
-		// Message targets the application layer.
-		auto message_action = _notify_message_received(
-			nsec::communication::message::type(msg_type), msg_payload);
-		switch (message_action) {
-		case application_message_action::FORWARD:
-		{
-			if (_position() == link_position::MIDDLE) {
-				send_wire_msg(_listening_side() == peer_relative_position::LEFT ?
-						      _right_serial :
-						      _left_serial,
-					      msg_type,
-					      msg_payload,
-					      wire_msg_payload_size(msg_type));
-			}
-
-			break;
-		}
-		case application_message_action::SWALLOW:
-			break;
-		case application_message_action::RESET:
-			send_wire_reset_msg(_listening_side_serial());
-			break;
-		}
-
-	} else {
-		switch (wire_msg_type(msg_type)) {
-		case wire_msg_type::MONITOR:
-			_handle_monitor_message(current_time_ms);
-			return;
-		default:
-			// Invalid message outside of discovery state.
-			_reset();
-		}
-	}
+	return state == wire_protocol_state::DISCOVERY_RECEIVE_ANNOUNCE ||
+		state == wire_protocol_state::DISCOVERY_RECEIVE_MONITOR_AFTER_ANNOUNCE ||
+		state == wire_protocol_state::DISCOVERY_RECEIVE_ANNOUNCE_REPLY ||
+		state == wire_protocol_state::DISCOVERY_RECEIVE_MONITOR_AFTER_ANNOUNCE_REPLY ||
+		state == wire_protocol_state::RUNNING_RECEIVE_MESSAGE;
 }
 
 void nc::network_handler::_run_wire_protocol(ns::absolute_time_ms current_time_ms) noexcept
 {
-	if (_last_monitor_message_received_time_ms < current_time_ms &&
-	    (current_time_ms - _last_monitor_message_received_time_ms) >
+	if (_last_message_received_time_ms < current_time_ms &&
+	    (current_time_ms - _last_message_received_time_ms) >
 		    nsec::config::communication::network_handler_timeout_ms &&
 	    _wire_protocol_state() != wire_protocol_state ::UNCONNECTED) {
 		// No activity for a while... reset.
@@ -877,83 +799,210 @@ void nc::network_handler::_run_wire_protocol(ns::absolute_time_ms current_time_m
 		return;
 	}
 
+	uint8_t message_type;
+	uint8_t message_payload[nsec::config::communication::protocol_max_message_size -
+				sizeof(wire_msg_header)];
+
+	if (_is_wire_protocol_in_a_reception_state(_wire_protocol_state())) {
+		const auto receive_status =
+			_handle_reception(_listening_side_serial(), message_type, message_payload);
+
+		if (receive_status != handle_reception_result::COMPLETE) {
+			/*
+			 * If the message is incomplete, we wait for the remaining data. If the
+			 * message is corrupted, we wait for a retransmission.
+			 */
+			return;
+		}
+
+		_last_message_received_time_ms = current_time_ms;
+
+		if (wire_msg_type(message_type) == wire_msg_type::RESET) {
+			_reset();
+			return;
+		}
+	}
+
+	SoftwareSerial *destination_serial;
+	switch (_position()) {
+	case link_position::LEFT_MOST:
+		destination_serial = &_right_serial;
+		break;
+	case link_position::RIGHT_MOST:
+		destination_serial = &_left_serial;
+		break;
+	case link_position::MIDDLE:
+		destination_serial = _wave_front_direction() == peer_relative_position::LEFT ?
+			&_left_serial :
+			&_right_serial;
+		break;
+	default:
+		// Unreachable.
+		_reset();
+		return;
+	}
+
 	switch (_wire_protocol_state()) {
 	case wire_protocol_state::UNCONNECTED:
 		// Nothing to do.
 		break;
-	case wire_protocol_state::WAIT_TO_SEND_ANNOUNCE:
+	case wire_protocol_state::WAIT_TO_INITIATE_DISCOVERY:
 		/*
 		 * State only reached by the left-most node.
 		 * Wait for the other boards to setup and expect our messages.
 		 */
 		if (_ticks_in_wire_state++ == 3) {
-			send_wire_announce_msg(_right_serial, 0);
-			send_wire_monitor_msg(_right_serial);
-			_wire_protocol_state(wire_protocol_state::DISCOVERY);
-			// Start waiting for a reply from our right neighboor.
-			_listening_side(peer_relative_position::RIGHT);
-			_reverse_wave_front_direction();
+			_wire_protocol_state(wire_protocol_state::INITIATE_DISCOVERY);
 		}
 
 		break;
-	case wire_protocol_state::DISCOVERY:
-	case wire_protocol_state::RUNNING:
+	case wire_protocol_state::INITIATE_DISCOVERY:
+		send_wire_announce_msg(_right_serial, 0);
+		_wire_protocol_state(wire_protocol_state::SEND_MONITOR_AFTER_INITIAL_ANNOUNCE);
+		break;
+	case wire_protocol_state::SEND_MONITOR_AFTER_INITIAL_ANNOUNCE:
+		// Start waiting for a reply from our right neighboor.
+		_listening_side(peer_relative_position::RIGHT);
+		_reverse_wave_front_direction();
+		send_wire_monitor_msg(_right_serial);
+		_wire_protocol_state(wire_protocol_state::DISCOVERY_RECEIVE_ANNOUNCE_REPLY);
+		break;
+	case wire_protocol_state::DISCOVERY_RECEIVE_ANNOUNCE:
 	{
-		auto& listening_serial = _listening_side_serial();
-		const auto status = _handle_incoming_data(listening_serial);
-
-		if (status == handle_incoming_data_result::INCOMPLETE) {
-			// Receive the remaining data during the next tick.
-			break;
+		if (wire_msg_type(message_type) != wire_msg_type::ANNOUNCE) {
+			// Unexpected message: protocol error.
+			_reset();
+			return;
 		}
 
-		// A complete message is available.
-		const uint8_t message_type = uint8_t(listening_serial.read());
-		const uint16_t checksum = uint16_t(listening_serial.read()) |
-			uint16_t(listening_serial.read()) << 8;
-		const auto payload_size = wire_msg_payload_size(message_type);
+		/*
+		 * Our left neighbor announced themselves which allows us to allocate ourselves a
+		 * peer id.
+		 */
+		const auto *announce_msg =
+			reinterpret_cast<const wire_msg_announce *>(message_payload);
 
-		uint8_t message_buffer[nsec::config::communication::protocol_max_message_size -
-				       sizeof(wire_msg_header)];
-		if (payload_size != 0) {
-			listening_serial.readBytes(message_buffer, payload_size);
-		}
+		_peer_id = announce_msg->peer_id + 1;
 
-		// Validate checksum
-		fletcher16_checksumer checksummer;
-		checksummer.push(message_type);
-		for (uint8_t i = 0; i < payload_size; i++) {
-			checksummer.push(message_buffer[i]);
-		}
-
-		if (checksum != checksummer.checksum()) {
-			Serial.println(F("Checksum failed"));
-		}
-
-		if (_wire_protocol_state() == wire_protocol_state::DISCOVERY) {
-			_wire_protocol_discovery_handle_message(message_type,
-								payload_size ? message_buffer :
-									       nullptr,
-								current_time_ms);
-		} else {
-			_wire_protocol_running_handle_message(message_type,
-							      payload_size ? message_buffer :
-									     nullptr,
-							      current_time_ms);
-		}
+		/*
+		 * Only valid for the right-most node, otherwise it will be overwriten when
+		 * ANNOUNCE_REPLY is received.
+		 */
+		_peer_count = _peer_id + 1;
+		_wire_protocol_state(wire_protocol_state::DISCOVERY_RECEIVE_MONITOR_AFTER_ANNOUNCE);
+		break;
 	}
+	case wire_protocol_state::DISCOVERY_RECEIVE_MONITOR_AFTER_ANNOUNCE:
+		if (wire_msg_type(message_type) != wire_msg_type::MONITOR) {
+			// Unexpected message: protocol error.
+			_reset();
+			return;
+		}
+
+		// It is our turn to transmit.
+		if (_position() == link_position::MIDDLE) {
+			// Announce ourselves to the right-side neighbor.
+			_wire_protocol_state(wire_protocol_state::DISCOVERY_SEND_ANNOUNCE);
+		} else {
+			// We are the right-most node, initiate the announce reply.
+			_wire_protocol_state(wire_protocol_state::DISCOVERY_SEND_ANNOUNCE_REPLY);
+		}
+
+		break;
+	case wire_protocol_state::DISCOVERY_SEND_ANNOUNCE:
+	{
+		// Not reachable by the right-most node.
+		const wire_msg_announce our_annouce_msg = { .peer_id = _peer_id };
+
+		send_wire_msg(_right_serial,
+			      uint8_t(wire_msg_type::ANNOUNCE),
+			      reinterpret_cast<const uint8_t *>(&our_annouce_msg),
+			      sizeof(wire_msg_announce));
+		_wire_protocol_state(wire_protocol_state::DISCOVERY_SEND_MONITOR_AFTER_ANNOUNCE);
+		break;
+	}
+	case wire_protocol_state::DISCOVERY_SEND_MONITOR_AFTER_ANNOUNCE:
+		// Not reachable by the right-most node.
+		send_wire_monitor_msg(_right_serial);
+		_wave_front_direction(peer_relative_position::LEFT);
+
+		// Next message (ANNOUNCE_REPLY) will come from our right neighbor.
+		_listening_side(peer_relative_position::RIGHT);
+		_wire_protocol_state(wire_protocol_state::DISCOVERY_RECEIVE_ANNOUNCE_REPLY);
+		break;
+	case wire_protocol_state::DISCOVERY_RECEIVE_ANNOUNCE_REPLY:
+	{
+		// Not reachable by the right-most node.
+		const auto *announce_reply_msg =
+			reinterpret_cast<const wire_msg_announce_reply *>(message_payload);
+
+		_peer_count = announce_reply_msg->peer_count;
+		_wire_protocol_state(
+			wire_protocol_state::DISCOVERY_RECEIVE_MONITOR_AFTER_ANNOUNCE_REPLY);
+		break;
+	}
+	case wire_protocol_state::DISCOVERY_RECEIVE_MONITOR_AFTER_ANNOUNCE_REPLY:
+		if (wire_msg_type(message_type) != wire_msg_type::MONITOR) {
+			// Unexpected message: protocol error.
+			_reset();
+			return;
+		}
+
+		if (_position() == link_position::MIDDLE) {
+			_wire_protocol_state(wire_protocol_state::DISCOVERY_SEND_ANNOUNCE_REPLY);
+		} else {
+			// We are the left-most node.
+			_wave_front_direction(peer_relative_position::RIGHT);
+			_wire_protocol_state(wire_protocol_state::RUNNING_SEND_MESSAGE);
+		}
+
+		break;
+	case wire_protocol_state::DISCOVERY_SEND_ANNOUNCE_REPLY:
+	{
+		const wire_msg_announce_reply announce_reply_msg = { .peer_count = _peer_count };
+
+		send_wire_msg(_left_serial,
+			      uint8_t(wire_msg_type::ANNOUNCE_REPLY),
+			      reinterpret_cast<const uint8_t *>(&announce_reply_msg),
+			      sizeof(announce_reply_msg));
+		_wire_protocol_state(
+			wire_protocol_state::DISCOVERY_SEND_MONITOR_AFTER_ANNOUNCE_REPLY);
+		break;
+	}
+	case wire_protocol_state::DISCOVERY_SEND_MONITOR_AFTER_ANNOUNCE_REPLY:
+		send_wire_monitor_msg(_left_serial);
+
+		// Next message will come from the left.
+		_listening_side(peer_relative_position::LEFT);
+		_wave_front_direction(peer_relative_position::RIGHT);
+		_wire_protocol_state(wire_protocol_state::RUNNING_RECEIVE_MESSAGE);
+		break;
+	case wire_protocol_state::RUNNING_RECEIVE_MESSAGE:
+		if (wire_msg_type(message_type) == wire_msg_type::MONITOR) {
+			_wire_protocol_state(wire_protocol_state::RUNNING_SEND_MESSAGE);
+		}
+
+		break;
+	case wire_protocol_state::RUNNING_SEND_MESSAGE:
+		_wire_protocol_state(wire_protocol_state::RUNNING_SEND_APP_MESSAGE);
+		break;
+	case wire_protocol_state::RUNNING_SEND_APP_MESSAGE:
+		_wire_protocol_state(wire_protocol_state::RUNNING_SEND_MONITOR);
+		break;
+	case wire_protocol_state::RUNNING_SEND_MONITOR:
+		send_wire_monitor_msg(*destination_serial);
+		if (_position() == link_position::MIDDLE) {
+			_reverse_wave_front_direction();
+			_reverse_listening_side();
+		}
+
+		_wire_protocol_state(wire_protocol_state::RUNNING_RECEIVE_MESSAGE);
+		break;
 	}
 }
 
 void nc::network_handler::run(ns::absolute_time_ms current_time_ms) noexcept
 {
-	/*
-	 * Clear the network activity LED: it results in a flash as "MONITOR"
-	 * messages are processed and gives a good idea of the network activity
-	 * to the user.
-	 */
-	digitalWrite(LED_DBG, LOW);
-
 	if (_check_connections() == check_connections_result::TOPOLOGY_CHANGED) {
 		/*
 		 * The protocol state has been reset. Resume on the next tick
@@ -962,5 +1011,15 @@ void nc::network_handler::run(ns::absolute_time_ms current_time_ms) noexcept
 		return;
 	}
 
+	if (_wire_protocol_state() == wire_protocol_state::UNCONNECTED) {
+		return;
+	}
+
 	_run_wire_protocol(current_time_ms);
+
+	/*
+	 * The network activity LED is "on" when it is this node's turn to broadcast.
+	 * It gives a good idea of the network activity to the user.
+	 */
+	digitalWrite(LED_DBG, !_is_wire_protocol_in_a_reception_state(_wire_protocol_state()));
 }
