@@ -104,7 +104,12 @@ private:
 	bool _has_pending_outgoing_message() const noexcept;
 	void _clear_pending_outgoing_message() noexcept;
 
-	void _check_connections() noexcept;
+	enum class check_connections_result {
+		NO_CHANGE,
+		TOPOLOGY_CHANGED,
+	};
+	check_connections_result _check_connections() noexcept;
+
 	void _detect_and_set_position() noexcept;
 	void _run_wire_protocol(nsec::scheduling::absolute_time_ms current_time_ms) noexcept;
 	void _handle_monitor_message(scheduling::absolute_time_ms current_time_ms) noexcept;

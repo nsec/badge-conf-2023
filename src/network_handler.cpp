@@ -412,7 +412,7 @@ void nc::network_handler::_detect_and_set_position() noexcept
 	_position(new_position[connection_mask]);
 }
 
-void nc::network_handler::_check_connections() noexcept
+nc::network_handler::check_connections_result nc::network_handler::_check_connections() noexcept
 {
 	const bool left_is_connected = _sense_is_left_connected();
 	const bool right_is_connected = _sense_is_right_connected();
@@ -423,7 +423,7 @@ void nc::network_handler::_check_connections() noexcept
 	const bool topology_changed = left_state_changed || right_state_changed;
 
 	if (!topology_changed) {
-		return;
+		return check_connections_result::NO_CHANGE;
 	}
 
 	logging::log_connector_states(left_is_connected, right_is_connected);
@@ -432,6 +432,7 @@ void nc::network_handler::_check_connections() noexcept
 	_is_left_connected = left_is_connected;
 	_is_right_connected = right_is_connected;
 	_detect_and_set_position();
+	return check_connections_result::TOPOLOGY_CHANGED;
 }
 
 void nc::network_handler::_position(link_position new_position) noexcept
@@ -946,8 +947,20 @@ void nc::network_handler::_run_wire_protocol(ns::absolute_time_ms current_time_m
 
 void nc::network_handler::run(ns::absolute_time_ms current_time_ms) noexcept
 {
-	// Monitor message activity LED
+	/*
+	 * Clear the network activity LED: it results in a flash as "MONITOR"
+	 * messages are processed and gives a good idea of the network activity
+	 * to the user.
+	 */
 	digitalWrite(LED_DBG, LOW);
-	_check_connections();
+
+	if (_check_connections() == check_connections_result::TOPOLOGY_CHANGED) {
+		/*
+		 * The protocol state has been reset. Resume on the next tick
+		 * to allow our peers enough time to detect the change.
+		 */
+		return;
+	}
+
 	_run_wire_protocol(current_time_ms);
 }
