@@ -20,7 +20,6 @@ public:
 	idle_screen(idle_screen&&) = delete;
 	idle_screen& operator=(const idle_screen&) = delete;
 	idle_screen& operator=(idle_screen&&) = delete;
-	~idle_screen() override = default;
 
 	void button_event(button::id id, button::event event) noexcept override;
 	void _render(scheduling::absolute_time_ms current_time_ms,

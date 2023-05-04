@@ -26,7 +26,7 @@ public:
 	screen(screen&&) = delete;
 	screen& operator=(const screen&) = delete;
 	screen& operator=(screen&&) = delete;
-	virtual ~screen() = default;
+	~screen() = default;
 
 	// Button event to be handled by screen
 	virtual void button_event(button::id id, button::event event) noexcept = 0;

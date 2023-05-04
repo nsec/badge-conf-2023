@@ -63,7 +63,6 @@ public:
 	menu_screen(menu_screen&&) = delete;
 	menu_screen& operator=(const menu_screen&) = delete;
 	menu_screen& operator=(menu_screen&&) = delete;
-	~menu_screen() override = default;
 
 	void button_event(button::id id, button::event event) noexcept override;
 	void _render(scheduling::absolute_time_ms current_time_ms,
