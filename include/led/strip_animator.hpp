@@ -22,7 +22,7 @@ public:
 	strip_animator(strip_animator&&) = delete;
 	strip_animator& operator=(const strip_animator&) = delete;
 	strip_animator& operator=(strip_animator&&) = delete;
-	~strip_animator() override = default;
+	~strip_animator() = default;
 
 	void setup() noexcept;
 

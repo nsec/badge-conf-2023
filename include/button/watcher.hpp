@@ -51,7 +51,7 @@ public:
 	watcher(watcher&&) = delete;
 	watcher& operator=(const watcher&) = delete;
 	watcher& operator=(watcher&&) = delete;
-	~watcher() override = default;
+	~watcher() = default;
 
 	// Setup hardware.
 	void setup() noexcept;

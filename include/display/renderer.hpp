@@ -24,7 +24,7 @@ public:
 	renderer(renderer&&) = delete;
 	renderer& operator=(const renderer&) = delete;
 	renderer& operator=(renderer&&) = delete;
-	~renderer() override = default;
+	~renderer() = default;
 
 	void setup() noexcept;
 

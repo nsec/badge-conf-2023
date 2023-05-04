@@ -45,7 +45,7 @@ public:
 	network_handler(network_handler&&) = delete;
 	network_handler& operator=(const network_handler&) = delete;
 	network_handler& operator=(network_handler&&) = delete;
-	~network_handler() override = default;
+	~network_handler() = default;
 
 	void setup() noexcept;
 

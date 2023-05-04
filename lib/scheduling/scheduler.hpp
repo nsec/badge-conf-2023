@@ -34,7 +34,7 @@ public:
 	task(task&&) = delete;
 	task& operator=(const task&) = delete;
 	task& operator=(task&&) = delete;
-	virtual ~task() = default;
+	~task() = default;
 
 	virtual void run(absolute_time_ms current_time) noexcept = 0;
 
@@ -76,7 +76,7 @@ public:
 	periodic_task(periodic_task&&) = delete;
 	periodic_task& operator=(const periodic_task&) = delete;
 	periodic_task& operator=(periodic_task&&) = delete;
-	~periodic_task() override = default;
+	~periodic_task() = default;
 
 	relative_time_ms period_ms() const noexcept
 	{
