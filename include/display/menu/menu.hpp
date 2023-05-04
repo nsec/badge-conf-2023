@@ -50,7 +50,7 @@ public:
 		choices(choices&&) = delete;
 		choices& operator=(const choices&) = delete;
 		choices& operator=(choices&&) = delete;
-		virtual ~choices() = default;
+		~choices() = default;
 
 		virtual unsigned int count() const noexcept = 0;
 		virtual const choice& operator[](unsigned int) const noexcept = 0;
