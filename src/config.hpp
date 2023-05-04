@@ -25,6 +25,10 @@ namespace nsec::config::user {
 constexpr uint8_t name_max_length = 32;
 }
 
+namespace nsec::config::splash {
+constexpr nsec::scheduling::relative_time_ms splash_screen_wait_time_ms = 2000;
+}
+
 namespace nsec::config::button {
 constexpr nsec::scheduling::relative_time_ms polling_period_ms = 10;
 

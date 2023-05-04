@@ -35,6 +35,7 @@ void nd::splash_screen::one_shot_timer_task::run(ns::absolute_time_ms current_ti
 
 void nd::splash_screen::focused() noexcept
 {
-	nsec::g::the_scheduler.schedule_task(_timer, 2000);
+	nsec::g::the_scheduler.schedule_task(_timer,
+					     nsec::config::splash::splash_screen_wait_time_ms);
 	nd::screen::focused();
 }
