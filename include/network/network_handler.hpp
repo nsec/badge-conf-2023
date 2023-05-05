@@ -30,7 +30,7 @@ public:
 	// void (our_peer_id, peer count)
 	using pairing_end_notifier = void (*)(peer_id_t, uint8_t);
 
-	enum class application_message_action { SWALLOW, FORWARD, RESET };
+	enum class application_message_action { OK, ERROR };
 	// application_message_action (relative_position_of_peer, message_type, message_payload)
 	using message_received_notifier =
 		application_message_action (*)(nsec::communication::message::type, const uint8_t *);
@@ -50,10 +50,9 @@ public:
 	void setup() noexcept;
 
 	enum class enqueue_message_result { QUEUED, UNCONNECTED, FULL };
-	enqueue_message_result enqueue_message(peer_relative_position direction,
-					       uint8_t msg_type,
-					       const uint8_t *msg_payload,
-					       uint8_t payload_size);
+	enqueue_message_result enqueue_app_message(peer_relative_position direction,
+						   uint8_t msg_type,
+						   const uint8_t *msg_payload);
 
 protected:
 	void run(scheduling::absolute_time_ms current_time_ms) noexcept override;
@@ -73,16 +72,21 @@ private:
 		DISCOVERY_RECEIVE_ANNOUNCE,
 		DISCOVERY_RECEIVE_MONITOR_AFTER_ANNOUNCE,
 		DISCOVERY_SEND_ANNOUNCE,
+		DISCOVERY_CONFIRM_ANNOUNCE,
 		DISCOVERY_SEND_MONITOR_AFTER_ANNOUNCE,
+		DISCOVERY_CONFIRM_MONITOR_AFTER_ANNOUNCE,
 		DISCOVERY_RECEIVE_ANNOUNCE_REPLY,
 		DISCOVERY_RECEIVE_MONITOR_AFTER_ANNOUNCE_REPLY,
 		DISCOVERY_SEND_ANNOUNCE_REPLY,
+		DISCOVERY_CONFIRM_ANNOUNCE_REPLY,
 		DISCOVERY_SEND_MONITOR_AFTER_ANNOUNCE_REPLY,
-		/* Waiting for messages and forwarding as needed. */
+		DISCOVERY_CONFIRM_MONITOR_AFTER_ANNOUNCE_REPLY,
+		/* Waiting for application and protocol (MONITOR and RESET) messages. */
 		RUNNING_RECEIVE_MESSAGE,
-		RUNNING_SEND_MESSAGE,
 		RUNNING_SEND_APP_MESSAGE,
+		RUNNING_CONFIRM_APP_MESSAGE,
 		RUNNING_SEND_MONITOR,
+		RUNNING_CONFIRM_MONITOR
 
 	};
 	enum class message_reception_state {
@@ -94,7 +98,7 @@ private:
 	enum class message_transmission_state {
 		NONE,
 		ATTEMPT_SEND,
-		// On timeout, retransmit
+		// On timeout, retransmit until timeout
 		WAIT_CONFIRMATION,
 	};
 
@@ -116,9 +120,18 @@ private:
 	message_reception_state _message_reception_state() const noexcept;
 	void _message_reception_state(message_reception_state new_state) noexcept;
 
+	// Message tranmsmission state machine.
 	message_transmission_state _message_transmission_state() const noexcept;
 	void _message_transmission_state(message_transmission_state new_state) noexcept;
+	peer_relative_position _outgoing_message_direction() const noexcept;
+	void _outgoing_message_direction(peer_relative_position) noexcept;
+	uint8_t _outgoing_message_size() const noexcept;
+	void _clear_outgoing_message() noexcept;
+	void _set_outgoing_message(nsec::scheduling::absolute_time_ms current_time_ms,
+				   uint8_t message_type,
+				   const uint8_t *message_payload = nullptr) noexcept;
 
+	// Message transmission request from an application.
 	peer_relative_position _pending_outgoing_app_message_direction() const noexcept;
 	uint8_t _pending_outgoing_app_message_size() const noexcept;
 	bool _has_pending_outgoing_app_message() const noexcept;
@@ -138,6 +151,7 @@ private:
 	bool _sense_is_right_connected() const noexcept;
 
 	enum class handle_reception_result {
+		NO_DATA,
 		INCOMPLETE,
 		COMPLETE,
 		CORRUPTED,
@@ -145,6 +159,13 @@ private:
 	handle_reception_result _handle_reception(SoftwareSerial&,
 						  uint8_t& message_type,
 						  uint8_t *message_payload) noexcept;
+
+	enum class handle_transmission_result {
+		COMPLETE,
+		INCOMPLETE,
+	};
+	handle_transmission_result
+	_handle_transmission(nsec::scheduling::absolute_time_ms current_time_ms) noexcept;
 
 	static bool _is_wire_protocol_in_a_reception_state(wire_protocol_state state) noexcept;
 	static bool _is_wire_protocol_in_a_running_state(wire_protocol_state state) noexcept;
@@ -168,7 +189,7 @@ private:
 	// Storage for a link_position enum
 	uint8_t _current_position : 2;
 	// Storage for a wire_protocol_state enum
-	uint8_t _current_wire_protocol_state : 4;
+	uint8_t _current_wire_protocol_state : 5;
 	// Storage for a peer_relative_location enum. Indicates the direction of the
 	// wave front by the time we get the next message.
 	uint8_t _current_wave_front_direction : 1;
@@ -186,22 +207,26 @@ private:
 	uint8_t _current_message_reception_state : 3;
 	// Number of bytes left to receive for the current message
 	uint8_t _payload_bytes_to_receive : 5;
+
 	// Storage for a message_transmission_state enum
 	uint8_t _current_message_transmission_state : 2;
-	uint8_t _message_being_sent_size : 5;
+	uint8_t _current_message_being_sent_size : 5;
+	// Storage for a peer_relative_location enum
+	uint8_t _current_message_being_sent_direction : 1;
+	uint8_t _current_message_being_sent_type : 5;
 
 	// App-level enqueued message
 	// Storage for a peer_relative_location enum
 	uint8_t _current_pending_outgoing_app_message_direction : 1;
 	uint8_t _current_pending_outgoing_app_message_size : 5;
-	// Buffered outgoing message type and payload.
+	// Enqueued outgoing application message type and payload.
 	uint8_t _current_pending_outgoing_app_message_type : 5;
-
 	uint8_t _current_pending_outgoing_app_message_payload
 		[nsec::config::communication::protocol_max_message_size];
 
 	// Message currently being sent and potentially retransmitted.
-	uint8_t _message_being_sent[nsec::config::communication::protocol_max_message_size];
+	nsec::scheduling::absolute_time_ms _last_transmission_time_ms;
+	uint8_t _current_message_being_sent[nsec::config::communication::protocol_max_message_size];
 };
 } // namespace nsec::communication
 

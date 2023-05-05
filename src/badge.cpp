@@ -163,5 +163,5 @@ nc::network_handler::application_message_action
 nr::badge::on_message_received(communication::message::type message_type,
 			       const uint8_t *message) noexcept
 {
-	return nc::network_handler::application_message_action::SWALLOW;
+	return nc::network_handler::application_message_action::OK;
 }
