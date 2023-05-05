@@ -30,6 +30,18 @@ enum class wire_msg_type : uint8_t {
 }
 
 namespace logging {
+const __FlashStringHelper *as_flash_string(const char *str)
+{
+	return static_cast<const __FlashStringHelper *>(static_cast<const void *>(str));
+}
+
+const char monitor_str[] PROGMEM = "MONITOR";
+const char reset_str[] PROGMEM = "RESET";
+const char announce_str[] PROGMEM = "ANNOUNCE";
+const char announce_reply_str[] PROGMEM = "ANNOUNCE_REPLY";
+const char ok_str[] PROGMEM = "OK";
+const char app_message_str[] PROGMEM = "APP_MESSAGE";
+
 #if NETWORK_VERBOSE_LOG == 1
 const char left_str[] PROGMEM = "left";
 const char right_str[] PROGMEM = "right";
@@ -211,7 +223,13 @@ uint8_t wire_msg_payload_size(uint8_t type)
 	case wire_msg_type::OK:
 		return 0;
 	default:
-		// TODO query app msg size from id
+		switch (nc::message::type(type)) {
+		case nc::message::type::ANNOUNCE_BADGE_ID:
+			return sizeof(nc::message::announce_badge_id);
+		default:
+			break;
+		}
+
 		return 0;
 	}
 }
@@ -279,12 +297,14 @@ void send_wire_ok_msg(SoftwareSerial& serial) noexcept
 nc::network_handler::network_handler(disconnection_notifier unconnected,
 				     pairing_begin_notifier pairing_begin,
 				     pairing_end_notifier pairing_end,
-				     message_received_notifier message_received) noexcept :
+				     message_received_notifier message_received,
+				     message_sent_notifier message_sent) noexcept :
 	ns::periodic_task(nsec::config::communication::network_handler_base_period_ms),
 	_notify_unconnected{ unconnected },
 	_notify_pairing_begin{ pairing_begin },
 	_notify_pairing_end{ pairing_end },
 	_notify_message_received{ message_received },
+	_notify_app_message_sent{ message_sent },
 	_left_serial(nsec::config::communication::serial_rx_pin_left,
 		     nsec::config::communication::serial_tx_pin_left,
 		     true),
@@ -323,7 +343,7 @@ bool nc::network_handler::_sense_is_right_connected() const noexcept
 	return digitalRead(nsec::config::communication::connection_sense_pin_right) == LOW;
 }
 
-nc::network_handler::link_position nc::network_handler::_position() const noexcept
+nc::network_handler::link_position nc::network_handler::position() const noexcept
 {
 	return link_position(_current_position);
 }
@@ -463,7 +483,7 @@ nc::network_handler::check_connections_result nc::network_handler::_check_connec
 		return check_connections_result::NO_CHANGE;
 	} else {
 		SoftwareSerial *destination_serial;
-		switch (_position()) {
+		switch (position()) {
 		case link_position::LEFT_MOST:
 			destination_serial = &_right_serial;
 			break;
@@ -494,7 +514,7 @@ nc::network_handler::check_connections_result nc::network_handler::_check_connec
 void nc::network_handler::_position(link_position new_position) noexcept
 {
 	_current_position = uint8_t(new_position);
-	switch (_position()) {
+	switch (position()) {
 	case link_position::UNKNOWN:
 		break;
 	case link_position::LEFT_MOST:
@@ -668,7 +688,7 @@ void nc::network_handler::_set_outgoing_message(nsec::scheduling::absolute_time_
 {
 	_current_message_being_sent_size = wire_msg_payload_size(message_type);
 	memcpy(_current_message_being_sent, message_payload, _current_message_being_sent_size);
-	switch (_position()) {
+	switch (position()) {
 	case link_position::LEFT_MOST:
 		_outgoing_message_direction(peer_relative_position::RIGHT);
 		break;
@@ -824,9 +844,10 @@ nc::network_handler::handle_transmission_result nc::network_handler::_handle_tra
 		return handle_transmission_result::COMPLETE;
 	case message_transmission_state::ATTEMPT_SEND:
 	{
-		auto &sending_serial = _outgoing_message_direction() == peer_relative_position::LEFT ?
-				      _left_serial :
-				      _right_serial;
+		auto& sending_serial = _outgoing_message_direction() ==
+				peer_relative_position::LEFT ?
+			_left_serial :
+			_right_serial;
 
 		// Listen before send since the other side can reply OK immediately.
 		_listening_side(_outgoing_message_direction());
@@ -841,9 +862,10 @@ nc::network_handler::handle_transmission_result nc::network_handler::_handle_tra
 	case message_transmission_state::WAIT_CONFIRMATION:
 	{
 		uint8_t new_message_type;
-		auto& listening_serial = _outgoing_message_direction() == peer_relative_position::LEFT ?
-				      _left_serial :
-				      _right_serial;
+		auto& listening_serial = _outgoing_message_direction() ==
+				peer_relative_position::LEFT ?
+			_left_serial :
+			_right_serial;
 
 		const auto receive_result =
 			_handle_reception(listening_serial, new_message_type, nullptr);
@@ -894,10 +916,10 @@ nc::network_handler::enqueue_message_result nc::network_handler::enqueue_app_mes
 		return enqueue_message_result::FULL;
 	}
 
-	if (_position() == link_position::LEFT_MOST && direction == peer_relative_position::LEFT) {
+	if (position() == link_position::LEFT_MOST && direction == peer_relative_position::LEFT) {
 		_reset();
 		return enqueue_message_result::UNCONNECTED;
-	} else if (_position() == link_position::RIGHT_MOST &&
+	} else if (position() == link_position::RIGHT_MOST &&
 		   direction == peer_relative_position::RIGHT) {
 		_reset();
 		return enqueue_message_result::UNCONNECTED;
@@ -1010,7 +1032,7 @@ void nc::network_handler::_run_wire_protocol(ns::absolute_time_ms current_time_m
 		}
 
 		// It is our turn to transmit.
-		if (_position() == link_position::MIDDLE) {
+		if (position() == link_position::MIDDLE) {
 			// Announce ourselves to the right-side neighbor.
 			_wire_protocol_state(wire_protocol_state::DISCOVERY_SEND_ANNOUNCE);
 		} else {
@@ -1063,7 +1085,7 @@ void nc::network_handler::_run_wire_protocol(ns::absolute_time_ms current_time_m
 			return;
 		}
 
-		if (_position() == link_position::MIDDLE) {
+		if (position() == link_position::MIDDLE) {
 			_wire_protocol_state(wire_protocol_state::DISCOVERY_SEND_ANNOUNCE_REPLY);
 		} else {
 			// We are the left-most node.
@@ -1099,25 +1121,43 @@ void nc::network_handler::_run_wire_protocol(ns::absolute_time_ms current_time_m
 		_wire_protocol_state(wire_protocol_state::RUNNING_RECEIVE_MESSAGE);
 		break;
 	case wire_protocol_state::RUNNING_RECEIVE_MESSAGE:
-		if (wire_msg_type(message_type) == wire_msg_type::MONITOR) {
+	{
+		if (message_type >=
+		    nsec::config::communication::application_message_type_range_begin) {
+			// Process app-level message
+			_notify_message_received(nc::message::type(message_type), message_payload);
+		} else if (wire_msg_type(message_type) == wire_msg_type::MONITOR) {
 			_wire_protocol_state(wire_protocol_state::RUNNING_SEND_APP_MESSAGE);
+		} else {
+			// Unexpected message or a reset message.
+			_reset();
+			return;
 		}
 
-		// TODO processing of app messages.
-
 		break;
+	}
 	case wire_protocol_state::RUNNING_SEND_APP_MESSAGE:
+	{
+		const auto is_middle_peer = position() ==
+			nc::network_handler::link_position::MIDDLE;
+		const auto pending_matches_wave_front_direction =
+			_pending_outgoing_app_message_direction() == _wave_front_direction();
 		if (_has_pending_outgoing_app_message() &&
-		    _pending_outgoing_app_message_direction() == _wave_front_direction()) {
+		    (!is_middle_peer || (is_middle_peer && pending_matches_wave_front_direction))) {
 			_set_outgoing_message(current_time_ms,
 					      _current_pending_outgoing_app_message_type,
 					      _current_pending_outgoing_app_message_payload);
 			_clear_pending_outgoing_app_message();
+			_wire_protocol_state(wire_protocol_state::RUNNING_CONFIRM_APP_MESSAGE);
+		} else {
+			// Nothing sent, skip the confirmation step.
+			_wire_protocol_state(wire_protocol_state::RUNNING_SEND_MONITOR);
 		}
 
-		_wire_protocol_state(wire_protocol_state::RUNNING_CONFIRM_APP_MESSAGE);
 		break;
+	}
 	case wire_protocol_state::RUNNING_CONFIRM_APP_MESSAGE:
+		_notify_app_message_sent();
 		_wire_protocol_state(wire_protocol_state::RUNNING_SEND_MONITOR);
 		break;
 	case wire_protocol_state::RUNNING_SEND_MONITOR:
@@ -1125,7 +1165,7 @@ void nc::network_handler::_run_wire_protocol(ns::absolute_time_ms current_time_m
 		_wire_protocol_state(wire_protocol_state::RUNNING_CONFIRM_MONITOR);
 		break;
 	case wire_protocol_state::RUNNING_CONFIRM_MONITOR:
-		if (_position() == link_position::MIDDLE) {
+		if (position() == link_position::MIDDLE) {
 			_reverse_wave_front_direction();
 		}
 

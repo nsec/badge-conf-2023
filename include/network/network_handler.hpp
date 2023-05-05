@@ -34,11 +34,13 @@ public:
 	// application_message_action (relative_position_of_peer, message_type, message_payload)
 	using message_received_notifier =
 		application_message_action (*)(nsec::communication::message::type, const uint8_t *);
+	using message_sent_notifier = void (*)();
 
 	network_handler(disconnection_notifier,
 			pairing_begin_notifier,
 			pairing_end_notifier,
-			message_received_notifier) noexcept;
+			message_received_notifier,
+			message_sent_notifier) noexcept;
 
 	/* Deactivate copy and assignment. */
 	network_handler(const network_handler&) = delete;
@@ -49,6 +51,24 @@ public:
 
 	void setup() noexcept;
 
+	peer_id_t peer_id() const noexcept
+	{
+		return _peer_id;
+	}
+
+	uint8_t peer_count() const noexcept
+	{
+		return _peer_count;
+	}
+
+	enum class link_position {
+		UNKNOWN = 0b00,
+		LEFT_MOST = 0b01,
+		RIGHT_MOST = 0b10,
+		MIDDLE = 0b11
+	};
+	link_position position() const noexcept;
+
 	enum class enqueue_message_result { QUEUED, UNCONNECTED, FULL };
 	enqueue_message_result enqueue_app_message(peer_relative_position direction,
 						   uint8_t msg_type,
@@ -58,12 +78,7 @@ protected:
 	void run(scheduling::absolute_time_ms current_time_ms) noexcept override;
 
 private:
-	enum class link_position {
-		UNKNOWN = 0b00,
-		LEFT_MOST = 0b01,
-		RIGHT_MOST = 0b10,
-		MIDDLE = 0b11
-	};
+
 	enum class wire_protocol_state {
 		UNCONNECTED,
 		/* Wait for boards to listen before left-most node initiates the discovery. */
@@ -102,7 +117,6 @@ private:
 		WAIT_CONFIRMATION,
 	};
 
-	link_position _position() const noexcept;
 	void _position(link_position new_role) noexcept;
 
 	wire_protocol_state _wire_protocol_state() const noexcept;
@@ -178,6 +192,7 @@ private:
 	pairing_begin_notifier _notify_pairing_begin;
 	pairing_end_notifier _notify_pairing_end;
 	message_received_notifier _notify_message_received;
+	message_sent_notifier _notify_app_message_sent;
 
 	SoftwareSerial _left_serial;
 	SoftwareSerial _right_serial;

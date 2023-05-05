@@ -15,18 +15,14 @@
 namespace nsec::communication::message {
 
 enum class type {
-	SOME_APPLICATION_MESSAGE_TYPE =
+	ANNOUNCE_BADGE_ID =
 		nsec::config::communication::application_message_type_range_begin,
 };
 
-struct header {
-	uint8_t type;
-};
-
-struct announce_peer {
+struct announce_badge_id {
 	uint8_t peer_id;
 	uint8_t board_unique_id[UniqueIDsize];
-};
+} __attribute__((packed));
 
 } // namespace nsec::communication::message
 
