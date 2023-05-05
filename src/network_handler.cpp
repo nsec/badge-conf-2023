@@ -340,9 +340,6 @@ void nc::network_handler::_log_wire_protocol_state(wire_protocol_state state) no
 		[uint8_t(wire_protocol_state::UNCONNECTED)] = F("UNCONNECTED"),
 		[uint8_t(wire_protocol_state::WAIT_TO_INITIATE_DISCOVERY)] =
 			F("WAIT_TO_INITIATE_DISCOVERY"),
-		[uint8_t(wire_protocol_state::INITIATE_DISCOVERY)] = F("INITIATE_DISCOVERY"),
-		[uint8_t(wire_protocol_state::SEND_MONITOR_AFTER_INITIAL_ANNOUNCE)] =
-			F("SEND_MONITOR_AFTER_INITIAL_ANNOUNCE"),
 		[uint8_t(wire_protocol_state::DISCOVERY_RECEIVE_ANNOUNCE)] =
 			F("DISCOVERY_RECEIVE_ANNOUNCE"),
 		[uint8_t(wire_protocol_state::DISCOVERY_RECEIVE_MONITOR_AFTER_ANNOUNCE)] =
@@ -852,20 +849,9 @@ void nc::network_handler::_run_wire_protocol(ns::absolute_time_ms current_time_m
 		 * Wait for the other boards to setup and expect our messages.
 		 */
 		if (_ticks_in_wire_state++ == 3) {
-			_wire_protocol_state(wire_protocol_state::INITIATE_DISCOVERY);
+			_wire_protocol_state(wire_protocol_state::DISCOVERY_SEND_ANNOUNCE);
 		}
 
-		break;
-	case wire_protocol_state::INITIATE_DISCOVERY:
-		send_wire_announce_msg(_right_serial, 0);
-		_wire_protocol_state(wire_protocol_state::SEND_MONITOR_AFTER_INITIAL_ANNOUNCE);
-		break;
-	case wire_protocol_state::SEND_MONITOR_AFTER_INITIAL_ANNOUNCE:
-		// Start waiting for a reply from our right neighboor.
-		_listening_side(peer_relative_position::RIGHT);
-		_reverse_wave_front_direction();
-		send_wire_monitor_msg(_right_serial);
-		_wire_protocol_state(wire_protocol_state::DISCOVERY_RECEIVE_ANNOUNCE_REPLY);
 		break;
 	case wire_protocol_state::DISCOVERY_RECEIVE_ANNOUNCE:
 	{

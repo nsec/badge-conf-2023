@@ -69,8 +69,6 @@ private:
 		UNCONNECTED,
 		/* Wait for boards to listen before left-most node initiates the discovery. */
 		WAIT_TO_INITIATE_DISCOVERY,
-		INITIATE_DISCOVERY,
-		SEND_MONITOR_AFTER_INITIAL_ANNOUNCE,
 		/* Discover left neighbours. */
 		DISCOVERY_RECEIVE_ANNOUNCE,
 		DISCOVERY_RECEIVE_MONITOR_AFTER_ANNOUNCE,
