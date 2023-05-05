@@ -30,7 +30,7 @@ void nd::splash_screen::_render(scheduling::absolute_time_ms current_time_ms [[m
 void nd::splash_screen::one_shot_timer_task::run(ns::absolute_time_ms current_time
 						 [[maybe_unused]]) noexcept
 {
-	nsec::g::the_badge.relase_focus_current_screen();
+	nsec::g::the_badge.on_splash_complete();
 }
 
 void nd::splash_screen::focused() noexcept

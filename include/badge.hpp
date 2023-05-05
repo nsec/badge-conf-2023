@@ -12,6 +12,7 @@
 #include "display/idle.hpp"
 #include "display/menu/main_menu_choices.hpp"
 #include "display/menu/menu.hpp"
+#include "display/pairing.hpp"
 #include "display/renderer.hpp"
 #include "display/screen.hpp"
 #include "display/scroll.hpp"
@@ -40,6 +41,7 @@ public:
 	void setup();
 
 	void relase_focus_current_screen() noexcept;
+	void on_splash_complete() noexcept;
 
 private:
 	// Handle new button event
@@ -58,6 +60,8 @@ private:
 			    const uint8_t *message) noexcept;
 
 	uint8_t _social_level : 7;
+	bool _connected : 1;
+	// Mask to prevent repeats after a screen transition, one bit per button.
 	uint8_t _button_had_non_repeat_event_since_screen_focus_change;
 	char _user_name[nsec::config::user::name_max_length];
 
@@ -68,6 +72,7 @@ private:
 	display::string_property_editor_screen _string_property_edit_screen;
 	display::splash_screen _splash_screen;
 	display::scroll_screen _scroll_screen;
+	//display::pairing_screen _pairing_screen;
 	display::screen *_focused_screen;
 
 	// displays

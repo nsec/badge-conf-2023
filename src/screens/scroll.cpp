@@ -49,12 +49,11 @@ unsigned int property_renderable_character_count(const StringType *property)
 
 unsigned int window_offset_from_frame_time(nsec::scheduling::absolute_time_ms time,
 					   uint8_t character_width,
-					   uint8_t character_count)
+					   uint8_t character_count,
+					   uint16_t separator_width)
 {
 	// Compute x offset of the viewport according to the time
-	const auto total_string_width =
-		(character_width * (character_count + sizeof(repeat_separator) - 1)) +
-		(2 * repeat_separator_padding);
+	const auto total_string_width = (character_width * character_count) + int(separator_width);
 
 	auto window_offset = nsec::config::display::scroll_pixels_per_second * (time / 1000);
 	window_offset += ((nsec::config::display::scroll_pixels_per_second) * (time % 1000)) / 1000;
@@ -117,7 +116,8 @@ void nd::scroll_screen::_render(scheduling::absolute_time_ms current_time_ms,
 		const unsigned int window_offset =
 			window_offset_from_frame_time(current_time_ms,
 						      _scroll_character_width,
-						      _property.renderable_character_count);
+						      _property.renderable_character_count,
+						      _separator_rendered_width());
 
 		canvas.setTextSize(nsec::config::display::scroll_font_size);
 		canvas.setCursor(-static_cast<int16_t>(window_offset), _scroll_character_y_offset);
@@ -128,7 +128,7 @@ void nd::scroll_screen::_render(scheduling::absolute_time_ms current_time_ms,
 	}
 	case render_state::FIRST_VISIBLE_CHARACTER_RENDERING:
 	{
-		// "Render" characters until we step into the visible area.
+		// Render (off-screen) characters until we step into the visible area.
 		while (canvas.getCursorX() < 0) {
 			_render_current_property_character(canvas);
 			_current_character_offset++;
@@ -159,11 +159,7 @@ void nd::scroll_screen::_render(scheduling::absolute_time_ms current_time_ms,
 
 		break;
 	case render_state::SEPARATOR_RENDERING:
-		canvas.setCursor(canvas.getCursorX() + repeat_separator_padding,
-				 canvas.getCursorY());
-		canvas.print(as_flash_string(repeat_separator));
-		canvas.setCursor(canvas.getCursorX() + repeat_separator_padding,
-				 canvas.getCursorY());
+		_render_separator(canvas);
 
 		if (canvas.getCursorX() < width()) {
 			_render_state(render_state::VISIBLE_CHARACTER_CHUNK_RENDERING);
@@ -179,18 +175,20 @@ void nd::scroll_screen::_render(scheduling::absolute_time_ms current_time_ms,
 	damage();
 }
 
-void nd::scroll_screen::set_property(const __FlashStringHelper *property) noexcept
+void nd::scroll_screen::set_property(const __FlashStringHelper *property, bool close_repeat) noexcept
 {
 	_property.flash_value = property;
 	_property.is_value_in_ram = false;
 	_property.renderable_character_count = property_renderable_character_count(property);
+	_closely_repeat_string = close_repeat;
 }
 
-void nd::scroll_screen::set_property(const char *property) noexcept
+void nd::scroll_screen::set_property(const char *property, bool close_repeat) noexcept
 {
 	_property.ram_value = property;
 	_property.is_value_in_ram = true;
 	_property.renderable_character_count = property_renderable_character_count(property);
+	_closely_repeat_string = close_repeat;
 }
 
 void nd::scroll_screen::focused() noexcept
@@ -209,4 +207,26 @@ void nd::scroll_screen::_initialize_layout(Adafruit_SSD1306& canvas) noexcept
 	_scroll_character_width = text_width;
 	_scroll_character_y_offset = (canvas.height() - text_height) / 2;
 	_layout_initialized = true;
+}
+
+void nd::scroll_screen::_render_separator(Adafruit_SSD1306& canvas) noexcept
+{
+	if (_closely_repeat_string) {
+		canvas.setCursor(canvas.getCursorX() + repeat_separator_padding,
+				canvas.getCursorY());
+		canvas.print(as_flash_string(repeat_separator));
+		canvas.setCursor(canvas.getCursorX() + repeat_separator_padding,
+				canvas.getCursorY());
+	} else {
+		canvas.setCursor(canvas.getCursorX() + (canvas.width() / 2), canvas.getCursorY());
+	}
+}
+
+uint16_t nd::scroll_screen::_separator_rendered_width() const noexcept
+{
+	if (_closely_repeat_string) {
+		return (2 * repeat_separator_padding) + _scroll_character_width;
+	} else {
+		return width() / 2;
+	}
 }

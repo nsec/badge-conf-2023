@@ -49,6 +49,7 @@ constexpr nsec::scheduling::relative_time_ms refresh_period_ms = 4;
 
 constexpr uint8_t menu_font_size = 1;
 constexpr uint8_t scroll_font_size = 3;
+constexpr uint8_t pairing_font_size = 3;
 
 constexpr nsec::scheduling::absolute_time_ms prompt_cycle_time = 2000;
 
@@ -75,7 +76,8 @@ constexpr unsigned int serial_tx_pin_right = SIG_R1;
 
 constexpr nsec::scheduling::relative_time_ms network_handler_base_period_ms = 30;
 constexpr nsec::scheduling::relative_time_ms network_handler_timeout_ms = 5000;
-constexpr nsec::scheduling::relative_time_ms network_handler_retransmit_timeout_ms = 6 * network_handler_base_period_ms;
+constexpr nsec::scheduling::relative_time_ms network_handler_retransmit_timeout_ms =
+	6 * network_handler_base_period_ms;
 
 } // namespace nsec::communication
 

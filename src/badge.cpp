@@ -27,6 +27,7 @@ const __FlashStringHelper *as_flash_string(const char *str)
 } // anonymous namespace
 
 nr::badge::badge() :
+_connected{false},
 	_user_name{ "Kassandra Lapointe-Chagnon" },
 	_button_watcher(
 		nb::new_button_event_notifier{ [](nsec::button::id id, nsec::button::event event) {
@@ -122,6 +123,10 @@ void nr::badge::set_social_level(uint8_t new_level)
 
 void nr::badge::set_focused_screen(nd::screen& newly_focused_screen) noexcept
 {
+	if (_focused_screen == &_string_property_edit_screen) {
+		_string_property_edit_screen.clean_up_property();
+	}
+
 	_focused_screen = &newly_focused_screen;
 	_focused_screen->focused();
 	_button_had_non_repeat_event_since_screen_focus_change = 0;
@@ -133,10 +138,6 @@ void nr::badge::relase_focus_current_screen() noexcept
 		_scroll_screen.set_property(_user_name);
 		set_focused_screen(_scroll_screen);
 	} else {
-		if (_focused_screen == &_string_property_edit_screen) {
-			_string_property_edit_screen.clean_up_property();
-		}
-
 		_menu_screen.set_choices(_main_menu_choices);
 		set_focused_screen(_menu_screen);
 	}
@@ -145,6 +146,13 @@ void nr::badge::relase_focus_current_screen() noexcept
 void nr::badge::on_disconnection() noexcept
 {
 	Serial.println(F("Connection lost"));
+	_connected = false;
+
+	//if (_focused_screen == &_pairing_screen) {
+		// Back to the idle state.
+		_menu_screen.set_choices(_main_menu_choices);
+		set_focused_screen(_menu_screen);
+	//}
 }
 
 void nr::badge::on_pairing_begin() noexcept
@@ -153,10 +161,14 @@ void nr::badge::on_pairing_begin() noexcept
 
 void nr::badge::on_pairing_end(nc::peer_id_t our_peer_id, uint8_t peer_count) noexcept
 {
+	_connected = true;
 	Serial.print(F("Connected to network: peer_id="));
 	Serial.print(int(our_peer_id));
 	Serial.print(F(", peer_count="));
 	Serial.println(int(peer_count));
+
+	_scroll_screen.set_property(F("Pairing"));
+	set_focused_screen(_scroll_screen);
 }
 
 nc::network_handler::application_message_action
@@ -164,4 +176,11 @@ nr::badge::on_message_received(communication::message::type message_type,
 			       const uint8_t *message) noexcept
 {
 	return nc::network_handler::application_message_action::OK;
+}
+
+void nr::badge::on_splash_complete() noexcept
+{
+	if (_focused_screen == &_splash_screen) {
+		relase_focus_current_screen();
+	}
 }
