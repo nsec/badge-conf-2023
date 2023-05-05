@@ -12,12 +12,12 @@
 #include "display/idle.hpp"
 #include "display/menu/main_menu_choices.hpp"
 #include "display/menu/menu.hpp"
-#include "display/pairing.hpp"
 #include "display/renderer.hpp"
 #include "display/screen.hpp"
 #include "display/scroll.hpp"
 #include "display/splash.hpp"
 #include "display/string_property_editor.hpp"
+#include "display/text.hpp"
 #include "led/strip_animator.hpp"
 #include "network/network_handler.hpp"
 
@@ -42,6 +42,8 @@ public:
 
 	void relase_focus_current_screen() noexcept;
 	void on_splash_complete() noexcept;
+	uint8_t level() const noexcept;
+	bool is_connected() const noexcept;
 
 private:
 	// Handle new button event
@@ -72,7 +74,7 @@ private:
 	display::string_property_editor_screen _string_property_edit_screen;
 	display::splash_screen _splash_screen;
 	display::scroll_screen _scroll_screen;
-	//display::pairing_screen _pairing_screen;
+	display::text_screen _text_screen;
 	display::screen *_focused_screen;
 
 	// displays

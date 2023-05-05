@@ -11,6 +11,7 @@
 #include "network/network_messages.hpp"
 
 #include <Arduino.h>
+#include <ArduinoUniqueID.h>
 
 namespace nr = nsec::runtime;
 namespace nd = nsec::display;
@@ -19,15 +20,40 @@ namespace nb = nsec::button;
 
 namespace {
 const char set_name_prompt[] PROGMEM = "Enter your name";
+const char yes_str[] PROGMEM = "yes";
+const char no_str[] PROGMEM = "no";
 
 const __FlashStringHelper *as_flash_string(const char *str)
 {
 	return static_cast<const __FlashStringHelper *>(static_cast<const void *>(str));
 }
+
+void badge_info_printer(void *badge_data,
+			Print& print,
+			nsec::scheduling::absolute_time_ms current_time_ms)
+{
+	auto *badge = reinterpret_cast<class nsec::runtime::badge *>(badge_data);
+
+	print.print(F("ID: "));
+	for (uint8_t i = 0; i < UniqueIDsize; i++) {
+		if (UniqueID[i] < 0x10)
+			print.print(F("0"));
+		print.print(UniqueID[i], HEX);
+		print.print(F(" "));
+	}
+	print.println();
+
+	print.print(F("Level: "));
+	print.println(int(badge->level()));
+
+	print.print(F("Connected: "));
+	print.println(badge->is_connected() ? as_flash_string(yes_str) : as_flash_string(no_str));
+}
+
 } // anonymous namespace
 
 nr::badge::badge() :
-_connected{false},
+	_connected{ false },
 	_user_name{ "Kassandra Lapointe-Chagnon" },
 	_button_watcher(
 		nb::new_button_event_notifier{ [](nsec::button::id id, nsec::button::event event) {
@@ -43,16 +69,26 @@ _connected{false},
 		[](nsec::communication::message::type message_type, const uint8_t *message) {
 			return nsec::g::the_badge.on_message_received(message_type, message);
 		}),
-	_main_menu_choices{ { [](void *data) {
-				     auto *badge = reinterpret_cast<class badge *>(data);
+	_main_menu_choices{
+		{ [](void *data) {
+			 auto *badge = reinterpret_cast<class badge *>(data);
 
-				     badge->_string_property_edit_screen.set_property(
-					     as_flash_string(set_name_prompt),
-					     badge->_user_name,
-					     sizeof(badge->_user_name));
-				     badge->set_focused_screen(badge->_string_property_edit_screen);
-			     },
-			      this } }
+			 badge->_string_property_edit_screen.set_property(
+				 as_flash_string(set_name_prompt),
+				 badge->_user_name,
+				 sizeof(badge->_user_name));
+			 badge->set_focused_screen(badge->_string_property_edit_screen);
+		 },
+		  this },
+		{ [](void *data) {
+			 auto *badge = reinterpret_cast<class badge *>(data);
+
+			 badge->_text_screen.set_printer(
+				 nd::text_screen::text_printer{ badge_info_printer, badge });
+			 badge->set_focused_screen(badge->_text_screen);
+		 },
+		  this },
+	}
 {
 	set_focused_screen(_splash_screen);
 }
@@ -71,6 +107,16 @@ void nr::badge::setup()
 
 	// Hardware serial init (through USB-C connector).
 	Serial.begin(38400);
+}
+
+uint8_t nr::badge::level() const noexcept
+{
+	return _social_level;
+}
+
+bool nr::badge::is_connected() const noexcept
+{
+	return _connected;
 }
 
 void nr::badge::on_button_event(nsec::button::id button, nsec::button::event event) noexcept
@@ -148,11 +194,8 @@ void nr::badge::on_disconnection() noexcept
 	Serial.println(F("Connection lost"));
 	_connected = false;
 
-	//if (_focused_screen == &_pairing_screen) {
-		// Back to the idle state.
-		_menu_screen.set_choices(_main_menu_choices);
-		set_focused_screen(_menu_screen);
-	//}
+	_menu_screen.set_choices(_main_menu_choices);
+	set_focused_screen(_menu_screen);
 }
 
 void nr::badge::on_pairing_begin() noexcept

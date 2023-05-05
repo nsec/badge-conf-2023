@@ -14,7 +14,8 @@ namespace nsec::display {
 class main_menu_choices : public menu_screen::choices {
 public:
 	explicit main_menu_choices(
-		const choices::choice::menu_choice_action& set_name_action) noexcept;
+		const choices::choice::menu_choice_action& set_name_action,
+		const choices::choice::menu_choice_action& show_badge_info_action) noexcept;
 
 	/* Deactivate copy and assignment. */
 	main_menu_choices(const main_menu_choices&) = delete;
@@ -28,7 +29,8 @@ public:
 
 private:
 	const choices::choice::menu_choice_action _set_name_action;
-	const menu_screen::choices::choice _choices[8];
+	const choices::choice::menu_choice_action _show_badge_info_action;
+	const menu_screen::choices::choice _choices[4];
 };
 
 } // namespace nsec::display
