@@ -862,14 +862,8 @@ nc::network_handler::handle_transmission_result nc::network_handler::_handle_tra
 		switch (receive_result) {
 		case handle_reception_result::COMPLETE:
 		{
-			if (new_message_type == uint8_t(wire_msg_type::OK)) {
-				_clear_outgoing_message();
-				return handle_transmission_result::COMPLETE;
-			} else {
-				_reset();
-			}
-
-			break;
+			_clear_outgoing_message();
+			return handle_transmission_result::COMPLETE;
 		}
 		case handle_reception_result::NO_DATA:
 			if (current_time_ms - _last_transmission_time_ms >=
