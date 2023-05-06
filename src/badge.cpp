@@ -282,10 +282,9 @@ void nr::badge::network_id_exchanger::connected(nr::badge& badge) noexcept
 	nc::message::announce_badge_id msg = { .peer_id = our_id };
 	memcpy(msg.board_unique_id, _UniqueID.id, UniqueIDsize);
 
-	const auto enqueue_status = badge._network_handler.enqueue_app_message(
-		nc::peer_relative_position::RIGHT,
-		uint8_t(nc::message::type::ANNOUNCE_BADGE_ID),
-		reinterpret_cast<const uint8_t *>(&msg));
+	badge._network_handler.enqueue_app_message(nc::peer_relative_position::RIGHT,
+						   uint8_t(nc::message::type::ANNOUNCE_BADGE_ID),
+						   reinterpret_cast<const uint8_t *>(&msg));
 }
 
 void nr::badge::network_id_exchanger::new_message(nr::badge& badge,
@@ -326,7 +325,7 @@ void nr::badge::network_id_exchanger::new_message(nr::badge& badge,
 			};
 			memcpy(msg.board_unique_id, _UniqueID.id, UniqueIDsize);
 
-			const auto enqueue_result = badge._network_handler.enqueue_app_message(
+			badge._network_handler.enqueue_app_message(
 				nc::peer_relative_position(_direction),
 				uint8_t(nc::message::type::ANNOUNCE_BADGE_ID),
 				reinterpret_cast<const uint8_t *>(&msg));
@@ -346,7 +345,7 @@ void nr::badge::network_id_exchanger::new_message(nr::badge& badge,
 		}
 
 		// Forward messages from other badges.
-		const auto enqueue_result = badge._network_handler.enqueue_app_message(
+		badge._network_handler.enqueue_app_message(
 			msg_origin_peer_id < our_peer_id ? nc::peer_relative_position::RIGHT :
 							   nc::peer_relative_position::LEFT,
 			uint8_t(msg_type),
@@ -367,10 +366,9 @@ void nr::badge::network_id_exchanger::message_sent(nr::badge& badge) noexcept
 	nc::message::announce_badge_id msg = { .peer_id = badge._network_handler.peer_id() };
 	memcpy(msg.board_unique_id, _UniqueID.id, UniqueIDsize);
 
-	const auto enqueue_result = badge._network_handler.enqueue_app_message(
-		nc::peer_relative_position(_direction),
-		uint8_t(nc::message::type::ANNOUNCE_BADGE_ID),
-		reinterpret_cast<const uint8_t *>(&msg));
+	badge._network_handler.enqueue_app_message(nc::peer_relative_position(_direction),
+						   uint8_t(nc::message::type::ANNOUNCE_BADGE_ID),
+						   reinterpret_cast<const uint8_t *>(&msg));
 
 	_send_ours_on_next_send_complete = false;
 
