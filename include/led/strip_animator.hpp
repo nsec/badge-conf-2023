@@ -27,14 +27,32 @@ public:
 	void setup() noexcept;
 
 	void set_current_animation_idle(unsigned int current_level) noexcept;
+	void set_breathing_led_count(unsigned int led_count) noexcept;
 
 protected:
 	void run(scheduling::absolute_time_ms current_time_ms) noexcept override;
 
 private:
+	enum class animation_type {
+		LEGACY,
+	};
+
+	void _legacy_animation_tick() noexcept;
+
 	Adafruit_NeoPixel _pixels;
-	uint8_t _start_position = 0;
-	uint8_t _level = 0;
+	animation_type _current_animation;
+
+	union {
+		struct {
+			uint8_t level;
+		} legacy;
+	} _animation_config;
+	union {
+		struct {
+			uint8_t start_position;
+
+		} legacy;
+	} _animation_state;
 };
 } // namespace nsec::led
 #endif // NSEC_LED_STRIP_ANIMATOR_HPP

@@ -28,19 +28,19 @@ void nl::strip_animator::setup() noexcept
 	_pixels.begin();
 }
 
-void nl::strip_animator::run(scheduling::absolute_time_ms current_time_ms) noexcept
+void nl::strip_animator::_legacy_animation_tick() noexcept
 {
-	if (_start_position > 15) {
+	if (_animation_state.legacy.start_position > 15) {
 		// wrap around when reaching the end led strip
-		_start_position = 0;
+		_animation_state.legacy.start_position = 0;
 	}
 
 	// Set all pixel colors to 'off'
 	_pixels.clear();
-	for (unsigned int i = 0; i < _level; i++) // determine how many LED should be ON
+	for (unsigned int i = 0; i < _animation_config.legacy.level; i++) // determine how many LED should be ON
 	{
 		// led_ID is the current LED index that we are update.
-		uint8_t const led_ID = (_start_position + i) % 16; // This is going over every
+		uint8_t const led_ID = (_animation_state.legacy.start_position + i) % 16; // This is going over every
 								   // single LED that needs to
 								   // be on based on the
 								   // current LVL
@@ -113,13 +113,29 @@ void nl::strip_animator::run(scheduling::absolute_time_ms current_time_ms) noexc
 		_pixels.setPixelColor(led_ID, _pixels.Color(r, g, b));
 	}
 
-	_start_position++;
+	_animation_state.legacy.start_position++;
 	// Send the updated pixel colors to the hardware.
 	_pixels.show();
 }
 
+void nl::strip_animator::run(scheduling::absolute_time_ms current_time_ms) noexcept
+{
+	switch (_current_animation) {
+	case animation_type::LEGACY:
+		_legacy_animation_tick();
+	default:
+		break;
+	}
+}
+
 void nl::strip_animator::set_current_animation_idle(unsigned int current_level) noexcept
 {
-	_start_position = 0;
-	_level = current_level;
+	_current_animation = animation_type::LEGACY;
+	_animation_state.legacy.start_position = 0;
+	_animation_config.legacy.level = current_level;
+}
+
+void nl::strip_animator::set_breathing_led_count(unsigned int current_level) noexcept
+{
+	set_current_animation_idle(current_level);
 }
