@@ -51,6 +51,10 @@ constexpr uint8_t menu_font_size = 1;
 constexpr uint8_t scroll_font_size = 3;
 constexpr uint8_t pairing_font_size = 3;
 
+// Default font.
+constexpr uint8_t font_base_width = 6;
+constexpr uint8_t font_base_height = 8;
+
 constexpr nsec::scheduling::absolute_time_ms prompt_cycle_time = 2000;
 
 constexpr uint8_t scroll_pixels_per_second = 80;

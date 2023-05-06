@@ -199,13 +199,12 @@ void nd::scroll_screen::focused() noexcept
 
 void nd::scroll_screen::_initialize_layout(Adafruit_SSD1306& canvas) noexcept
 {
-	int x, y;
-	unsigned int text_width, text_height;
-
-	canvas.setTextSize(nsec::config::display::scroll_font_size);
-	canvas.getTextBounds("a", 0, 0, &x, &y, &text_width, &text_height);
-	_scroll_character_width = text_width;
-	_scroll_character_y_offset = (canvas.height() - text_height) / 2;
+	_scroll_character_width =
+		nsec::config::display::scroll_font_size * config::display::font_base_width;
+	_scroll_character_y_offset =
+		(canvas.height() -
+		 (config::display::font_base_height * nsec::config::display::scroll_font_size)) /
+		2;
 	_layout_initialized = true;
 }
 

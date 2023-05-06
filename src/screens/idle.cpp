@@ -4,6 +4,7 @@
  * Copyright 2023 Jérémie Galarneau <jeremie.galarneau@gmail.com>
  */
 
+#include "config.hpp"
 #include "display/idle.hpp"
 #include "display/utils.hpp"
 
@@ -49,14 +50,11 @@ void nd::idle_screen::_render(scheduling::absolute_time_ms current_time_ms,
 
 	// Initialize the bounding-box on first frame
 	if (_text_width == 0) {
-		int16_t x, y;
-		uint16_t text_width, text_height;
 		char local_text[max_text_length];
 
 		strncpy_P(local_text, (const char *) text, max_text_length);
-		canvas.getTextBounds(local_text, 0, 0, &x, &y, &text_width, &text_height);
-		_text_width = text_width;
-		_text_height = text_height;
+		_text_width = nsec::config::display::font_base_width;
+		_text_height = nsec::config::display::font_base_height;
 	}
 
 	if ((_pos_x + _text_width >= width() && _moving_right) || (_pos_x <= 0 && !_moving_right)) {

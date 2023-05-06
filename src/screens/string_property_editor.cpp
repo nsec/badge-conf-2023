@@ -267,22 +267,15 @@ void nd::string_property_editor_screen::clean_up_property() noexcept
 
 void nd::string_property_editor_screen::_initialize_layout(Adafruit_SSD1306& canvas) noexcept
 {
-	int x, y;
-	unsigned int text_width, text_height;
+	_prompt_characters_per_screen = canvas.width() / config::display::font_base_width;
+	_edit_character_y_offset = config::display::font_base_height + (config::display::font_base_height / 2);
+	_prompt_glyph_width = config::display::font_base_width;
+	_prompt_glyph_height = config::display::font_base_height;
 
-	canvas.setTextSize(1);
-	canvas.getTextBounds("a", 0, 0, &x, &y, &text_width, &text_height);
-	_prompt_characters_per_screen = canvas.width() / text_width;
-	_edit_character_y_offset = text_height + (text_height / 2);
-	_prompt_glyph_width = text_width;
-	_prompt_glyph_height = text_height;
-
-	canvas.setTextSize(2);
-	canvas.getTextBounds("a", 0, 0, &x, &y, &text_width, &text_height);
-	_edit_characters_per_screen = (canvas.width() / text_width) - 1;
-	_edit_character_width = text_width;
-	_edit_character_height = text_height;
-	_edit_character_x_offset = text_width / 2;
+	_edit_characters_per_screen = (canvas.width() / (config::display::font_base_width * 2)) - 1;
+	_edit_character_width = config::display::font_base_width * 2;
+	_edit_character_height = config::display::font_base_height * 2;
+	_edit_character_x_offset = (config::display::font_base_width * 2) / 2;
 
 	_layout_initialized = true;
 }
