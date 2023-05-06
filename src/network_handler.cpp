@@ -30,17 +30,6 @@ enum class wire_msg_type : uint8_t {
 }
 
 namespace logging {
-const __FlashStringHelper *as_flash_string(const char *str)
-{
-	return static_cast<const __FlashStringHelper *>(static_cast<const void *>(str));
-}
-
-const char monitor_str[] PROGMEM = "MONITOR";
-const char reset_str[] PROGMEM = "RESET";
-const char announce_str[] PROGMEM = "ANNOUNCE";
-const char announce_reply_str[] PROGMEM = "ANNOUNCE_REPLY";
-const char ok_str[] PROGMEM = "OK";
-const char app_message_str[] PROGMEM = "APP_MESSAGE";
 
 #if NETWORK_VERBOSE_LOG == 1
 const char left_str[] PROGMEM = "left";
