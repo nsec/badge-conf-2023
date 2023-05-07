@@ -58,6 +58,7 @@ private:
 	enum class network_app_state {
 		UNCONNECTED,
 		EXCHANGING_IDS,
+		ANIMATE_PAIRING,
 		IDLE,
 	};
 	class network_id_exchanger {
@@ -70,7 +71,7 @@ private:
 		network_id_exchanger& operator=(network_id_exchanger&&) = delete;
 		~network_id_exchanger() = default;
 
-		void connected(badge&) noexcept;
+		void start(badge&) noexcept;
 		void new_message(badge& badge,
 				 nsec::communication::message::type msg_type,
 				 const uint8_t *payload) noexcept;
@@ -89,6 +90,55 @@ private:
 		bool _done_after_sending_ours : 1;
 	};
 
+	class pairing_animator {
+	public:
+		pairing_animator();
+
+		pairing_animator(const pairing_animator&) = delete;
+		pairing_animator(pairing_animator&&) = delete;
+		pairing_animator& operator=(const pairing_animator&) = delete;
+		pairing_animator& operator=(pairing_animator&&) = delete;
+		~pairing_animator() = default;
+
+		void start(badge&) noexcept;
+		void new_message(badge& badge,
+				 nsec::communication::message::type msg_type,
+				 const uint8_t *payload) noexcept;
+		void message_sent(badge& badge) noexcept;
+		void reset() noexcept;
+
+		void tick(nsec::scheduling::absolute_time_ms current_time_ms) noexcept;
+
+	private:
+		class animation_task : public nsec::scheduling::periodic_task {
+		public:
+			explicit animation_task(
+				const nsec::callback<void, nsec::scheduling::absolute_time_ms>&
+					action);
+			void
+			run(nsec::scheduling::absolute_time_ms current_time_ms) noexcept override;
+
+		private:
+			nsec::callback<void, nsec::scheduling::absolute_time_ms> _run;
+		};
+
+		enum class animation_state {
+			WAIT_MESSAGE_ANIMATION_PART_1,
+			LIGHT_UP_UPPER_BAR,
+			LIGHT_UP_LOWER_BAR,
+			WAIT_MESSAGE_ANIMATION_PART_2,
+			WAIT_DONE,
+			DONE,
+		};
+
+		void _animation_state(animation_state) noexcept;
+		animation_state _animation_state() const noexcept;
+
+		uint8_t _current_state : 3;
+		uint8_t _state_counter : 5;
+		animation_task _timer;
+	};
+
 	// Handle new button event
 	void on_button_event(button::id button, button::event event) noexcept;
 	void set_social_level(uint8_t new_level) noexcept;
@@ -99,21 +149,13 @@ private:
 	enum class badge_discovered_result { NEW, ALREADY_KNOWN };
 	badge_discovered_result on_badge_discovered(const uint8_t *id) noexcept;
 	void on_badge_discovery_completed() noexcept;
-	void on_disconnection() noexcept;
-	void on_pairing_begin() noexcept;
-	void on_pairing_end(nsec::communication::peer_id_t our_peer_id,
-			    uint8_t peer_count) noexcept;
-	nsec::communication::network_handler::application_message_action
-	on_message_received(communication::message::type message_type,
-			    const uint8_t *message) noexcept;
-	void on_message_sent() noexcept;
 
 	network_app_state _network_app_state() const noexcept;
 	void _network_app_state(network_app_state) noexcept;
 
 	uint8_t _social_level : 7;
 	// Storage for network_app_state
-	uint8_t _current_network_app_state;
+	uint8_t _current_network_app_state : 4;
 	// Mask to prevent repeats after a screen transition, one bit per button.
 	uint8_t _button_had_non_repeat_event_since_screen_focus_change;
 	char _user_name[nsec::config::user::name_max_length];
@@ -135,6 +177,7 @@ private:
 	// network
 	communication::network_handler _network_handler;
 	network_id_exchanger _id_exchanger;
+	pairing_animator _pairing_animator;
 
 	// menu choices
 	display::main_menu_choices _main_menu_choices;

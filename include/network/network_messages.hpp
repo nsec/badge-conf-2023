@@ -17,6 +17,9 @@ namespace nsec::communication::message {
 enum class type {
 	ANNOUNCE_BADGE_ID =
 		nsec::config::communication::application_message_type_range_begin,
+	PAIRING_ANIMATION_PART_1_DONE,
+	PAIRING_ANIMATION_PART_2_DONE,
+	PAIRING_ANIMATION_DONE,
 };
 
 struct announce_badge_id {

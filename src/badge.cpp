@@ -175,13 +175,20 @@ void nr::badge::set_focused_screen(nd::screen& newly_focused_screen) noexcept
 
 void nr::badge::relase_focus_current_screen() noexcept
 {
+	if (_network_app_state() == network_app_state::EXCHANGING_IDS ||
+	    _network_app_state() == network_app_state::ANIMATE_PAIRING) {
+		// Lock the user to the pairing screen.
+		return;
+	}
+
 	if (_focused_screen == &_menu_screen) {
 		_scroll_screen.set_property(_user_name);
 		set_focused_screen(_scroll_screen);
-	} else {
-		_menu_screen.set_choices(_main_menu_choices);
-		set_focused_screen(_menu_screen);
+		return;
 	}
+
+	_menu_screen.set_choices(_main_menu_choices);
+	set_focused_screen(_menu_screen);
 }
 
 void nr::badge::on_disconnection() noexcept
@@ -189,9 +196,11 @@ void nr::badge::on_disconnection() noexcept
 	Serial.println(F("Connection lost"));
 	_network_app_state(network_app_state::UNCONNECTED);
 	_id_exchanger.reset();
+	_pairing_animator.reset();
 
 	_menu_screen.set_choices(_main_menu_choices);
 	set_focused_screen(_menu_screen);
+	_strip_animator.set_current_animation_idle(_social_level);
 }
 
 void nr::badge::on_pairing_begin() noexcept
@@ -210,7 +219,7 @@ void nr::badge::on_pairing_end(nc::peer_id_t our_peer_id, uint8_t peer_count) no
 
 	_id_exchanger.reset();
 	_network_app_state(network_app_state::EXCHANGING_IDS);
-	_id_exchanger.connected(*this);
+	_id_exchanger.start(*this);
 }
 
 nc::network_handler::application_message_action
@@ -219,12 +228,14 @@ nr::badge::on_message_received(communication::message::type message_type,
 {
 	if (_network_app_state() == network_app_state::EXCHANGING_IDS) {
 		_id_exchanger.new_message(*this, message_type, message);
+	} else if (_network_app_state() == network_app_state::ANIMATE_PAIRING) {
+		_pairing_animator.new_message(*this, message_type, message);
 	}
 
 	return nc::network_handler::application_message_action::OK;
 }
 
-void nr::badge::on_message_sent() noexcept
+void nr::badge::on_app_message_sent() noexcept
 {
 	if (_network_app_state() == network_app_state::EXCHANGING_IDS) {
 		_id_exchanger.message_sent(*this);
@@ -246,6 +257,13 @@ nr::badge::network_app_state nr::badge::_network_app_state() const noexcept
 void nr::badge::_network_app_state(nr::badge::network_app_state new_state) noexcept
 {
 	_current_network_app_state = uint8_t(new_state);
+	if (new_state == network_app_state::ANIMATE_PAIRING) {
+		_pairing_animator.start(*this);
+	} else if (new_state == network_app_state::IDLE ||
+		   new_state == network_app_state::UNCONNECTED) {
+		set_focused_screen(_menu_screen);
+		_strip_animator.set_current_animation_idle(_social_level);
+	}
 }
 
 nr::badge::badge_discovered_result nr::badge::on_badge_discovered(const uint8_t *id) noexcept
@@ -258,9 +276,10 @@ void nr::badge::on_badge_discovery_completed() noexcept
 	Serial.print(F("Discovery completed: "));
 	Serial.print(_id_exchanger.new_badges_discovered());
 	Serial.println(F(" new badges"));
+	_network_app_state(network_app_state::ANIMATE_PAIRING);
 }
 
-void nr::badge::network_id_exchanger::connected(nr::badge& badge) noexcept
+void nr::badge::network_id_exchanger::start(nr::badge& badge) noexcept
 {
 	const auto our_id = badge._network_handler.peer_id();
 
@@ -374,4 +393,133 @@ void nr::badge::network_id_exchanger::reset() noexcept
 	_message_received_count = 0;
 	_send_ours_on_next_send_complete = false;
 	_done_after_sending_ours = false;
+}
+
+nr::badge::pairing_animator::pairing_animator() :
+	_timer({ [](void *data, nsec::scheduling::absolute_time_ms current_time_ms) {
+			auto *animator = reinterpret_cast<pairing_animator *>(data);
+
+			animator->tick(current_time_ms);
+		},
+		 this })
+{
+	_animation_state(animation_state::DONE);
+	nsec::g::the_scheduler.schedule_task(_timer);
+}
+
+void nr::badge::pairing_animator::_animation_state(animation_state new_state) noexcept
+{
+	_current_state = uint8_t(new_state);
+	_state_counter = 0;
+}
+
+nr::badge::pairing_animator::animation_state
+nr::badge::pairing_animator::_animation_state() const noexcept
+{
+	return animation_state(_current_state);
+}
+
+void nr::badge::pairing_animator::start(nr::badge& badge) noexcept
+{
+	if (badge._network_handler.position() == nc::network_handler::link_position::LEFT_MOST) {
+		_animation_state(animation_state::LIGHT_UP_UPPER_BAR);
+	} else {
+		_animation_state(animation_state::WAIT_MESSAGE_ANIMATION_PART_1);
+	}
+}
+
+void nr::badge::pairing_animator::reset() noexcept
+{
+	_animation_state(animation_state::DONE);
+}
+
+nr::badge::pairing_animator::animation_task::animation_task(
+	const nsec::callback<void, nsec::scheduling::absolute_time_ms>& action) :
+	periodic_task(250), _run{ action }
+{
+}
+
+void nr::badge::pairing_animator::animation_task::run(
+	nsec::scheduling::absolute_time_ms current_time_ms) noexcept
+{
+	_run(current_time_ms);
+}
+
+void nr::badge::pairing_animator::tick(nsec::scheduling::absolute_time_ms current_time_ms) noexcept
+{
+	switch (_animation_state()) {
+	case animation_state::DONE:
+		break;
+	case animation_state::WAIT_MESSAGE_ANIMATION_PART_1:
+	case animation_state::WAIT_MESSAGE_ANIMATION_PART_2:
+	case animation_state::WAIT_DONE:
+		break;
+	case animation_state::LIGHT_UP_UPPER_BAR:
+		nsec::g::the_badge._strip_animator.set_red_to_green_led_progress_bar(
+			_state_counter);
+		if (_state_counter < 8) {
+			_state_counter++;
+		} else if (nsec::g::the_badge._network_handler.position() ==
+			   nc::network_handler::link_position::RIGHT_MOST) {
+			_animation_state(animation_state::LIGHT_UP_LOWER_BAR);
+		} else {
+			nsec::g::the_badge._network_handler.enqueue_app_message(
+				nc::peer_relative_position::RIGHT,
+				uint8_t(nc::message::type::PAIRING_ANIMATION_PART_1_DONE),
+				nullptr);
+			_animation_state(animation_state::WAIT_MESSAGE_ANIMATION_PART_2);
+		}
+
+		break;
+	case animation_state::LIGHT_UP_LOWER_BAR:
+		nsec::g::the_badge._strip_animator.set_red_to_green_led_progress_bar(
+			_state_counter + 8);
+
+		if (_state_counter < 8) {
+			_state_counter++;
+		} else if (nsec::g::the_badge._network_handler.position() ==
+			   nc::network_handler::link_position::LEFT_MOST) {
+			nsec::g::the_badge._network_handler.enqueue_app_message(
+				nc::peer_relative_position::RIGHT,
+				uint8_t(nc::message::type::PAIRING_ANIMATION_DONE),
+				nullptr);
+			_animation_state(animation_state::DONE);
+			nsec::g::the_badge._network_app_state(nr::badge::network_app_state::IDLE);
+		} else {
+			nsec::g::the_badge._network_handler.enqueue_app_message(
+				nc::peer_relative_position::LEFT,
+				uint8_t(nc::message::type::PAIRING_ANIMATION_PART_2_DONE),
+				nullptr);
+			_animation_state(animation_state::WAIT_DONE);
+		}
+
+		break;
+	}
+}
+
+void nr::badge::pairing_animator::new_message(nr::badge& badge,
+					      nc::message::type msg_type,
+					      const uint8_t *payload) noexcept
+{
+	switch (msg_type) {
+	case nc::message::type::PAIRING_ANIMATION_PART_1_DONE:
+		_animation_state(animation_state::LIGHT_UP_UPPER_BAR);
+		break;
+	case nc::message::type::PAIRING_ANIMATION_PART_2_DONE:
+		_animation_state(animation_state::LIGHT_UP_LOWER_BAR);
+		break;
+	case nc::message::type::PAIRING_ANIMATION_DONE:
+		if (nsec::g::the_badge._network_handler.position() !=
+		    nc::network_handler::link_position::RIGHT_MOST) {
+			nsec::g::the_badge._network_handler.enqueue_app_message(
+				nc::peer_relative_position::RIGHT,
+				uint8_t(nc::message::type::PAIRING_ANIMATION_DONE),
+				nullptr);
+		}
+
+		nsec::g::the_badge._network_app_state(nr::badge::network_app_state::IDLE);
+		break;
+	default:
+		break;
+	}
 }
