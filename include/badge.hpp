@@ -9,7 +9,6 @@
 
 #include "button/watcher.hpp"
 #include "config.hpp"
-#include "display/idle.hpp"
 #include "display/menu/main_menu_choices.hpp"
 #include "display/menu/menu.hpp"
 #include "display/renderer.hpp"
