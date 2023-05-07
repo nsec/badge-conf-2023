@@ -804,10 +804,6 @@ nc::network_handler::handle_reception_result nc::network_handler::_handle_recept
 				checksummer.push(message_payload[i]);
 			}
 
-			if (checksum != checksummer.checksum()) {
-				Serial.println(F("Checksum failed"));
-			}
-
 			return checksum == checksummer.checksum() ?
 				handle_reception_result::COMPLETE :
 				handle_reception_result::CORRUPTED;
@@ -861,8 +857,8 @@ nc::network_handler::handle_transmission_result nc::network_handler::_handle_tra
 		case handle_reception_result::NO_DATA:
 			if (current_time_ms - _last_transmission_time_ms >=
 			    nsec::config::communication::network_handler_retransmit_timeout_ms) {
-				Serial.println(F("Queueing retransmission"));
-				// Attempt a retransmission
+
+				// Attempt a retransmission.
 				_message_transmission_state(
 					message_transmission_state::ATTEMPT_SEND);
 			}
@@ -1118,6 +1114,7 @@ void nc::network_handler::_run_wire_protocol(ns::absolute_time_ms current_time_m
 			nc::network_handler::link_position::MIDDLE;
 		const auto pending_matches_wave_front_direction =
 			_pending_outgoing_app_message_direction() == _wave_front_direction();
+
 		if (_has_pending_outgoing_app_message() &&
 		    (!is_middle_peer || (is_middle_peer && pending_matches_wave_front_direction))) {
 			_set_outgoing_message(current_time_ms,
