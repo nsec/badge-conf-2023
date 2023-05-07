@@ -17,6 +17,8 @@ namespace ng = nsec::g;
 
 namespace {
 enum class wire_msg_type : uint8_t {
+	// Reserved.
+	NONE = 0,
 	// Wire protocol reserved messages
 	MONITOR = 3,
 	RESET = 4,
@@ -702,12 +704,12 @@ uint8_t nc::network_handler::_pending_outgoing_app_message_size() const noexcept
 
 bool nc::network_handler::_has_pending_outgoing_app_message() const noexcept
 {
-	return _pending_outgoing_app_message_size();
+	return _current_pending_outgoing_app_message_type != 0;
 }
 
 void nc::network_handler::_clear_pending_outgoing_app_message() noexcept
 {
-	_current_pending_outgoing_app_message_size = 0;
+	_current_pending_outgoing_app_message_type = 0;
 }
 
 SoftwareSerial& nc::network_handler::_listening_side_serial() noexcept
