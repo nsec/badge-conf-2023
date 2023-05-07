@@ -71,13 +71,6 @@ void delete_character(char *str)
 
 	*(str - 1) = ' ';
 }
-
-[[maybe_unused]] void print_property(const char *property)
-{
-	Serial.print(F("String property is: ["));
-	Serial.print(property);
-	Serial.println(F("]"));
-}
 } // anonymous namespace
 
 nd::string_property_editor_screen::prompt_cycle_task::prompt_cycle_task(
@@ -261,8 +254,6 @@ void nd::string_property_editor_screen::clean_up_property() noexcept
 			break;
 		}
 	}
-
-	print_property(_property.value);
 }
 
 void nd::string_property_editor_screen::_initialize_layout(Adafruit_SSD1306& canvas) noexcept

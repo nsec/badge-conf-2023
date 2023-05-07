@@ -14,9 +14,7 @@
 void setup()
 {
 	nsec::g::the_badge.setup();
-
 	UniqueIDdump(Serial);
-	Serial.println(F("Setup completed"));
 }
 
 void loop()

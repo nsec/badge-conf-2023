@@ -16,27 +16,7 @@ namespace nsec::button {
 enum class id { UP = 0, RIGHT = 1, DOWN = 2, LEFT = 3, OK = 4, CANCEL = 5 };
 enum class event { UP, DOWN, DOWN_REPEAT };
 
-/*
- * Callable provided to a button watcher and invoked when a new button event is
- * detected.
- */
-class new_button_event_notifier {
-public:
-	using new_button_event_cb = void (*)(id id, event event);
-
-	explicit new_button_event_notifier(new_button_event_cb function) noexcept :
-		_function{ function }
-	{
-	}
-
-	void operator()(id id, event event) const
-	{
-		_function(id, event);
-	}
-
-private:
-	new_button_event_cb _function;
-};
+using new_button_event_notifier = void (*)(id id, event event);
 
 /*
  * Tracks the state of the badge's buttons to debounce and transform

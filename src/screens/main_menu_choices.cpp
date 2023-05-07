@@ -24,8 +24,8 @@ const __FlashStringHelper *as_flash_string(const char *str)
 } // anonymous namespace
 
 nd::main_menu_choices::main_menu_choices(
-	const choices::choice::menu_choice_action& set_name_action,
-	const choices::choice::menu_choice_action& show_badge_info_action) noexcept :
+	const choice_action& set_name_action,
+	const choice_action& show_badge_info_action) noexcept :
 	_set_name_action{ set_name_action },
 	_show_badge_info_action{ show_badge_info_action },
 	_choices{
@@ -41,8 +41,6 @@ nd::main_menu_choices::main_menu_choices(
 			as_flash_string(led_config_entry_option_name),
 			nd::menu_screen::choices::choice::menu_choice_action(
 				[](void *) {
-					Serial.println(
-						as_flash_string(led_config_entry_option_name));
 				},
 				this)),
 		nd::menu_screen::choices::choice(
@@ -57,7 +55,6 @@ nd::main_menu_choices::main_menu_choices(
 			as_flash_string(factory_reset_option_name),
 			nd::menu_screen::choices::choice::menu_choice_action(
 				[](void *) {
-					Serial.println(as_flash_string(factory_reset_option_name));
 				},
 				nullptr)),
 	}

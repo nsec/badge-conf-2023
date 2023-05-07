@@ -57,14 +57,14 @@ void badge_info_printer(void *badge_data,
 nr::badge::badge() :
 	_user_name{ "Kassandra Lapointe-Chagnon" },
 	_button_watcher(
-		nb::new_button_event_notifier{ [](nsec::button::id id, nsec::button::event event) {
+		[](nsec::button::id id, nsec::button::event event) {
 			nsec::g::the_badge.on_button_event(id, event);
-		} }),
+		}),
 	_renderer{ &_focused_screen },
 	_network_handler(),
-	_main_menu_choices{
-		{ [](void *data) {
-			 auto *badge = reinterpret_cast<class badge *>(data);
+	_main_menu_choices(
+		[]() {
+			 auto *badge = &nsec::g::the_badge;
 
 			 badge->_string_property_edit_screen.set_property(
 				 as_flash_string(set_name_prompt),
@@ -72,16 +72,14 @@ nr::badge::badge() :
 				 sizeof(badge->_user_name));
 			 badge->set_focused_screen(badge->_string_property_edit_screen);
 		 },
-		  this },
-		{ [](void *data) {
-			 auto *badge = reinterpret_cast<class badge *>(data);
+		[]() {
+			 auto *badge = &nsec::g::the_badge;
 
 			 badge->_text_screen.set_printer(
 				 nd::text_screen::text_printer{ badge_info_printer, badge });
 			 badge->set_focused_screen(badge->_text_screen);
-		 },
-		  this },
-	}
+		 }
+	)
 {
 	_network_app_state(network_app_state::UNCONNECTED);
 	_id_exchanger.reset();
