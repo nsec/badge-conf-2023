@@ -61,16 +61,7 @@ nr::badge::badge() :
 			nsec::g::the_badge.on_button_event(id, event);
 		} }),
 	_renderer{ &_focused_screen },
-	_network_handler(
-		[]() { nsec::g::the_badge.on_disconnection(); },
-		[]() { nsec::g::the_badge.on_pairing_begin(); },
-		[](nc::peer_id_t id, uint8_t peer_count) {
-			nsec::g::the_badge.on_pairing_end(id, peer_count);
-		},
-		[](nsec::communication::message::type message_type, const uint8_t *message) {
-			return nsec::g::the_badge.on_message_received(message_type, message);
-		},
-		[]() { return nsec::g::the_badge.on_message_sent(); }),
+	_network_handler(),
 	_main_menu_choices{
 		{ [](void *data) {
 			 auto *badge = reinterpret_cast<class badge *>(data);

@@ -36,11 +36,7 @@ public:
 		application_message_action (*)(nsec::communication::message::type, const uint8_t *);
 	using message_sent_notifier = void (*)();
 
-	network_handler(disconnection_notifier,
-			pairing_begin_notifier,
-			pairing_end_notifier,
-			message_received_notifier,
-			message_sent_notifier) noexcept;
+	network_handler() noexcept;
 
 	/* Deactivate copy and assignment. */
 	network_handler(const network_handler&) = delete;
@@ -186,13 +182,6 @@ private:
 	static void _log_wire_protocol_state(wire_protocol_state state) noexcept;
 	static void _log_message_reception_state(message_reception_state state) noexcept;
 	static void _log_message_transmission_state(message_transmission_state state) noexcept;
-
-	// Event handlers
-	disconnection_notifier _notify_unconnected;
-	pairing_begin_notifier _notify_pairing_begin;
-	pairing_end_notifier _notify_pairing_end;
-	message_received_notifier _notify_message_received;
-	message_sent_notifier _notify_app_message_sent;
 
 	SoftwareSerial _left_serial;
 	SoftwareSerial _right_serial;

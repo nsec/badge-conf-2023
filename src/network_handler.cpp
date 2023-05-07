@@ -283,17 +283,8 @@ void send_wire_ok_msg(SoftwareSerial& serial) noexcept
 }
 } /* namespace */
 
-nc::network_handler::network_handler(disconnection_notifier unconnected,
-				     pairing_begin_notifier pairing_begin,
-				     pairing_end_notifier pairing_end,
-				     message_received_notifier message_received,
-				     message_sent_notifier message_sent) noexcept :
+nc::network_handler::network_handler() noexcept :
 	ns::periodic_task(nsec::config::communication::network_handler_base_period_ms),
-	_notify_unconnected{ unconnected },
-	_notify_pairing_begin{ pairing_begin },
-	_notify_pairing_end{ pairing_end },
-	_notify_message_received{ message_received },
-	_notify_app_message_sent{ message_sent },
 	_left_serial(nsec::config::communication::serial_rx_pin_left,
 		     nsec::config::communication::serial_tx_pin_left,
 		     true),
@@ -585,7 +576,7 @@ void nc::network_handler::_wire_protocol_state(wire_protocol_state state) noexce
 
 	if (_is_wire_protocol_in_a_running_state(previous_protocol_state) &&
 	    state == wire_protocol_state::UNCONNECTED) {
-		_notify_unconnected();
+		nsec::g::the_badge.on_disconnection();
 	}
 
 	if (state == wire_protocol_state::UNCONNECTED) {
@@ -612,7 +603,7 @@ void nc::network_handler::_wire_protocol_state(wire_protocol_state state) noexce
 	if (!_is_wire_protocol_in_a_running_state(previous_protocol_state) &&
 	    _is_wire_protocol_in_a_running_state(state)) {
 		// Discovery has completed.
-		_notify_pairing_end(_peer_id, _peer_count);
+		nsec::g::the_badge.on_pairing_end(_peer_id, _peer_count);
 	}
 }
 
@@ -1108,7 +1099,7 @@ void nc::network_handler::_run_wire_protocol(ns::absolute_time_ms current_time_m
 		if (message_type >=
 		    nsec::config::communication::application_message_type_range_begin) {
 			// Process app-level message
-			_notify_message_received(nc::message::type(message_type), message_payload);
+			nsec::g::the_badge.on_message_received(nc::message::type(message_type), message_payload);
 		} else if (wire_msg_type(message_type) == wire_msg_type::MONITOR) {
 			_wire_protocol_state(wire_protocol_state::RUNNING_SEND_APP_MESSAGE);
 		} else {
@@ -1140,7 +1131,7 @@ void nc::network_handler::_run_wire_protocol(ns::absolute_time_ms current_time_m
 		break;
 	}
 	case wire_protocol_state::RUNNING_CONFIRM_APP_MESSAGE:
-		_notify_app_message_sent();
+		nsec::g::the_badge.on_app_message_sent();
 		_wire_protocol_state(wire_protocol_state::RUNNING_SEND_MONITOR);
 		break;
 	case wire_protocol_state::RUNNING_SEND_MONITOR:

@@ -45,6 +45,15 @@ public:
 	uint8_t level() const noexcept;
 	bool is_connected() const noexcept;
 
+	void on_disconnection() noexcept;
+	void on_pairing_begin() noexcept;
+	void on_pairing_end(nsec::communication::peer_id_t our_peer_id,
+			    uint8_t peer_count) noexcept;
+	nsec::communication::network_handler::application_message_action
+	on_message_received(communication::message::type message_type,
+			    const uint8_t *message) noexcept;
+	void on_app_message_sent() noexcept;
+
 private:
 	enum class network_app_state {
 		UNCONNECTED,
