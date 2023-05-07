@@ -42,12 +42,10 @@ nl::strip_animator::led_color interpolate(const nl::strip_animator::keyframe& or
 }
 
 const nl::strip_animator::keyframe red_to_green_progress_bar_keyframe_template[] = {
-	// off
-	{ { 0, 0, 0 }, 0 },
 	// red
-	{ { 25, 0, 0 }, 2000 },
+	{ { 10, 0, 0 }, 0 },
 	// green <- beginning of loop
-	{ { 0, 100, 0 }, 4000 },
+	{ { 0, 100, 0 }, nsec::config::badge::pairing_animation_time_per_led_progress_bar_ms },
 	// dimmed green to green loop
 	{ { 0, 5, 0 }, 5000 },
 	{ { 0, 100, 0 }, 6000 },
@@ -290,11 +288,11 @@ void nl::strip_animator::_reset_keyframed_animation_state() noexcept
 
 void nl::strip_animator::set_red_to_green_led_progress_bar(uint8_t active_led_count) noexcept
 {
-	bool is_current_animation = _current_animation_type == animation_type::KEYFRAMED &&
+	const bool is_current_animation = _current_animation_type == animation_type::KEYFRAMED &&
 		_config.keyframed._animation == keyframed_animation::PROGRESS_BAR;
 
 	if (!is_current_animation) {
-		period_ms(30);
+		period_ms(40);
 
 		// Setup animation parameters.
 		_current_animation_type = animation_type::KEYFRAMED;
@@ -304,7 +302,7 @@ void nl::strip_animator::set_red_to_green_led_progress_bar(uint8_t active_led_co
 			sizeof(red_to_green_progress_bar_keyframe_template) /
 			sizeof(*red_to_green_progress_bar_keyframe_template);
 		_config.keyframed.keyframes = red_to_green_progress_bar_keyframe_template;
-		_config.keyframed.loop_point_index = 2;
+		_config.keyframed.loop_point_index = 1;
 
 		// Clear its state.
 		_reset_keyframed_animation_state();

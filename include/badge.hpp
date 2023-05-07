@@ -53,6 +53,8 @@ public:
 			    const uint8_t *message) noexcept;
 	void on_app_message_sent() noexcept;
 
+	void tick(nsec::scheduling::absolute_time_ms current_time_ms) noexcept;
+
 private:
 	enum class network_app_state {
 		UNCONNECTED,
@@ -109,18 +111,6 @@ private:
 		void tick(nsec::scheduling::absolute_time_ms current_time_ms) noexcept;
 
 	private:
-		class animation_task : public nsec::scheduling::periodic_task {
-		public:
-			explicit animation_task(
-				const nsec::callback<void, nsec::scheduling::absolute_time_ms>&
-					action);
-			void
-			run(nsec::scheduling::absolute_time_ms current_time_ms) noexcept override;
-
-		private:
-			nsec::callback<void, nsec::scheduling::absolute_time_ms> _run;
-		};
-
 		enum class animation_state {
 			WAIT_MESSAGE_ANIMATION_PART_1,
 			LIGHT_UP_UPPER_BAR,
@@ -135,7 +125,12 @@ private:
 
 		uint8_t _current_state : 3;
 		uint8_t _state_counter : 5;
-		animation_task _timer;
+	};
+
+	class animation_task : public nsec::scheduling::periodic_task {
+	public:
+		explicit animation_task();
+		void run(nsec::scheduling::absolute_time_ms current_time_ms) noexcept override;
 	};
 
 	// Handle new button event
@@ -180,6 +175,9 @@ private:
 
 	// menu choices
 	display::main_menu_choices _main_menu_choices;
+
+	// animation timer
+	animation_task _timer;
 };
 } // namespace nsec::runtime
 

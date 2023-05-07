@@ -56,30 +56,28 @@ void badge_info_printer(void *badge_data,
 
 nr::badge::badge() :
 	_user_name{ "Kassandra Lapointe-Chagnon" },
-	_button_watcher(
-		[](nsec::button::id id, nsec::button::event event) {
-			nsec::g::the_badge.on_button_event(id, event);
-		}),
+	_button_watcher([](nsec::button::id id, nsec::button::event event) {
+		nsec::g::the_badge.on_button_event(id, event);
+	}),
 	_renderer{ &_focused_screen },
 	_network_handler(),
 	_main_menu_choices(
 		[]() {
-			 auto *badge = &nsec::g::the_badge;
+			auto *badge = &nsec::g::the_badge;
 
-			 badge->_string_property_edit_screen.set_property(
-				 as_flash_string(set_name_prompt),
-				 badge->_user_name,
-				 sizeof(badge->_user_name));
-			 badge->set_focused_screen(badge->_string_property_edit_screen);
-		 },
+			badge->_string_property_edit_screen.set_property(
+				as_flash_string(set_name_prompt),
+				badge->_user_name,
+				sizeof(badge->_user_name));
+			badge->set_focused_screen(badge->_string_property_edit_screen);
+		},
 		[]() {
-			 auto *badge = &nsec::g::the_badge;
+			auto *badge = &nsec::g::the_badge;
 
-			 badge->_text_screen.set_printer(
-				 nd::text_screen::text_printer{ badge_info_printer, badge });
-			 badge->set_focused_screen(badge->_text_screen);
-		 }
-	)
+			badge->_text_screen.set_printer(
+				nd::text_screen::text_printer{ badge_info_printer, badge });
+			badge->set_focused_screen(badge->_text_screen);
+		})
 {
 	_network_app_state(network_app_state::UNCONNECTED);
 	_id_exchanger.reset();
@@ -94,7 +92,9 @@ void nr::badge::setup()
 	_button_watcher.setup();
 	_strip_animator.setup();
 	_renderer.setup();
-	set_social_level(1);
+
+	// For testing purposes; should be loaded from EEPROM.
+	set_social_level(rand() % 60);
 
 	_network_handler.setup();
 
@@ -193,12 +193,6 @@ void nr::badge::on_disconnection() noexcept
 {
 	Serial.println(F("Connection lost"));
 	_network_app_state(network_app_state::UNCONNECTED);
-	_id_exchanger.reset();
-	_pairing_animator.reset();
-
-	_menu_screen.set_choices(_main_menu_choices);
-	set_focused_screen(_menu_screen);
-	_strip_animator.set_current_animation_idle(_social_level);
 }
 
 void nr::badge::on_pairing_begin() noexcept
@@ -212,12 +206,7 @@ void nr::badge::on_pairing_end(nc::peer_id_t our_peer_id, uint8_t peer_count) no
 	Serial.print(F(", peer_count="));
 	Serial.println(int(peer_count));
 
-	_scroll_screen.set_property(F("Pairing"));
-	set_focused_screen(_scroll_screen);
-
-	_id_exchanger.reset();
-	_network_app_state(network_app_state::EXCHANGING_IDS);
-	_id_exchanger.start(*this);
+	_network_app_state(network_app_state::ANIMATE_PAIRING);
 }
 
 nc::network_handler::application_message_action
@@ -254,13 +243,31 @@ nr::badge::network_app_state nr::badge::_network_app_state() const noexcept
 
 void nr::badge::_network_app_state(nr::badge::network_app_state new_state) noexcept
 {
+	_id_exchanger.reset();
+	_pairing_animator.reset();
+
 	_current_network_app_state = uint8_t(new_state);
-	if (new_state == network_app_state::ANIMATE_PAIRING) {
-		_pairing_animator.start(*this);
-	} else if (new_state == network_app_state::IDLE ||
-		   new_state == network_app_state::UNCONNECTED) {
+	switch (new_state) {
+	case network_app_state::ANIMATE_PAIRING:
+	case network_app_state::EXCHANGING_IDS:
+		_scroll_screen.set_property(F("Pairing"));
+		set_focused_screen(_scroll_screen);
+
+		// Reduce the CPU time of the renderer to reduce network errors.
+		_renderer.period_ms(16);
+		if (new_state == network_app_state::ANIMATE_PAIRING) {
+			_pairing_animator.start(*this);
+		} else {
+			_id_exchanger.start(*this);
+		}
+
+		break;
+	case network_app_state::IDLE:
+	case network_app_state::UNCONNECTED:
 		set_focused_screen(_menu_screen);
 		_strip_animator.set_current_animation_idle(_social_level);
+		_renderer.period_ms(nsec::config::display::refresh_period_ms);
+		break;
 	}
 }
 
@@ -274,7 +281,7 @@ void nr::badge::on_badge_discovery_completed() noexcept
 	Serial.print(F("Discovery completed: "));
 	Serial.print(_id_exchanger.new_badges_discovered());
 	Serial.println(F(" new badges"));
-	_network_app_state(network_app_state::ANIMATE_PAIRING);
+	_network_app_state(network_app_state::IDLE);
 }
 
 void nr::badge::network_id_exchanger::start(nr::badge& badge) noexcept
@@ -393,16 +400,9 @@ void nr::badge::network_id_exchanger::reset() noexcept
 	_done_after_sending_ours = false;
 }
 
-nr::badge::pairing_animator::pairing_animator() :
-	_timer({ [](void *data, nsec::scheduling::absolute_time_ms current_time_ms) {
-			auto *animator = reinterpret_cast<pairing_animator *>(data);
-
-			animator->tick(current_time_ms);
-		},
-		 this })
+nr::badge::pairing_animator::pairing_animator()
 {
 	_animation_state(animation_state::DONE);
-	nsec::g::the_scheduler.schedule_task(_timer);
 }
 
 void nr::badge::pairing_animator::_animation_state(animation_state new_state) noexcept
@@ -424,6 +424,9 @@ void nr::badge::pairing_animator::start(nr::badge& badge) noexcept
 	} else {
 		_animation_state(animation_state::WAIT_MESSAGE_ANIMATION_PART_1);
 	}
+
+	badge._timer.period_ms(nsec::config::badge::pairing_animation_time_per_led_progress_bar_ms);
+	nsec::g::the_badge._strip_animator.set_red_to_green_led_progress_bar(0);
 }
 
 void nr::badge::pairing_animator::reset() noexcept
@@ -431,22 +434,28 @@ void nr::badge::pairing_animator::reset() noexcept
 	_animation_state(animation_state::DONE);
 }
 
-nr::badge::pairing_animator::animation_task::animation_task(
-	const nsec::callback<void, nsec::scheduling::absolute_time_ms>& action) :
-	periodic_task(250), _run{ action }
+nr::badge::animation_task::animation_task() :
+	periodic_task(250)
 {
+	nsec::g::the_scheduler.schedule_task(*this);
 }
 
-void nr::badge::pairing_animator::animation_task::run(
+void nr::badge::animation_task::run(
 	nsec::scheduling::absolute_time_ms current_time_ms) noexcept
 {
-	_run(current_time_ms);
+	nsec::g::the_badge.tick(current_time_ms);
 }
 
 void nr::badge::pairing_animator::tick(nsec::scheduling::absolute_time_ms current_time_ms) noexcept
 {
 	switch (_animation_state()) {
 	case animation_state::DONE:
+		if (_state_counter < 8 && nsec::g::the_badge._network_handler.position() == nc::network_handler::link_position::LEFT_MOST) {
+			// Left-most badge waits for the neighbor to transition states.
+			_state_counter++;
+		} else {
+			nsec::g::the_badge._network_app_state(nr::badge::network_app_state::EXCHANGING_IDS);
+		}
 		break;
 	case animation_state::WAIT_MESSAGE_ANIMATION_PART_1:
 	case animation_state::WAIT_MESSAGE_ANIMATION_PART_2:
@@ -481,8 +490,8 @@ void nr::badge::pairing_animator::tick(nsec::scheduling::absolute_time_ms curren
 				nc::peer_relative_position::RIGHT,
 				uint8_t(nc::message::type::PAIRING_ANIMATION_DONE),
 				nullptr);
+
 			_animation_state(animation_state::DONE);
-			nsec::g::the_badge._network_app_state(nr::badge::network_app_state::IDLE);
 		} else {
 			nsec::g::the_badge._network_handler.enqueue_app_message(
 				nc::peer_relative_position::LEFT,
@@ -515,7 +524,18 @@ void nr::badge::pairing_animator::new_message(nr::badge& badge,
 				nullptr);
 		}
 
-		nsec::g::the_badge._network_app_state(nr::badge::network_app_state::IDLE);
+		_animation_state(animation_state::DONE);
+		break;
+	default:
+		break;
+	}
+}
+
+void nr::badge::tick(nsec::scheduling::absolute_time_ms current_time_ms) noexcept
+{
+	switch (_network_app_state()) {
+	case network_app_state::ANIMATE_PAIRING:
+		_pairing_animator.tick(current_time_ms);
 		break;
 	default:
 		break;

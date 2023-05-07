@@ -62,7 +62,7 @@ constexpr uint8_t scroll_pixels_per_second = 80;
 
 namespace nsec::config::communication {
 // Size reserved for protocol messages
-constexpr size_t protocol_max_message_size = 20;
+constexpr size_t protocol_max_message_size = 16;
 constexpr unsigned int software_serial_speed = 38400;
 /*
 * Applications may define messages >= application_message_type_range_begin.
@@ -78,11 +78,15 @@ constexpr unsigned int serial_tx_pin_left = SIG_L2;
 constexpr unsigned int serial_rx_pin_right = SIG_R2;
 constexpr unsigned int serial_tx_pin_right = SIG_R1;
 
-constexpr nsec::scheduling::relative_time_ms network_handler_base_period_ms = 30;
-constexpr nsec::scheduling::relative_time_ms network_handler_timeout_ms = 5000;
+constexpr nsec::scheduling::relative_time_ms network_handler_base_period_ms = 60;
+constexpr nsec::scheduling::relative_time_ms network_handler_timeout_ms = 10000;
 constexpr nsec::scheduling::relative_time_ms network_handler_retransmit_timeout_ms =
 	6 * network_handler_base_period_ms;
 
 } // namespace nsec::communication
+
+namespace nsec::config::badge {
+constexpr unsigned int pairing_animation_time_per_led_progress_bar_ms = 1000;
+} // namespace nsec::badge
 
 #endif // NSEC_CONFIG_HPP

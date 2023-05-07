@@ -37,6 +37,10 @@ public:
 	~task() = default;
 
 	virtual void run(absolute_time_ms current_time) noexcept = 0;
+	bool scheduled() const noexcept
+	{
+		return _next_scheduled_time;
+	}
 
 private:
 	virtual bool must_be_rescheduled() const noexcept
@@ -83,11 +87,15 @@ public:
 		return _period_ms;
 	}
 
-protected:
 	/* Indicate that this task should no longer be scheduled after the current execution. */
 	void kill() noexcept
 	{
 		_killed = true;
+	}
+
+	void revive() noexcept
+	{
+		_killed = false;
 	}
 
 	// Effective at the end of the next tick.
