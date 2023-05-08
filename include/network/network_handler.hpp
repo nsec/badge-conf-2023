@@ -16,7 +16,7 @@
 
 namespace nsec::communication {
 
-enum class peer_relative_position {
+enum class peer_relative_position : uint8_t {
 	LEFT,
 	RIGHT,
 };
@@ -30,7 +30,7 @@ public:
 	// void (our_peer_id, peer count)
 	using pairing_end_notifier = void (*)(peer_id_t, uint8_t);
 
-	enum class application_message_action { OK, ERROR };
+	enum class application_message_action : uint8_t { OK, ERROR };
 	// application_message_action (relative_position_of_peer, message_type, message_payload)
 	using message_received_notifier =
 		application_message_action (*)(nsec::communication::message::type, const uint8_t *);
@@ -57,7 +57,7 @@ public:
 		return _peer_count;
 	}
 
-	enum class link_position {
+	enum class link_position : uint8_t {
 		UNKNOWN = 0b00,
 		LEFT_MOST = 0b01,
 		RIGHT_MOST = 0b10,
@@ -65,7 +65,7 @@ public:
 	};
 	link_position position() const noexcept;
 
-	enum class enqueue_message_result { QUEUED, UNCONNECTED, FULL };
+	enum class enqueue_message_result : uint8_t { QUEUED, UNCONNECTED, FULL };
 	enqueue_message_result enqueue_app_message(peer_relative_position direction,
 						   uint8_t msg_type,
 						   const uint8_t *msg_payload);
@@ -75,7 +75,7 @@ protected:
 
 private:
 
-	enum class wire_protocol_state {
+	enum class wire_protocol_state : uint8_t {
 		UNCONNECTED,
 		/* Wait for boards to listen before left-most node initiates the discovery. */
 		WAIT_TO_INITIATE_DISCOVERY,
@@ -100,13 +100,13 @@ private:
 		RUNNING_CONFIRM_MONITOR
 
 	};
-	enum class message_reception_state {
+	enum class message_reception_state : uint8_t {
 		RECEIVE_MAGIC_BYTE_1,
 		RECEIVE_MAGIC_BYTE_2,
 		RECEIVE_HEADER,
 		RECEIVE_PAYLOAD,
 	};
-	enum class message_transmission_state {
+	enum class message_transmission_state : uint8_t {
 		NONE,
 		ATTEMPT_SEND,
 		// On timeout, retransmit until timeout
@@ -147,7 +147,7 @@ private:
 	bool _has_pending_outgoing_app_message() const noexcept;
 	void _clear_pending_outgoing_app_message() noexcept;
 
-	enum class check_connections_result {
+	enum class check_connections_result : uint8_t {
 		NO_CHANGE,
 		TOPOLOGY_CHANGED,
 	};
@@ -160,7 +160,7 @@ private:
 	bool _sense_is_left_connected() const noexcept;
 	bool _sense_is_right_connected() const noexcept;
 
-	enum class handle_reception_result {
+	enum class handle_reception_result : uint8_t {
 		NO_DATA,
 		INCOMPLETE,
 		COMPLETE,
@@ -170,7 +170,7 @@ private:
 						  uint8_t& message_type,
 						  uint8_t *message_payload) noexcept;
 
-	enum class handle_transmission_result {
+	enum class handle_transmission_result : uint8_t {
 		COMPLETE,
 		INCOMPLETE,
 	};

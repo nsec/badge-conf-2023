@@ -25,8 +25,8 @@ public:
 	main_menu_choices& operator=(main_menu_choices&&) = delete;
 	~main_menu_choices() = default;
 
-	unsigned int count() const noexcept override;
-	const choice& operator[](unsigned int) const noexcept override;
+	uint8_t count() const noexcept override;
+	const choice& operator[](uint8_t) const noexcept override;
 
 private:
 	const choice_action _set_name_action;

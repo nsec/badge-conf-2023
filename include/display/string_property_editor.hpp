@@ -37,7 +37,7 @@ public:
 	void clean_up_property() noexcept;
 
 private:
-	enum class move_direction { LEFT, RIGHT };
+	enum class move_direction : uint8_t { LEFT, RIGHT };
 	enum class prompt_cycle_state : uint8_t {
 		PROPERTY_PROMPT = 0,
 		HOW_TO_DELETE = 1,

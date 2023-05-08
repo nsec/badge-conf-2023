@@ -61,13 +61,13 @@ nd::main_menu_choices::main_menu_choices(
 {
 }
 
-unsigned int nd::main_menu_choices::count() const noexcept
+uint8_t nd::main_menu_choices::count() const noexcept
 {
 	return sizeof(_choices) / sizeof(_choices[0]);
 }
 
 const nd::menu_screen::choices::choice&
-nd::main_menu_choices::operator[](unsigned int index) const noexcept
+nd::main_menu_choices::operator[](uint8_t index) const noexcept
 {
 	return _choices[index];
 }

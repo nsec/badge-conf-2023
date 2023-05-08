@@ -74,7 +74,7 @@ void nl::strip_animator::_legacy_animation_tick() noexcept
 
 	// Set all pixel colors to 'off'
 	_pixels.clear();
-	for (unsigned int i = 0; i < _config.legacy.level; i++) // determine how many LED
+	for (uint8_t i = 0; i < _config.legacy.level; i++) // determine how many LED
 								// should be ON
 	{
 		// led_ID is the current LED index that we are update.
@@ -273,7 +273,7 @@ nl::strip_animator::led_color nl::strip_animator::_color(uint8_t led_id) const n
 	return led_color(&_pixels.getPixels()[led_id * 3]);
 }
 
-void nl::strip_animator::set_current_animation_idle(unsigned int current_level) noexcept
+void nl::strip_animator::set_current_animation_idle(uint8_t current_level) noexcept
 {
 	period_ms(200);
 	_current_animation_type = animation_type::LEGACY;

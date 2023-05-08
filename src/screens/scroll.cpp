@@ -35,7 +35,7 @@ const __FlashStringHelper *as_flash_string(const char *str)
 }
 
 template <typename StringType>
-unsigned int property_renderable_character_count(const StringType *property)
+uint8_t property_renderable_character_count(const StringType *property)
 {
 	unsigned int length = 0;
 	auto current_ptr = reinterpret_cast<const char *>(property);

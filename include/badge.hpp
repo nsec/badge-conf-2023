@@ -56,7 +56,7 @@ public:
 	void tick(nsec::scheduling::absolute_time_ms current_time_ms) noexcept;
 
 private:
-	enum class network_app_state {
+	enum class network_app_state : uint8_t {
 		UNCONNECTED,
 		EXCHANGING_IDS,
 		ANIMATE_PAIRING,
@@ -78,9 +78,9 @@ private:
 				 const uint8_t *payload) noexcept;
 		void message_sent(badge& badge) noexcept;
 		void reset() noexcept;
-		unsigned int new_badges_discovered() const noexcept
+		uint8_t new_badges_discovered() const noexcept
 		{
-			return uint16_t(_new_badges_discovered);
+			return uint8_t(_new_badges_discovered);
 		}
 
 	private:
@@ -111,7 +111,7 @@ private:
 		void tick(nsec::scheduling::absolute_time_ms current_time_ms) noexcept;
 
 	private:
-		enum class animation_state {
+		enum class animation_state : uint8_t {
 			WAIT_MESSAGE_ANIMATION_PART_1,
 			LIGHT_UP_UPPER_BAR,
 			LIGHT_UP_LOWER_BAR,
@@ -140,7 +140,7 @@ private:
 	void set_focused_screen(display::screen& focused_screen) noexcept;
 
 	// Handle network events
-	enum class badge_discovered_result { NEW, ALREADY_KNOWN };
+	enum class badge_discovered_result : uint8_t { NEW, ALREADY_KNOWN };
 	badge_discovered_result on_badge_discovered(const uint8_t *id) noexcept;
 	void on_badge_discovery_completed() noexcept;
 

@@ -23,7 +23,7 @@ const __FlashStringHelper *as_flash_string(const char *str)
 	return static_cast<const __FlashStringHelper *>(static_cast<const void *>(str));
 }
 
-enum class cycle_character_direction { PREVIOUS, NEXT };
+enum class cycle_character_direction : uint8_t { PREVIOUS, NEXT };
 
 bool is_valid_character(char c)
 {

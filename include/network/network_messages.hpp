@@ -14,7 +14,7 @@
 
 namespace nsec::communication::message {
 
-enum class type {
+enum class type : uint8_t {
 	ANNOUNCE_BADGE_ID =
 		nsec::config::communication::application_message_type_range_begin,
 	PAIRING_ANIMATION_PART_1_DONE,

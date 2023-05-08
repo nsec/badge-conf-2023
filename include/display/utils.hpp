@@ -18,11 +18,11 @@ namespace nsec::display::utils {
  */
 void draw_string(Adafruit_SSD1306& canvas,
 		 const char *str,
-		 unsigned int max_char_count,
+		 uint8_t max_char_count,
 		 bool draw_ellipsis_if_too_long = true) noexcept;
 void draw_string(Adafruit_SSD1306& canvas,
 		 const __FlashStringHelper *str,
-		 unsigned int max_char_count,
+		 uint8_t max_char_count,
 		 bool draw_ellipsis_if_too_long = true) noexcept;
 
 
@@ -33,11 +33,11 @@ enum class arrow_glyph_direction { UP, DOWN, LEFT, RIGHT };
  * this indicator replaces.
  */
 void draw_arrow_glyph(Adafruit_SSD1306& canvas,
-		      unsigned int glyph_x,
-		      unsigned int glyph_y,
-		      unsigned int glyph_width,
-		      unsigned int glyph_heigth,
-		      unsigned int glyph_color,
+		      uint8_t glyph_x,
+		      uint8_t glyph_y,
+		      uint8_t glyph_width,
+		      uint8_t glyph_heigth,
+		      uint8_t glyph_color,
 		      arrow_glyph_direction direction);
 
 } // namespace nsec::display

@@ -52,8 +52,8 @@ public:
 		choices& operator=(choices&&) = delete;
 		~choices() = default;
 
-		virtual unsigned int count() const noexcept = 0;
-		virtual const choice& operator[](unsigned int) const noexcept = 0;
+		virtual uint8_t count() const noexcept = 0;
+		virtual const choice& operator[](uint8_t) const noexcept = 0;
 	};
 
 	explicit menu_screen() noexcept;

@@ -555,11 +555,8 @@ nc::network_handler::wire_protocol_state nc::network_handler::_wire_protocol_sta
 
 bool nc::network_handler::_is_wire_protocol_in_a_running_state(wire_protocol_state state) noexcept
 {
-	return state == wire_protocol_state::RUNNING_RECEIVE_MESSAGE ||
-		state == wire_protocol_state::RUNNING_SEND_APP_MESSAGE ||
-		state == wire_protocol_state::RUNNING_CONFIRM_APP_MESSAGE ||
-		state == wire_protocol_state::RUNNING_SEND_MONITOR ||
-		state == wire_protocol_state::RUNNING_CONFIRM_MONITOR;
+	return state >= wire_protocol_state::RUNNING_RECEIVE_MESSAGE &&
+		state <= wire_protocol_state::RUNNING_CONFIRM_MONITOR;
 }
 
 void nc::network_handler::_wire_protocol_state(wire_protocol_state state) noexcept
@@ -592,14 +589,9 @@ void nc::network_handler::_wire_protocol_state(wire_protocol_state state) noexce
 		_clear_outgoing_message();
 		_clear_pending_outgoing_app_message();
 
-		/* Empty the serial buffers. */
-		while (_left_serial.available()) {
-			_left_serial.read();
-		}
-
-		while (_right_serial.available()) {
-			_right_serial.read();
-		}
+		/* Empty the serial buffers by switching listening side. */
+		_right_serial.listen();
+		_left_serial.listen();
 	}
 
 	if (!_is_wire_protocol_in_a_running_state(previous_protocol_state) &&
@@ -682,7 +674,6 @@ void nc::network_handler::_set_outgoing_message(nsec::scheduling::absolute_time_
 		break;
 	default:
 		// Unreachable.
-		_reset();
 		return;
 	}
 

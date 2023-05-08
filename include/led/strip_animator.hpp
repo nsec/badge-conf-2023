@@ -26,7 +26,7 @@ public:
 
 	void setup() noexcept;
 
-	void set_current_animation_idle(unsigned int current_level) noexcept;
+	void set_current_animation_idle(uint8_t current_level) noexcept;
 	void set_red_to_green_led_progress_bar(uint8_t led_count) noexcept;
 
 	struct led_color {
@@ -98,7 +98,7 @@ protected:
 	void run(scheduling::absolute_time_ms current_time_ms) noexcept override;
 
 private:
-	enum class animation_type {
+	enum class animation_type : uint8_t {
 		LEGACY,
 		KEYFRAMED,
 	};

@@ -26,7 +26,7 @@ inline char to_char(const __FlashStringHelper *src)
 template <typename StringType>
 void _draw_string(Adafruit_SSD1306& canvas,
 		  const StringType *str,
-		  unsigned int max_char_count,
+		  uint8_t max_char_count,
 		  bool draw_ellipsis_if_too_long) noexcept
 {
 	auto current_ptr = reinterpret_cast<const char *>(str);
@@ -65,25 +65,25 @@ void _draw_string(Adafruit_SSD1306& canvas,
 
 void ndu::draw_string(Adafruit_SSD1306& canvas,
 		      const char *str,
-		      unsigned int max_char_count,
+		      uint8_t max_char_count,
 		      bool draw_ellipsis_if_too_long) noexcept
 {
 	_draw_string(canvas, str, max_char_count, draw_ellipsis_if_too_long);
 }
 void ndu::draw_string(Adafruit_SSD1306& canvas,
 		      const __FlashStringHelper *str,
-		      unsigned int max_char_count,
+		      uint8_t max_char_count,
 		      bool draw_ellipsis_if_too_long) noexcept
 {
 	_draw_string(canvas, str, max_char_count, draw_ellipsis_if_too_long);
 }
 
 void ndu::draw_arrow_glyph(Adafruit_SSD1306& canvas,
-			   unsigned int glyph_x,
-			   unsigned int glyph_y,
-			   unsigned int glyph_width,
-			   unsigned int glyph_heigth,
-			   unsigned int glyph_color,
+			   uint8_t glyph_x,
+			   uint8_t glyph_y,
+			   uint8_t glyph_width,
+			   uint8_t glyph_heigth,
+			   uint8_t glyph_color,
 			   ndu::arrow_glyph_direction direction)
 {
 	const auto is_direction_vertical = direction == arrow_glyph_direction::UP ||
