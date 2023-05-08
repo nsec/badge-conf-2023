@@ -29,7 +29,12 @@ public:
 	~screen() = default;
 
 	// Button event to be handled by screen
-	virtual void button_event(button::id id, button::event event) noexcept = 0;
+	virtual void button_event(button::id id, button::event event) noexcept
+	{
+		if (event != button::event::UP && id == button::id::CANCEL) {
+			_release_focus();
+		}
+	}
 
 	// Focus gained by screen
 	virtual void focused()

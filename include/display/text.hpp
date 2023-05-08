@@ -25,7 +25,6 @@ public:
 	text_screen& operator=(text_screen&&) = delete;
 
         void set_printer(const text_printer& printer);
-	void button_event(button::id id, button::event event) noexcept override;
 	void _render(scheduling::absolute_time_ms current_time_ms,
 		    Adafruit_SSD1306& canvas) noexcept override;
 private:

@@ -69,20 +69,6 @@ nd::scroll_screen::scroll_screen() noexcept : screen()
 	set_property(as_flash_string(default_property));
 }
 
-void nd::scroll_screen::button_event(nb::id id, nb::event event) noexcept
-{
-	if (event == nb::event::UP) {
-		// Not interested in any button release events; it allows us
-		// to assume the action is a button press or repeat.
-		return;
-	}
-
-	// Release focus to the previous screen.
-	if (id == nb::id::CANCEL) {
-		_release_focus();
-	}
-}
-
 char nd::scroll_screen::_property_character_at_offset(uint8_t offset) const noexcept
 {
 	return _property.is_value_in_ram ?

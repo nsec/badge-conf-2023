@@ -23,7 +23,6 @@ public:
 	scroll_screen& operator=(const scroll_screen&) = delete;
 	scroll_screen& operator=(scroll_screen&&) = delete;
 
-	void button_event(button::id id, button::event event) noexcept override;
 	void _render(scheduling::absolute_time_ms current_time_ms,
 		     Adafruit_SSD1306& canvas) noexcept override;
 

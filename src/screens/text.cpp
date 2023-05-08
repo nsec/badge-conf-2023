@@ -15,13 +15,6 @@ nd::text_screen::text_screen() noexcept :
 {
 }
 
-void nd::text_screen::button_event(nb::id id, nb::event event) noexcept
-{
-	if (id == nb::id::CANCEL && event != nb::event::UP) {
-		_release_focus();
-	}
-}
-
 void nd::text_screen::_render(scheduling::absolute_time_ms current_time_ms,
 			      Adafruit_SSD1306& canvas) noexcept
 {
