@@ -31,11 +31,11 @@ public:
 
 	struct led_color {
 		led_color() = default;
-		led_color(uint8_t r_in, uint8_t g_in, uint8_t b_in)
+		constexpr led_color(uint8_t r_in, uint8_t g_in, uint8_t b_in) :
+			components{
+				[np_green_offset] = g_in, [np_red_offset] = r_in, [np_blue_offset] = b_in
+			}
 		{
-			components[np_red_offset] = r_in;
-			components[np_green_offset] = g_in;
-			components[np_blue_offset] = b_in;
 		}
 
 		explicit led_color(uint8_t *native_device_pixel_storage)
@@ -43,20 +43,24 @@ public:
 			memcpy(components, native_device_pixel_storage, sizeof(components));
 		}
 
-		led_color(const led_color& in_color)
+		constexpr led_color(const led_color& in_color) :
+			components{ [np_green_offset] = in_color.g(),
+				    [np_red_offset] = in_color.r(),
+				    [np_blue_offset] = in_color.b() }
 		{
-			memcpy(components, in_color.components, sizeof(components));
 		}
 
-		uint8_t r() const noexcept
+		constexpr const uint8_t& r() const noexcept
 		{
 			return components[np_red_offset];
 		}
-		uint8_t g() const noexcept
+
+		constexpr const uint8_t& g() const noexcept
 		{
 			return components[np_green_offset];
 		}
-		uint8_t b() const noexcept
+
+		constexpr const uint8_t& b() const noexcept
 		{
 			return components[np_blue_offset];
 		}
@@ -76,7 +80,8 @@ public:
 		uint8_t components[3];
 
 	private:
-		// Offsets in the three-byte group forming a pixel given our device's internal pixel format.
+		// Offsets in the three-byte group forming a pixel given our device's internal pixel
+		// format.
 		static const uint8_t np_red_offset = (NEO_GRB >> 4) & 0b11;
 		static const uint8_t np_green_offset = (NEO_GRB >> 2) & 0b11;
 		static const uint8_t np_blue_offset = NEO_GRB & 0b11;
@@ -84,7 +89,7 @@ public:
 
 	struct keyframe {
 		keyframe() = default;
-		keyframe(const led_color& in_color, uint16_t at_time) :
+		constexpr keyframe(const led_color& in_color, uint16_t at_time) :
 			color{ in_color }, time{ at_time }
 		{
 		}
@@ -154,10 +159,11 @@ private:
 		} keyframed;
 	} _state;
 
-	uint8_t _get_keyframe_index(const indice_storage_element *indices, uint8_t led_id) const noexcept;
-	void _set_keyframe_index(indice_storage_element *indices, uint8_t led_id, uint8_t index) noexcept;
-
-
+	uint8_t _get_keyframe_index(const indice_storage_element *indices,
+				    uint8_t led_id) const noexcept;
+	void _set_keyframe_index(indice_storage_element *indices,
+				 uint8_t led_id,
+				 uint8_t index) noexcept;
 };
 } // namespace nsec::led
 #endif // NSEC_LED_STRIP_ANIMATOR_HPP

@@ -41,7 +41,7 @@ nl::strip_animator::led_color interpolate(const nl::strip_animator::keyframe& or
 	return new_color;
 }
 
-const nl::strip_animator::keyframe red_to_green_progress_bar_keyframe_template[] = {
+const nl::strip_animator::keyframe PROGMEM red_to_green_progress_bar_keyframe_template[] = {
 	// red
 	{ { 10, 0, 0 }, 0 },
 	// green <- beginning of loop
@@ -50,6 +50,15 @@ const nl::strip_animator::keyframe red_to_green_progress_bar_keyframe_template[]
 	{ { 0, 5, 0 }, 5000 },
 	{ { 0, 100, 0 }, 6000 },
 };
+
+nl::strip_animator::keyframe keyframe_from_flash(const nl::strip_animator::keyframe *src_keyframe)
+{
+	const auto r = pgm_read_byte(&src_keyframe->color.r());
+	const auto g = pgm_read_byte(&src_keyframe->color.g());
+	const auto b = pgm_read_byte(&src_keyframe->color.b());
+
+	return { { r, g, b }, pgm_read_word(&src_keyframe->time) };
+}
 
 } // namespace
 
@@ -75,7 +84,7 @@ void nl::strip_animator::_legacy_animation_tick() noexcept
 	// Set all pixel colors to 'off'
 	_pixels.clear();
 	for (uint8_t i = 0; i < _config.legacy.level; i++) // determine how many LED
-								// should be ON
+							   // should be ON
 	{
 		// led_ID is the current LED index that we are update.
 		uint8_t const led_ID = (_state.legacy.start_position + i) % 16; // This is going
@@ -186,11 +195,13 @@ void nl::strip_animator::_keyframe_animation_tick(
 	}
 
 	for (uint8_t i = 0; i < 16; i++) {
-		const auto origin_keyframe_index = _get_keyframe_index(_state.keyframed._origin_keyframe_index, i);
+		const auto origin_keyframe_index =
+			_get_keyframe_index(_state.keyframed._origin_keyframe_index, i);
 		const auto destination_keyframe_index =
 			_get_keyframe_index(_state.keyframed._destination_keyframe_index, i);
 
-		const auto& origin_keyframe = _config.keyframed.keyframes[origin_keyframe_index];
+		const auto origin_keyframe =
+			keyframe_from_flash(&_config.keyframed.keyframes[origin_keyframe_index]);
 		const bool led_animation_is_active = (_config.keyframed.active >> i) & 1;
 
 		if (!led_animation_is_active) {
@@ -202,28 +213,28 @@ void nl::strip_animator::_keyframe_animation_tick(
 			continue;
 		}
 
-		//Serial.println();
+		// Serial.println();
 
 		const auto time_since_animation_start =
 			_state.keyframed.ticks_since_start_of_animation[i] * period_ms();
-		//Serial.print(F("Time since animation start: "));
-		//Serial.println(time_since_animation_start);
+		// Serial.print(F("Time since animation start: "));
+		// Serial.println(time_since_animation_start);
 
-		//origin_keyframe.color.log(F("origin keyframe: "));
+		// origin_keyframe.color.log(F("origin keyframe: "));
 		if (_state.keyframed.ticks_since_start_of_animation[i] != 255) {
 			// Saturate counter.
 			_state.keyframed.ticks_since_start_of_animation[i]++;
 		}
 
 		// Interpolate to find the current color.
-		const auto& destination_keyframe =
-			_config.keyframed.keyframes[destination_keyframe_index];
-		//destination_keyframe.color.log(F("destination keyframe: "));
+		const auto destination_keyframe = keyframe_from_flash(
+			&_config.keyframed.keyframes[destination_keyframe_index]);
+		// destination_keyframe.color.log(F("destination keyframe: "));
 
 		const auto new_color = interpolate(origin_keyframe,
 						   destination_keyframe,
 						   uint16_t(time_since_animation_start));
-		//new_color.log(F("interpolated color: "));
+		// new_color.log(F("interpolated color: "));
 		_pixels.setPixelColor(i, new_color.r(), new_color.g(), new_color.b());
 
 		// Advance keyframes if needed
@@ -234,7 +245,8 @@ void nl::strip_animator::_keyframe_animation_tick(
 		uint8_t new_origin_keyframe_index = destination_keyframe_index;
 		uint8_t new_destination_keyframe_index = destination_keyframe_index + 1;
 		if (new_destination_keyframe_index >= _config.keyframed.keyframe_count) {
-			// Loop back to the configured loop point. Move the current animation time in the past.
+			// Loop back to the configured loop point. Move the current animation time
+			// in the past.
 			new_origin_keyframe_index = _config.keyframed.loop_point_index;
 			new_destination_keyframe_index = min(new_origin_keyframe_index + 1,
 							     _config.keyframed.keyframe_count - 1);
@@ -246,8 +258,11 @@ void nl::strip_animator::_keyframe_animation_tick(
 			new_destination_keyframe_index = destination_keyframe_index + 1;
 		}
 
-		_set_keyframe_index(_state.keyframed._origin_keyframe_index, i, new_origin_keyframe_index);
-		_set_keyframe_index(_state.keyframed._destination_keyframe_index, i, new_destination_keyframe_index);
+		_set_keyframe_index(
+			_state.keyframed._origin_keyframe_index, i, new_origin_keyframe_index);
+		_set_keyframe_index(_state.keyframed._destination_keyframe_index,
+				    i,
+				    new_destination_keyframe_index);
 	}
 }
 
