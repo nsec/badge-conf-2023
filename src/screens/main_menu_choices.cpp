@@ -12,14 +12,10 @@
 namespace nd = nsec::display;
 
 namespace {
-const char user_name_entry_option_name[] PROGMEM = "Edit name";
-const char choice_2_name[] PROGMEM = "Second choice item to test long string handling";
-const char choice_3_name[] PROGMEM = "Third choice item";
-const char choice_4_name[] PROGMEM = "Fourth choice item";
-const char choice_5_name[] PROGMEM = "Fifth choice item";
-const char choice_6_name[] PROGMEM = "Sixth choice item";
-const char choice_7_name[] PROGMEM = "Seventh choice item";
-const char choice_8_name[] PROGMEM = "Eighth choice item";
+const char user_name_entry_option_name[] PROGMEM = "Set name";
+const char led_config_entry_option_name[] PROGMEM = "Set RGB animation";
+const char badge_id_option_name[] PROGMEM = "Badge information";
+const char factory_reset_option_name[] PROGMEM = "Factory reset";
 
 const __FlashStringHelper *as_flash_string(const char *str)
 {
@@ -28,8 +24,10 @@ const __FlashStringHelper *as_flash_string(const char *str)
 } // anonymous namespace
 
 nd::main_menu_choices::main_menu_choices(
-	const choices::choice::menu_choice_action& set_name_action) noexcept :
+	const choice_action& set_name_action,
+	const choice_action& show_badge_info_action) noexcept :
 	_set_name_action{ set_name_action },
+	_show_badge_info_action{ show_badge_info_action },
 	_choices{
 		nd::menu_screen::choices::choice(
 			as_flash_string(user_name_entry_option_name),
@@ -40,51 +38,36 @@ nd::main_menu_choices::main_menu_choices(
 				},
 				this)),
 		nd::menu_screen::choices::choice(
-			as_flash_string(choice_2_name),
+			as_flash_string(led_config_entry_option_name),
 			nd::menu_screen::choices::choice::menu_choice_action(
-				[](void *) { Serial.println(as_flash_string(choice_2_name)); },
-				nullptr)),
+				[](void *) {
+				},
+				this)),
 		nd::menu_screen::choices::choice(
-			as_flash_string(choice_3_name),
+			as_flash_string(badge_id_option_name),
 			nd::menu_screen::choices::choice::menu_choice_action(
-				[](void *) { Serial.println(as_flash_string(choice_3_name)); },
-				nullptr)),
+				[](void *data) {
+					reinterpret_cast<nd::main_menu_choices *>(data)
+						->_show_badge_info_action();
+				},
+				this)),
 		nd::menu_screen::choices::choice(
-			as_flash_string(choice_4_name),
+			as_flash_string(factory_reset_option_name),
 			nd::menu_screen::choices::choice::menu_choice_action(
-				[](void *) { Serial.println(as_flash_string(choice_4_name)); },
-				nullptr)),
-		nd::menu_screen::choices::choice(
-			as_flash_string(choice_5_name),
-			nd::menu_screen::choices::choice::menu_choice_action(
-				[](void *) { Serial.println(as_flash_string(choice_5_name)); },
-				nullptr)),
-		nd::menu_screen::choices::choice(
-			as_flash_string(choice_6_name),
-			nd::menu_screen::choices::choice::menu_choice_action(
-				[](void *) { Serial.println(as_flash_string(choice_6_name)); },
-				nullptr)),
-		nd::menu_screen::choices::choice(
-			as_flash_string(choice_7_name),
-			nd::menu_screen::choices::choice::menu_choice_action(
-				[](void *) { Serial.println(as_flash_string(choice_7_name)); },
-				nullptr)),
-		nd::menu_screen::choices::choice(
-			as_flash_string(choice_8_name),
-			nd::menu_screen::choices::choice::menu_choice_action(
-				[](void *) { Serial.println(as_flash_string(choice_8_name)); },
+				[](void *) {
+				},
 				nullptr)),
 	}
 {
 }
 
-unsigned int nd::main_menu_choices::count() const noexcept
+uint8_t nd::main_menu_choices::count() const noexcept
 {
 	return sizeof(_choices) / sizeof(_choices[0]);
 }
 
 const nd::menu_screen::choices::choice&
-nd::main_menu_choices::operator[](unsigned int index) const noexcept
+nd::main_menu_choices::operator[](uint8_t index) const noexcept
 {
 	return _choices[index];
 }

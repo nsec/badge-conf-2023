@@ -50,10 +50,10 @@ public:
 		choices(choices&&) = delete;
 		choices& operator=(const choices&) = delete;
 		choices& operator=(choices&&) = delete;
-		virtual ~choices() = default;
+		~choices() = default;
 
-		virtual unsigned int count() const noexcept = 0;
-		virtual const choice& operator[](unsigned int) const noexcept = 0;
+		virtual uint8_t count() const noexcept = 0;
+		virtual const choice& operator[](uint8_t) const noexcept = 0;
 	};
 
 	explicit menu_screen() noexcept;
@@ -63,7 +63,6 @@ public:
 	menu_screen(menu_screen&&) = delete;
 	menu_screen& operator=(const menu_screen&) = delete;
 	menu_screen& operator=(menu_screen&&) = delete;
-	~menu_screen() override = default;
 
 	void button_event(button::id id, button::event event) noexcept override;
 	void _render(scheduling::absolute_time_ms current_time_ms,

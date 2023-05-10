@@ -19,11 +19,6 @@ using pixel_dimension = uint8_t;
 
 class screen {
 public:
-	// Callable that will be invoked when a focused screen wishes to relinquish the focus.
-	using release_focus_notifier = nsec::callback<void>;
-	// Callable that will be invoked when a focused screen is damaged and should be re-rendered.
-	using damage_notifier = nsec::callback<void>;
-
 	explicit screen() noexcept;
 
 	// Deactivate copy and assignment.
@@ -31,10 +26,15 @@ public:
 	screen(screen&&) = delete;
 	screen& operator=(const screen&) = delete;
 	screen& operator=(screen&&) = delete;
-	virtual ~screen() = default;
+	~screen() = default;
 
 	// Button event to be handled by screen
-	virtual void button_event(button::id id, button::event event) noexcept = 0;
+	virtual void button_event(button::id id, button::event event) noexcept
+	{
+		if (event != button::event::UP && id == button::id::CANCEL) {
+			_release_focus();
+		}
+	}
 
 	// Focus gained by screen
 	virtual void focused()

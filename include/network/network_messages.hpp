@@ -7,27 +7,25 @@
 #ifndef NSEC_NETWORK_MESSAGES_HPP
 #define NSEC_NETWORK_MESSAGES_HPP
 
-#include <stdint.h>
+#include "config.hpp"
 
 #include <ArduinoUniqueID.h>
+#include <stdint.h>
 
 namespace nsec::communication::message {
 
-enum class type {
-	ACK = 0,
-	RESET = 1,
-	ANNOUNCE_PEER = 2,
-	ANNOUNCE_PEER_STOP = 3,
+enum class type : uint8_t {
+	ANNOUNCE_BADGE_ID =
+		nsec::config::communication::application_message_type_range_begin,
+	PAIRING_ANIMATION_PART_1_DONE,
+	PAIRING_ANIMATION_PART_2_DONE,
+	PAIRING_ANIMATION_DONE,
 };
 
-struct header {
-	uint8_t type;
-};
-
-struct announce_peer {
+struct announce_badge_id {
 	uint8_t peer_id;
 	uint8_t board_unique_id[UniqueIDsize];
-};
+} __attribute__((packed));
 
 } // namespace nsec::communication::message
 

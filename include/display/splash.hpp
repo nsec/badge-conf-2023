@@ -22,7 +22,6 @@ public:
 	splash_screen(splash_screen&&) = delete;
 	splash_screen& operator=(const splash_screen&) = delete;
 	splash_screen& operator=(splash_screen&&) = delete;
-	~splash_screen() override = default;
 
 	void button_event(button::id id, button::event event) noexcept override;
 	void _render(scheduling::absolute_time_ms current_time_ms,

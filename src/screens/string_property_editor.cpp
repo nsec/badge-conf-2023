@@ -23,7 +23,7 @@ const __FlashStringHelper *as_flash_string(const char *str)
 	return static_cast<const __FlashStringHelper *>(static_cast<const void *>(str));
 }
 
-enum class cycle_character_direction { PREVIOUS, NEXT };
+enum class cycle_character_direction : uint8_t { PREVIOUS, NEXT };
 
 bool is_valid_character(char c)
 {
@@ -70,13 +70,6 @@ void delete_character(char *str)
 	}
 
 	*(str - 1) = ' ';
-}
-
-[[maybe_unused]] void print_property(const char *property)
-{
-	Serial.print(F("String property is: ["));
-	Serial.print(property);
-	Serial.println(F("]"));
 }
 } // anonymous namespace
 
@@ -261,28 +254,19 @@ void nd::string_property_editor_screen::clean_up_property() noexcept
 			break;
 		}
 	}
-
-	print_property(_property.value);
 }
 
 void nd::string_property_editor_screen::_initialize_layout(Adafruit_SSD1306& canvas) noexcept
 {
-	int x, y;
-	unsigned int text_width, text_height;
+	_prompt_characters_per_screen = canvas.width() / config::display::font_base_width;
+	_edit_character_y_offset = config::display::font_base_height + (config::display::font_base_height / 2);
+	_prompt_glyph_width = config::display::font_base_width;
+	_prompt_glyph_height = config::display::font_base_height;
 
-	canvas.setTextSize(1);
-	canvas.getTextBounds("a", 0, 0, &x, &y, &text_width, &text_height);
-	_prompt_characters_per_screen = canvas.width() / text_width;
-	_edit_character_y_offset = text_height + (text_height / 2);
-	_prompt_glyph_width = text_width;
-	_prompt_glyph_height = text_height;
-
-	canvas.setTextSize(2);
-	canvas.getTextBounds("a", 0, 0, &x, &y, &text_width, &text_height);
-	_edit_characters_per_screen = (canvas.width() / text_width) - 1;
-	_edit_character_width = text_width;
-	_edit_character_height = text_height;
-	_edit_character_x_offset = text_width / 2;
+	_edit_characters_per_screen = (canvas.width() / (config::display::font_base_width * 2)) - 1;
+	_edit_character_width = config::display::font_base_width * 2;
+	_edit_character_height = config::display::font_base_height * 2;
+	_edit_character_x_offset = (config::display::font_base_width * 2) / 2;
 
 	_layout_initialized = true;
 }

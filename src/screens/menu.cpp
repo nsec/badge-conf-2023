@@ -56,16 +56,14 @@ void nd::menu_screen::button_event(nb::id id, nb::event event) noexcept
 
 void nd::menu_screen::_initialize_layout_constraints(Adafruit_SSD1306& canvas) noexcept
 {
-	int x, y;
-	unsigned int text_width, text_height;
-
-	canvas.setTextSize(config::display::menu_font_size);
-	canvas.getTextBounds("a", 0, 0, &x, &y, &text_width, &text_height);
-
-	_layout_constraints.glyph_size.height = text_height;
-	_layout_constraints.glyph_size.width = text_width;
-	_layout_constraints._lines_per_screen = canvas.height() / text_height;
-	_layout_constraints._chars_per_screen = canvas.width() / text_width;
+	_layout_constraints.glyph_size.height =
+		config::display::menu_font_size * config::display::font_base_height;
+	_layout_constraints.glyph_size.width =
+		config::display::menu_font_size * config::display::font_base_width;
+	_layout_constraints._lines_per_screen =
+		canvas.height() / _layout_constraints.glyph_size.height;
+	_layout_constraints._chars_per_screen =
+		canvas.width() / _layout_constraints.glyph_size.width;
 	_layout_constraints_initialized = true;
 }
 

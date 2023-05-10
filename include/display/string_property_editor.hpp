@@ -22,7 +22,6 @@ public:
 	string_property_editor_screen(string_property_editor_screen&&) = delete;
 	string_property_editor_screen& operator=(const string_property_editor_screen&) = delete;
 	string_property_editor_screen& operator=(string_property_editor_screen&&) = delete;
-	~string_property_editor_screen() override = default;
 
 	void button_event(button::id id, button::event event) noexcept override;
 	void _render(scheduling::absolute_time_ms current_time_ms,
@@ -38,7 +37,7 @@ public:
 	void clean_up_property() noexcept;
 
 private:
-	enum class move_direction { LEFT, RIGHT };
+	enum class move_direction : uint8_t { LEFT, RIGHT };
 	enum class prompt_cycle_state : uint8_t {
 		PROPERTY_PROMPT = 0,
 		HOW_TO_DELETE = 1,

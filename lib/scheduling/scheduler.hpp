@@ -13,11 +13,11 @@
 #define NSEC_SCHEDULING_SCHEDULER_HPP
 
 #include <stddef.h>
+#include <stdint.h>
+
+#include "time.hpp"
 
 namespace nsec::scheduling {
-
-using absolute_time_ms = unsigned long;
-using relative_time_ms = unsigned long;
 
 template <unsigned int>
 class scheduler;
@@ -34,9 +34,13 @@ public:
 	task(task&&) = delete;
 	task& operator=(const task&) = delete;
 	task& operator=(task&&) = delete;
-	virtual ~task() = default;
+	~task() = default;
 
 	virtual void run(absolute_time_ms current_time) noexcept = 0;
+	bool scheduled() const noexcept
+	{
+		return _next_scheduled_time;
+	}
 
 private:
 	virtual bool must_be_rescheduled() const noexcept
@@ -76,18 +80,22 @@ public:
 	periodic_task(periodic_task&&) = delete;
 	periodic_task& operator=(const periodic_task&) = delete;
 	periodic_task& operator=(periodic_task&&) = delete;
-	~periodic_task() override = default;
+	~periodic_task() = default;
 
 	relative_time_ms period_ms() const noexcept
 	{
 		return _period_ms;
 	}
 
-protected:
 	/* Indicate that this task should no longer be scheduled after the current execution. */
 	void kill() noexcept
 	{
 		_killed = true;
+	}
+
+	void revive() noexcept
+	{
+		_killed = false;
 	}
 
 	// Effective at the end of the next tick.
@@ -102,7 +110,7 @@ private:
 		return !_killed;
 	}
 
-	relative_time_ms _period_ms : 31;
+	relative_time_ms _period_ms : 15;
 	bool _killed : 1;
 };
 
@@ -138,7 +146,7 @@ public:
 
 			if (!task) {
 				/* No task left to run... Rest in peace. */
-				return -1UL;
+				return UINT16_MAX;
 			}
 
 			if (task->_next_scheduled_time <= _last_tick_ms) {

@@ -22,14 +22,12 @@ public:
 	scroll_screen(scroll_screen&&) = delete;
 	scroll_screen& operator=(const scroll_screen&) = delete;
 	scroll_screen& operator=(scroll_screen&&) = delete;
-	~scroll_screen() override = default;
 
-	void button_event(button::id id, button::event event) noexcept override;
 	void _render(scheduling::absolute_time_ms current_time_ms,
 		     Adafruit_SSD1306& canvas) noexcept override;
 
-	void set_property(const __FlashStringHelper *property) noexcept;
-	void set_property(const char *property) noexcept;
+	void set_property(const __FlashStringHelper *property, bool close_repeat = false) noexcept;
+	void set_property(const char *property, bool close_repeat = false) noexcept;
 
 	void focused() noexcept override;
 
@@ -68,11 +66,14 @@ private:
 
 	char _property_character_at_offset(uint8_t offset) const noexcept;
 	void _render_current_property_character(Adafruit_SSD1306& canvas) const noexcept;
+	void _render_separator(Adafruit_SSD1306& canvas) noexcept;
+	uint16_t _separator_rendered_width() const noexcept;
 
 	bool _layout_initialized : 1;
 	unsigned int _scroll_character_width : 5;
 	unsigned int _scroll_character_y_offset : 5;
 	uint8_t _frame_render_state : 2;
+	bool _closely_repeat_string = false;
 	uint8_t _current_character_offset;
 };
 } // namespace nsec::display
