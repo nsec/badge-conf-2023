@@ -29,6 +29,13 @@ public:
 	void set_current_animation_idle(uint8_t current_level) noexcept;
 	void set_red_to_green_led_progress_bar(uint8_t led_count) noexcept;
 
+	enum class pairing_completed_animation_type : uint8_t {
+		HAPPY_CLOWN_BARF,
+		SAD_AND_LONELY,
+	};
+	void set_pairing_completed_animation(pairing_completed_animation_type) noexcept;
+	void set_show_level_animation(pairing_completed_animation_type, uint8_t level) noexcept;
+
 	struct led_color {
 		led_color() = default;
 		constexpr led_color(uint8_t r_in, uint8_t g_in, uint8_t b_in) :
@@ -110,6 +117,7 @@ private:
 
 	enum class keyframed_animation : uint8_t {
 		PROGRESS_BAR,
+		PAIRING_COMPLETED,
 	};
 
 	void _legacy_animation_tick() noexcept;
@@ -141,6 +149,7 @@ private:
 			const keyframe *keyframes;
 			// 1-bit per led. When inactive, the origin keyframe is repeated.
 			uint16_t active;
+			uint8_t brightness;
 		} keyframed;
 	} _config;
 	union {

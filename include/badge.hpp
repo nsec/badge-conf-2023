@@ -60,6 +60,7 @@ private:
 		UNCONNECTED,
 		EXCHANGING_IDS,
 		ANIMATE_PAIRING,
+		ANIMATE_PAIRING_COMPLETED,
 		IDLE,
 	};
 	class network_id_exchanger {
@@ -127,6 +128,34 @@ private:
 		uint8_t _state_counter : 5;
 	};
 
+	class pairing_completed_animator {
+	public:
+		pairing_completed_animator() = default;
+
+		pairing_completed_animator(const pairing_completed_animator&) = delete;
+		pairing_completed_animator(pairing_completed_animator&&) = delete;
+		pairing_completed_animator& operator=(const pairing_completed_animator&) = delete;
+		pairing_completed_animator& operator=(pairing_completed_animator&&) = delete;
+		~pairing_completed_animator() = default;
+
+		void start(badge&) noexcept;
+		void reset() noexcept;
+		void tick(badge&, nsec::scheduling::absolute_time_ms current_time_ms) noexcept;
+
+	private:
+		enum class animation_state : uint8_t {
+			SHOW_PAIRING_COMPLETE_MESSAGE,
+			SHOW_NEW_LEVEL,
+		};
+
+		void _animation_state(animation_state) noexcept;
+		animation_state _animation_state() const noexcept;
+
+		uint8_t _current_state : 3;
+		uint8_t _state_counter : 5;
+		char current_message[32];
+	};
+
 	class animation_task : public nsec::scheduling::periodic_task {
 	public:
 		explicit animation_task();
@@ -151,6 +180,7 @@ private:
 	// Storage for network_app_state
 	uint8_t _current_network_app_state : 4;
 	uint8_t _is_user_name_set : 1;
+	uint8_t _badges_discovered_last_exchange : 5;
 	// Mask to prevent repeats after a screen transition, one bit per button.
 	uint8_t _button_had_non_repeat_event_since_screen_focus_change;
 	char _user_name[nsec::config::user::name_max_length];
@@ -173,6 +203,7 @@ private:
 	communication::network_handler _network_handler;
 	network_id_exchanger _id_exchanger;
 	pairing_animator _pairing_animator;
+	pairing_completed_animator _pairing_completed_animator;
 
 	// menu choices
 	display::main_menu_choices _main_menu_choices;

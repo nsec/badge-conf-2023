@@ -43,12 +43,34 @@ nl::strip_animator::led_color interpolate(const nl::strip_animator::keyframe& or
 
 const nl::strip_animator::keyframe PROGMEM red_to_green_progress_bar_keyframe_template[] = {
 	// red
-	{ { 10, 0, 0 }, 0 },
+	{ { 100, 20, 0 }, 0 },
+	{ { 0, 0, 0 }, nsec::config::badge::pairing_animation_time_per_led_progress_bar_ms / 2 },
 	// green <- beginning of loop
-	{ { 0, 100, 0 }, nsec::config::badge::pairing_animation_time_per_led_progress_bar_ms },
+	{ { 0, 255, 0 }, nsec::config::badge::pairing_animation_time_per_led_progress_bar_ms },
 	// dimmed green to green loop
-	{ { 0, 5, 0 }, 5000 },
-	{ { 0, 100, 0 }, 6000 },
+	{ { 48, 120, 19 },
+	  nsec::config::badge::pairing_animation_time_per_led_progress_bar_ms * 2 },
+	{ { 0, 255, 0 }, nsec::config::badge::pairing_animation_time_per_led_progress_bar_ms * 3 },
+};
+
+const nl::strip_animator::keyframe PROGMEM happy_clown_barf_keyframes[] = {
+	{ { 0, 0, 0 }, 0 },
+	{ { 161, 255, 181 }, 100 },
+	{ { 255, 128, 140 }, 200 },
+	{ { 255, 188, 110 }, 300 },
+	{ { 255, 255, 110 }, 400 },
+	{ { 110, 192, 255 }, 500 },
+	{ { 161, 255, 181 }, 600 },
+};
+
+const nl::strip_animator::keyframe PROGMEM sad_and_lonely_keyframes[] = {
+	{ { 0, 0, 0 }, 0 },
+	{ { 102, 0, 255 }, 200 },
+	{ { 184, 0, 255 }, 1200 },
+	{ { 255, 0, 255 }, 2400 },
+	{ { 255, 0, 186 }, 3600 },
+	{ { 255, 0, 37 }, 4800 },
+	{ { 102, 0, 255 }, 6000 },
 };
 
 nl::strip_animator::keyframe keyframe_from_flash(const nl::strip_animator::keyframe *src_keyframe)
@@ -194,6 +216,8 @@ void nl::strip_animator::_keyframe_animation_tick(
 		break;
 	}
 
+	_pixels.setBrightness(_config.keyframed.brightness);
+
 	for (uint8_t i = 0; i < 16; i++) {
 		const auto origin_keyframe_index =
 			_get_keyframe_index(_state.keyframed._origin_keyframe_index, i);
@@ -213,14 +237,14 @@ void nl::strip_animator::_keyframe_animation_tick(
 			continue;
 		}
 
-		// Serial.println();
-
 		const auto time_since_animation_start =
 			_state.keyframed.ticks_since_start_of_animation[i] * period_ms();
-		// Serial.print(F("Time since animation start: "));
-		// Serial.println(time_since_animation_start);
 
-		// origin_keyframe.color.log(F("origin keyframe: "));
+		//	Serial.println();
+		//	Serial.print(F("Time since animation start: "));
+		//	Serial.println(time_since_animation_start);
+		//	origin_keyframe.color.log(F("origin keyframe: "));
+
 		if (_state.keyframed.ticks_since_start_of_animation[i] != 255) {
 			// Saturate counter.
 			_state.keyframed.ticks_since_start_of_animation[i]++;
@@ -229,7 +253,8 @@ void nl::strip_animator::_keyframe_animation_tick(
 		// Interpolate to find the current color.
 		const auto destination_keyframe = keyframe_from_flash(
 			&_config.keyframed.keyframes[destination_keyframe_index]);
-		// destination_keyframe.color.log(F("destination keyframe: "));
+
+		//destination_keyframe.color.log(F("destination keyframe: "));
 
 		const auto new_color = interpolate(origin_keyframe,
 						   destination_keyframe,
@@ -326,7 +351,8 @@ void nl::strip_animator::set_red_to_green_led_progress_bar(uint8_t active_led_co
 			sizeof(red_to_green_progress_bar_keyframe_template) /
 			sizeof(*red_to_green_progress_bar_keyframe_template);
 		_config.keyframed.keyframes = red_to_green_progress_bar_keyframe_template;
-		_config.keyframed.loop_point_index = 1;
+		_config.keyframed.loop_point_index = 2;
+		_config.keyframed.brightness = 120;
 
 		// Clear its state.
 		_reset_keyframed_animation_state();
@@ -335,4 +361,51 @@ void nl::strip_animator::set_red_to_green_led_progress_bar(uint8_t active_led_co
 	for (uint8_t i = 0; i < active_led_count; i++) {
 		_config.keyframed.active |= (1 << i);
 	}
+}
+
+void nl::strip_animator::set_pairing_completed_animation(
+	nl::strip_animator::pairing_completed_animation_type animation_type) noexcept
+{
+	set_show_level_animation(animation_type, 0xFF);
+}
+
+void nl::strip_animator::set_show_level_animation(
+	nl::strip_animator::pairing_completed_animation_type animation_type, uint8_t level) noexcept
+{
+	period_ms(40);
+
+	// Setup animation parameters.
+	_current_animation_type = animation_type::KEYFRAMED;
+	_config.keyframed._animation = keyframed_animation::PAIRING_COMPLETED;
+	_config.keyframed.active = 0;
+	if (animation_type == pairing_completed_animation_type::HAPPY_CLOWN_BARF) {
+		_config.keyframed.keyframe_count =
+			sizeof(happy_clown_barf_keyframes) / sizeof(*happy_clown_barf_keyframes);
+		_config.keyframed.keyframes = happy_clown_barf_keyframes;
+	} else {
+		_config.keyframed.keyframe_count =
+			sizeof(sad_and_lonely_keyframes) / sizeof(*sad_and_lonely_keyframes);
+		_config.keyframed.keyframes = sad_and_lonely_keyframes;
+	}
+	_config.keyframed.loop_point_index = 1;
+	_config.keyframed.brightness = 50;
+	_reset_keyframed_animation_state();
+
+	for (uint8_t i = 0; i < 8; i++) {
+		// LED at bit number one is the left-most, so we need to "invert" the level pattern.
+		const auto value_bit = (level >> i) & 1;
+		_config.keyframed.active |= value_bit << (7 - i);
+	}
+
+	// Apply a slight offset between LEDs to achieve a "sparkle" effect.
+	for (uint8_t i = 0; i < 16; i++) {
+		_state.keyframed.ticks_since_start_of_animation[i] = (i * 10) %
+			(keyframe_from_flash(
+				 &_config.keyframed.keyframes[_config.keyframed.keyframe_count - 1])
+				 .time /
+			 period_ms());
+	}
+
+	// Animation always active on the bottom row.
+	_config.keyframed.active |= 0xFF00;
 }

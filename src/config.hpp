@@ -86,7 +86,7 @@ constexpr nsec::scheduling::relative_time_ms network_handler_retransmit_timeout_
 } // namespace nsec::communication
 
 namespace nsec::config::badge {
-constexpr unsigned int pairing_animation_time_per_led_progress_bar_ms = 150;
+constexpr unsigned int pairing_animation_time_per_led_progress_bar_ms = 1000;
 } // namespace nsec::badge
 
 #endif // NSEC_CONFIG_HPP

@@ -17,12 +17,30 @@ namespace nr = nsec::runtime;
 namespace nd = nsec::display;
 namespace nc = nsec::communication;
 namespace nb = nsec::button;
+namespace nl = nsec::led;
 
 namespace {
 const char set_name_prompt[] PROGMEM = "Enter your name";
 const char yes_str[] PROGMEM = "yes";
 const char no_str[] PROGMEM = "no";
 const char unset_name_scroll[] PROGMEM = "Press X to set your name";
+
+class formatter : public Print {
+public:
+	explicit formatter(char *msg) : _ptr{ msg }
+	{
+	}
+
+	size_t write(uint8_t new_char) override
+	{
+		*_ptr = new_char;
+		_ptr++;
+		return 1;
+	}
+
+private:
+	char *_ptr;
+};
 
 const __FlashStringHelper *as_flash_string(const char *str)
 {
@@ -252,6 +270,7 @@ void nr::badge::_network_app_state(nr::badge::network_app_state new_state) noexc
 {
 	_id_exchanger.reset();
 	_pairing_animator.reset();
+	_pairing_completed_animator.reset();
 
 	_current_network_app_state = uint8_t(new_state);
 	switch (new_state) {
@@ -269,9 +288,12 @@ void nr::badge::_network_app_state(nr::badge::network_app_state new_state) noexc
 		}
 
 		break;
+	case network_app_state::ANIMATE_PAIRING_COMPLETED:
+		_pairing_completed_animator.start(*this);
+		break;
 	case network_app_state::IDLE:
 	case network_app_state::UNCONNECTED:
-		set_focused_screen(_menu_screen);
+		relase_focus_current_screen();
 		_strip_animator.set_current_animation_idle(_social_level);
 		_renderer.period_ms(nsec::config::display::refresh_period_ms);
 		break;
@@ -288,7 +310,8 @@ void nr::badge::on_badge_discovery_completed() noexcept
 	Serial.print(F("Discovery completed: "));
 	Serial.print(_id_exchanger.new_badges_discovered());
 	Serial.println(F(" new badges"));
-	_network_app_state(network_app_state::IDLE);
+	_badges_discovered_last_exchange = _id_exchanger.new_badges_discovered();
+	_network_app_state(network_app_state::ANIMATE_PAIRING_COMPLETED);
 }
 
 void nr::badge::network_id_exchanger::start(nr::badge& badge) noexcept
@@ -545,7 +568,85 @@ void nr::badge::tick(nsec::scheduling::absolute_time_ms current_time_ms) noexcep
 	case network_app_state::ANIMATE_PAIRING:
 		_pairing_animator.tick(current_time_ms);
 		break;
+	case network_app_state::ANIMATE_PAIRING_COMPLETED:
+		_pairing_completed_animator.tick(*this, current_time_ms);
+		break;
 	default:
 		break;
 	}
+}
+
+void nr::badge::pairing_completed_animator::start(nr::badge& badge) noexcept
+{
+	badge._timer.period_ms(1000);
+	badge._strip_animator.set_pairing_completed_animation(
+		badge._badges_discovered_last_exchange > 0 ?
+			nl::strip_animator::pairing_completed_animation_type::HAPPY_CLOWN_BARF :
+			nl::strip_animator::pairing_completed_animation_type::SAD_AND_LONELY);
+	memset(current_message, 0, sizeof(current_message));
+
+	// format current msg
+	formatter message_formatter(current_message);
+	message_formatter.print(badge._badges_discovered_last_exchange);
+	message_formatter.print(F(" "));
+	message_formatter.print(F("new badge"));
+	if (badge._badges_discovered_last_exchange > 1) {
+		message_formatter.print(F("s"));
+	}
+
+	message_formatter.print(F(" discovered"));
+	if (badge._badges_discovered_last_exchange > 0) {
+		message_formatter.print(F("!"));
+	}
+
+	badge._scroll_screen.set_property(current_message);
+}
+
+void nr::badge::pairing_completed_animator::reset() noexcept
+{
+	_animation_state(animation_state::SHOW_PAIRING_COMPLETE_MESSAGE);
+	_state_counter = 0;
+}
+
+void nr::badge::pairing_completed_animator::tick(
+	nr::badge& badge, nsec::scheduling::absolute_time_ms current_time_ms) noexcept
+{
+	_state_counter++;
+	if (_state_counter == 8) {
+		_state_counter = 0;
+		if (_animation_state() == animation_state::SHOW_PAIRING_COMPLETE_MESSAGE) {
+			_animation_state(animation_state::SHOW_NEW_LEVEL);
+
+			const auto new_level =
+				badge._social_level + badge._badges_discovered_last_exchange;
+
+			badge._strip_animator.set_show_level_animation(
+				badge._badges_discovered_last_exchange > 0 ?
+					nl::strip_animator::pairing_completed_animation_type::
+						HAPPY_CLOWN_BARF :
+					nl::strip_animator::pairing_completed_animation_type::
+						SAD_AND_LONELY, new_level);
+
+			memset(current_message, 0, sizeof(current_message));
+
+			formatter message_formatter(current_message);
+			message_formatter.print(F("Level "));
+			message_formatter.print(int(new_level));
+			badge._scroll_screen.set_property(current_message);
+		} else {
+			// TODO save
+			badge._network_app_state(network_app_state::IDLE);
+		}
+	}
+}
+
+void nr::badge::pairing_completed_animator::_animation_state(
+	nr::badge::pairing_completed_animator::animation_state new_state) noexcept
+{
+	_current_state = uint8_t(new_state);
+}
+
+nr::badge::pairing_completed_animator::animation_state nr::badge::pairing_completed_animator::_animation_state() const noexcept
+{
+	return animation_state(_current_state);
 }
