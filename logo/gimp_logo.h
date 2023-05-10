@@ -1,3 +1,9 @@
+/*
+ * SPDX-License-Identifier: MIT
+ *
+ * Copyright 2023 Jérémie Galarneau <jeremie.galarneau@gmail.com>
+ */
+
 /*  GIMP header image file format (INDEXED): /home/jgalar/Projects/badge-nsec23/logo/logo.h  */
 
 static unsigned int width = 128;

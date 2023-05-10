@@ -11,7 +11,9 @@
 int main(int argc [[maybe_unused]], const char **argv [[maybe_unused]])
 {
 	std::cout << "/*" << std::endl;
-	std::cout << " * SPDX-License-Identifier: MIT" << std::endl;
+	// Split the SPDX identifier to avoid confusing the reuse tool
+	std::cout << " * SPDX-License-";
+	std::cout << "Identifier: MIT" << std::endl;
 	std::cout << " *" << std::endl;
 	std::cout << " * Copyright 2023 Jérémie Galarneau <jeremie.galarneau@gmail.com>"
 		  << std::endl;
