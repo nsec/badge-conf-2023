@@ -235,9 +235,14 @@ void nl::strip_animator::_keyframe_animation_tick(
 						   destination_keyframe,
 						   uint16_t(time_since_animation_start));
 		// new_color.log(F("interpolated color: "));
-		_pixels.setPixelColor(i, new_color.r(), new_color.g(), new_color.b());
 
-		// Advance keyframes if needed
+
+		_pixels.setPixelColor(i,
+				      _pixels.gamma8(new_color.r()),
+				      _pixels.gamma8(new_color.g()),
+				      _pixels.gamma8(new_color.b()));
+
+		// Advance keyframes if needed.
 		if (time_since_animation_start < destination_keyframe.time) {
 			continue;
 		}
