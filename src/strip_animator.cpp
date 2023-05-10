@@ -250,9 +250,13 @@ void nl::strip_animator::_keyframe_animation_tick(
 			new_origin_keyframe_index = _config.keyframed.loop_point_index;
 			new_destination_keyframe_index = min(new_origin_keyframe_index + 1,
 							     _config.keyframed.keyframe_count - 1);
+			// Round up to make sure the time isn't _before_ the origin keyframe.
 			_state.keyframed.ticks_since_start_of_animation[i] =
-				_config.keyframed.keyframes[new_origin_keyframe_index].time /
-				period_ms();
+				((keyframe_from_flash(
+					  &_config.keyframed.keyframes[new_origin_keyframe_index])
+					  .time +
+				  (period_ms() - 1)) /
+				 period_ms());
 		} else {
 			new_origin_keyframe_index = destination_keyframe_index;
 			new_destination_keyframe_index = destination_keyframe_index + 1;
