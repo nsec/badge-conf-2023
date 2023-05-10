@@ -37,12 +37,7 @@
 // Uncomment to disable Adafruit splash logo
 //#define SSD1306_NO_SPLASH
 
-#if defined(ARDUINO_STM32_FEATHER)
-typedef class HardwareSPI SPIClass;
-#endif
-
 #include <Adafruit_GFX.h>
-#include <SPI.h>
 #include <Wire.h>
 
 #if defined(__AVR__)
@@ -134,14 +129,8 @@ public:
   Adafruit_SSD1306(uint8_t w, uint8_t h, TwoWire *twi = &Wire,
                    int8_t rst_pin = -1, uint32_t clkDuring = 400000UL,
                    uint32_t clkAfter = 100000UL);
-  Adafruit_SSD1306(uint8_t w, uint8_t h, int8_t mosi_pin, int8_t sclk_pin,
-                   int8_t dc_pin, int8_t rst_pin, int8_t cs_pin);
-  Adafruit_SSD1306(uint8_t w, uint8_t h, SPIClass *spi, int8_t dc_pin,
-                   int8_t rst_pin, int8_t cs_pin, uint32_t bitrate = 8000000UL);
 
   // DEPRECATED CONSTRUCTORS - for back compatibility, avoid in new projects
-  Adafruit_SSD1306(int8_t mosi_pin, int8_t sclk_pin, int8_t dc_pin,
-                   int8_t rst_pin, int8_t cs_pin);
   Adafruit_SSD1306(int8_t dc_pin, int8_t rst_pin, int8_t cs_pin);
   Adafruit_SSD1306(int8_t rst_pin = -1);
 
@@ -167,14 +156,11 @@ public:
   uint8_t *getBuffer(void);
 
 protected:
-  inline void SPIwrite(uint8_t d) __attribute__((always_inline));
   void drawFastHLineInternal(int16_t x, int16_t y, int16_t w, uint16_t color);
   void drawFastVLineInternal(int16_t x, int16_t y, int16_t h, uint16_t color);
   void ssd1306_command1(uint8_t c);
   void ssd1306_commandList(const uint8_t *c, uint8_t n);
 
-  SPIClass *spi;   ///< Initialized during construction when using SPI. See
-                   ///< SPI.cpp, SPI.h
   TwoWire *wire;   ///< Initialized during construction when using I2C. See
                    ///< Wire.cpp, Wire.h
   uint8_t *buffer; ///< Buffer data used for display buffer. Allocated when
@@ -182,12 +168,6 @@ protected:
   int8_t i2caddr;  ///< I2C address initialized when begin method is called.
   int8_t vccstate; ///< VCC selection, set by begin method.
   int8_t page_end; ///< not used
-  int8_t mosiPin;  ///< (Master Out Slave In) set when using SPI set during
-                   ///< construction.
-  int8_t clkPin;   ///< (Clock Pin) set when using SPI set during construction.
-  int8_t dcPin;    ///< (Data Pin) set when using SPI set during construction.
-  int8_t
-      csPin; ///< (Chip Select Pin) set when using SPI set during construction.
   int8_t rstPin; ///< Display reset pin assignment. Set during construction.
   bool isBufferDynamicallyAllocated; ///< Is buffer allocated and managed by us.
 
@@ -200,11 +180,6 @@ protected:
   uint32_t restoreClk; ///< Wire speed following SSD1306 transfers
 #endif
   uint8_t contrast; ///< normal contrast setting for this device
-#if defined(SPI_HAS_TRANSACTION)
-protected:
-  // Allow sub-class to change
-  SPISettings spiSettings;
-#endif
 };
 
 #endif // _Adafruit_SSD1306_H_
