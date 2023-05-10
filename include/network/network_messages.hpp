@@ -8,8 +8,8 @@
 #define NSEC_NETWORK_MESSAGES_HPP
 
 #include "config.hpp"
+#include "unique_id.hpp"
 
-#include <ArduinoUniqueID.h>
 #include <stdint.h>
 
 namespace nsec::communication::message {

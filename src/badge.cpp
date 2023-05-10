@@ -9,9 +9,9 @@
 #include "display/menu/menu.hpp"
 #include "globals.hpp"
 #include "network/network_messages.hpp"
+#include "unique_id.hpp"
 
 #include <Arduino.h>
-#include <ArduinoUniqueID.h>
 
 namespace nr = nsec::runtime;
 namespace nd = nsec::display;

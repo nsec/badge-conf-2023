@@ -2,19 +2,11 @@
 //
 // SPDX-License-Identifier: MIT
 
-#include "board.hpp"
 #include "globals.hpp"
-
-#include <Arduino.h>
-#include <ArduinoUniqueID.h>
-#include <SPI.h>
-#include <SoftwareSerial.h>
-#include <Wire.h>
 
 void setup()
 {
 	nsec::g::the_badge.setup();
-	UniqueIDdump(Serial);
 }
 
 void loop()
