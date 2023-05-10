@@ -9,7 +9,7 @@
 
 #include "../board.hpp"
 #include "../button/watcher.hpp"
-#include "Adafruit_SSD1306/Adafruit_SSD1306.h"
+#include "Adafruit_SSD1306.h"
 #include "callback.hpp"
 #include "scheduler.hpp"
 

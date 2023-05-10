@@ -52,8 +52,8 @@
 #include <util/delay.h>
 #endif
 
-#include "Adafruit_SSD1306/Adafruit_SSD1306.h"
-#include "Adafruit_SSD1306/splash.h"
+#include "Adafruit_SSD1306.h"
+#include "splash.h"
 #include <Adafruit_GFX.h>
 
 // SOME DEFINES AND STATIC VARIABLES USED INTERNALLY -----------------------

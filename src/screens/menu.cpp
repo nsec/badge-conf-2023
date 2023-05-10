@@ -4,7 +4,7 @@
  * Copyright 2023 Jérémie Galarneau <jeremie.galarneau@gmail.com>
  */
 
-#include "Adafruit_SSD1306/Adafruit_SSD1306.h"
+#include "Adafruit_SSD1306.h"
 #include "config.hpp"
 #include "display/menu/menu.hpp"
 #include "display/utils.hpp"

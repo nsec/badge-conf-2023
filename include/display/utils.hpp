@@ -7,7 +7,7 @@
 #ifndef NSEC_DISPLAY_UTILS_HPP
 #define NSEC_DISPLAY_UTILS_HPP
 
-#include "Adafruit_SSD1306/Adafruit_SSD1306.h"
+#include "Adafruit_SSD1306.h"
 
 namespace nsec::display::utils {
 
