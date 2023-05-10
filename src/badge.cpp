@@ -22,6 +22,7 @@ namespace {
 const char set_name_prompt[] PROGMEM = "Enter your name";
 const char yes_str[] PROGMEM = "yes";
 const char no_str[] PROGMEM = "no";
+const char unset_name_scroll[] PROGMEM = "Press X to set your name";
 
 const __FlashStringHelper *as_flash_string(const char *str)
 {
@@ -55,7 +56,8 @@ void badge_info_printer(void *badge_data,
 } // anonymous namespace
 
 nr::badge::badge() :
-	_user_name{ "Kassandra Lapointe-Chagnon" },
+	_is_user_name_set{ false },
+	_user_name{ "" },
 	_button_watcher([](nsec::button::id id, nsec::button::event event) {
 		nsec::g::the_badge.on_button_event(id, event);
 	}),
@@ -164,6 +166,7 @@ void nr::badge::set_focused_screen(nd::screen& newly_focused_screen) noexcept
 {
 	if (_focused_screen == &_string_property_edit_screen) {
 		_string_property_edit_screen.clean_up_property();
+		_is_user_name_set = true;
 	}
 
 	_focused_screen = &newly_focused_screen;
@@ -179,14 +182,18 @@ void nr::badge::relase_focus_current_screen() noexcept
 		return;
 	}
 
-	if (_focused_screen == &_menu_screen) {
-		_scroll_screen.set_property(_user_name);
-		set_focused_screen(_scroll_screen);
-		return;
-	}
+	if (_focused_screen == &_menu_screen || _focused_screen == &_splash_screen) {
+		if (_is_user_name_set) {
+			_scroll_screen.set_property(_user_name);
+		} else {
+			_scroll_screen.set_property(as_flash_string(unset_name_scroll));
+		}
 
-	_menu_screen.set_choices(_main_menu_choices);
-	set_focused_screen(_menu_screen);
+		set_focused_screen(_scroll_screen);
+	} else {
+		_menu_screen.set_choices(_main_menu_choices);
+		set_focused_screen(_menu_screen);
+	}
 }
 
 void nr::badge::on_disconnection() noexcept
@@ -434,14 +441,12 @@ void nr::badge::pairing_animator::reset() noexcept
 	_animation_state(animation_state::DONE);
 }
 
-nr::badge::animation_task::animation_task() :
-	periodic_task(250)
+nr::badge::animation_task::animation_task() : periodic_task(250)
 {
 	nsec::g::the_scheduler.schedule_task(*this);
 }
 
-void nr::badge::animation_task::run(
-	nsec::scheduling::absolute_time_ms current_time_ms) noexcept
+void nr::badge::animation_task::run(nsec::scheduling::absolute_time_ms current_time_ms) noexcept
 {
 	nsec::g::the_badge.tick(current_time_ms);
 }
@@ -450,11 +455,14 @@ void nr::badge::pairing_animator::tick(nsec::scheduling::absolute_time_ms curren
 {
 	switch (_animation_state()) {
 	case animation_state::DONE:
-		if (_state_counter < 8 && nsec::g::the_badge._network_handler.position() == nc::network_handler::link_position::LEFT_MOST) {
+		if (_state_counter < 8 &&
+		    nsec::g::the_badge._network_handler.position() ==
+			    nc::network_handler::link_position::LEFT_MOST) {
 			// Left-most badge waits for the neighbor to transition states.
 			_state_counter++;
 		} else {
-			nsec::g::the_badge._network_app_state(nr::badge::network_app_state::EXCHANGING_IDS);
+			nsec::g::the_badge._network_app_state(
+				nr::badge::network_app_state::EXCHANGING_IDS);
 		}
 		break;
 	case animation_state::WAIT_MESSAGE_ANIMATION_PART_1:

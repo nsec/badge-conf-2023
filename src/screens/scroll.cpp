@@ -15,7 +15,6 @@ namespace nb = nsec::button;
 namespace ns = nsec::scheduling;
 
 namespace {
-const char default_property[] PROGMEM = "Unset content";
 const char repeat_separator[] PROGMEM = "|";
 constexpr uint8_t repeat_separator_padding = 4 * nsec::config::display::scroll_font_size;
 
@@ -66,7 +65,6 @@ unsigned int window_offset_from_frame_time(nsec::scheduling::absolute_time_ms ti
 nd::scroll_screen::scroll_screen() noexcept : screen()
 {
 	_cleared_on_every_frame = false;
-	set_property(as_flash_string(default_property));
 }
 
 char nd::scroll_screen::_property_character_at_offset(uint8_t offset) const noexcept

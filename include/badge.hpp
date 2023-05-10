@@ -150,6 +150,7 @@ private:
 	uint8_t _social_level : 7;
 	// Storage for network_app_state
 	uint8_t _current_network_app_state : 4;
+	uint8_t _is_user_name_set : 1;
 	// Mask to prevent repeats after a screen transition, one bit per button.
 	uint8_t _button_had_non_repeat_event_since_screen_focus_change;
 	char _user_name[nsec::config::user::name_max_length];
