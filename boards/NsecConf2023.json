@@ -1,0 +1,33 @@
+{
+  "build": {
+    "core": "MiniCore",
+    "extra_flags": "-DARDUINO_AVR_ATmega328PB",
+    "f_cpu": "8000000L",
+    "mcu": "atmega328pb",
+    "variant": "pb-variant"
+  },
+  "hardware": {
+    "uart": "uart0",
+    "oscillator": "external",
+    "bod": "2.7v",
+    "eesave": "no",
+    "cfd": "yes"
+  },
+  "bootloader": {
+    "led_pin": "B5",
+    "speed": "38400"
+  },
+  "frameworks": [
+    "arduino"
+  ],
+  "name": "Nsec Conf 2023",
+  "upload": {
+    "maximum_ram_size": 2048,
+    "maximum_size": 32768,
+    "protocol": "arduino",
+    "require_upload_port": true,
+    "speed": 38400
+  },
+  "url": "https://www.microchip.com/wwwproducts/en/ATmega328PB",
+  "vendor": "Microchip"
+}
