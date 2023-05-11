@@ -19,6 +19,7 @@
 #include "display/text.hpp"
 #include "led/strip_animator.hpp"
 #include "network/network_handler.hpp"
+#include "ringbuffer.hpp"
 
 namespace nsec::runtime {
 
@@ -162,9 +163,21 @@ private:
 		void run(nsec::scheduling::absolute_time_ms current_time_ms) noexcept override;
 	};
 
+	struct eeprom_config {
+		uint16_t version_magic;
+		uint8_t favorite_animation;
+		bool is_name_set;
+		uint8_t social_level;
+		char name[nsec::config::user::name_max_length];
+	};
+
+	void load_config();
+	void save_config() const;
+	void factory_reset();
+
 	// Handle new button event
 	void on_button_event(button::id button, button::event event) noexcept;
-	void set_social_level(uint8_t new_level) noexcept;
+	void set_social_level(uint8_t new_level, bool save=true) noexcept;
 
 	void set_focused_screen(display::screen& focused_screen) noexcept;
 
@@ -210,6 +223,9 @@ private:
 
 	// animation timer
 	animation_task _timer;
+
+	// persistent buffer of known badge ids
+	nsec::storage::buffer<sizeof(eeprom_config)> _id_buffer;
 };
 } // namespace nsec::runtime
 

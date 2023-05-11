@@ -25,6 +25,8 @@ const char yes_str[] PROGMEM = "yes";
 const char no_str[] PROGMEM = "no";
 const char unset_name_scroll[] PROGMEM = "Press X to set your name";
 
+constexpr uint16_t config_version_magic = 0xBAD8;
+
 class formatter : public Print {
 public:
 	explicit formatter(char *msg) : _ptr{ msg }
@@ -102,6 +104,48 @@ nr::badge::badge() :
 	_network_app_state(network_app_state::UNCONNECTED);
 	_id_exchanger.reset();
 	set_focused_screen(_splash_screen);
+	set_social_level(1, false);
+}
+
+void nr::badge::load_config()
+{
+	eeprom_config config;
+
+	EEPROM.get(0, config);
+	if (config.version_magic != config_version_magic) {
+		return;
+	}
+
+	set_social_level(config.social_level, false);
+	if (config.is_name_set) {
+		memcpy(_user_name, config.name, sizeof(_user_name));
+		_is_user_name_set = config.is_name_set;
+	}
+}
+
+void nr::badge::save_config() const
+{
+	eeprom_config config;
+	config.version_magic = config_version_magic;
+	config.favorite_animation = 0;
+	config.is_name_set = _is_user_name_set;
+	config.social_level = _social_level;
+
+	memcpy(config.name, _user_name, sizeof(config.name));
+	EEPROM.put(0, config);
+}
+
+void nr::badge::factory_reset()
+{
+	eeprom_config config;
+
+	// Set an invalid magic.
+	config.version_magic = 1234;
+
+	EEPROM.put(0, config);
+
+	void (*so_looooong)(void) = nullptr;
+	so_looooong();
 }
 
 void nr::badge::setup()
@@ -113,13 +157,12 @@ void nr::badge::setup()
 	_strip_animator.setup();
 	_renderer.setup();
 
-	// For testing purposes; should be loaded from EEPROM.
-	set_social_level(rand() % 60);
-
 	_network_handler.setup();
 
 	// Hardware serial init (through USB-C connector).
 	Serial.begin(38400);
+
+	load_config();
 }
 
 uint8_t nr::badge::level() const noexcept
@@ -161,23 +204,27 @@ void nr::badge::on_button_event(nsec::button::id button, nsec::button::event eve
 
 	switch (button) {
 	case nsec::button::id::UP:
-		set_social_level(_social_level + 1);
+		set_social_level(_social_level + 1, false);
 		break;
 	case nsec::button::id::DOWN:
-		set_social_level(_social_level - 1);
+		set_social_level(_social_level - 1, false);
 		break;
 	default:
 		break;
 	}
 }
 
-void nr::badge::set_social_level(uint8_t new_level)
+void nr::badge::set_social_level(uint8_t new_level, bool save)
 {
 	new_level = max(1, new_level);
 	new_level = min(nsec::config::social::max_level, new_level);
 
 	_social_level = new_level;
 	_strip_animator.set_current_animation_idle(_social_level);
+
+	if (save) {
+		save_config();
+	}
 }
 
 void nr::badge::set_focused_screen(nd::screen& newly_focused_screen) noexcept
@@ -185,6 +232,7 @@ void nr::badge::set_focused_screen(nd::screen& newly_focused_screen) noexcept
 	if (_focused_screen == &_string_property_edit_screen) {
 		_string_property_edit_screen.clean_up_property();
 		_is_user_name_set = true;
+		save_config();
 	}
 
 	_focused_screen = &newly_focused_screen;
@@ -625,7 +673,8 @@ void nr::badge::pairing_completed_animator::tick(
 					nl::strip_animator::pairing_completed_animation_type::
 						HAPPY_CLOWN_BARF :
 					nl::strip_animator::pairing_completed_animation_type::
-						SAD_AND_LONELY, new_level);
+						SAD_AND_LONELY,
+				new_level);
 
 			memset(current_message, 0, sizeof(current_message));
 
@@ -646,7 +695,8 @@ void nr::badge::pairing_completed_animator::_animation_state(
 	_current_state = uint8_t(new_state);
 }
 
-nr::badge::pairing_completed_animator::animation_state nr::badge::pairing_completed_animator::_animation_state() const noexcept
+nr::badge::pairing_completed_animator::animation_state
+nr::badge::pairing_completed_animator::_animation_state() const noexcept
 {
 	return animation_state(_current_state);
 }
