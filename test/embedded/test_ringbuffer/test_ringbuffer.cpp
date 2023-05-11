@@ -2,14 +2,17 @@
 //
 // SPDX-License-Identifier: MIT
 
-#include <unity.h>
 #include "ringbuffer.hpp"
 
 #include <Arduino.h>
+#include <unity.h>
 
-void setUp() {
+void setUp()
+{
 	TEST_MESSAGE("Clearing the ringbuffer");
-	nsec::ringbuffer::clear();
+
+	nsec::storage::buffer<0> buffer;
+	buffer.clear();
 }
 
 void test_init()
@@ -17,38 +20,39 @@ void test_init()
 	const uint32_t value1 = 12345;
 	const uint32_t value2 = 54321;
 
-	nsec::ringbuffer::setup();
+	nsec::storage::buffer<0> buffer;
 
-	TEST_ASSERT_EQUAL_MESSAGE(0, nsec::ringbuffer::count(), "init: count is 0");
+	TEST_ASSERT_EQUAL_MESSAGE(0, buffer.count(), "init: count is 0");
 
-	nsec::ringbuffer::insert(value1);
+	buffer.insert(value1);
 
-	TEST_ASSERT_EQUAL_MESSAGE(1, nsec::ringbuffer::count(), "init: count is 1");
-	TEST_ASSERT_EQUAL_MESSAGE(true, nsec::ringbuffer::contains(value1), "init: contains value");
+	TEST_ASSERT_EQUAL_MESSAGE(1, buffer.count(), "init: count is 1");
+	TEST_ASSERT_EQUAL_MESSAGE(true, buffer.contains(value1), "init: contains value");
 
-	nsec::ringbuffer::insert(value1);
+	buffer.insert(value1);
 
-	TEST_ASSERT_EQUAL_MESSAGE(1, nsec::ringbuffer::count(), "init: count is still 1");
-	TEST_ASSERT_EQUAL_MESSAGE(true, nsec::ringbuffer::contains(value1), "init: contains value");
+	TEST_ASSERT_EQUAL_MESSAGE(1, buffer.count(), "init: count is still 1");
+	TEST_ASSERT_EQUAL_MESSAGE(true, buffer.contains(value1), "init: contains value");
 
-	nsec::ringbuffer::insert(value2);
+	buffer.insert(value2);
 
-	TEST_ASSERT_EQUAL_MESSAGE(2, nsec::ringbuffer::count(), "init: count is 2");
-	TEST_ASSERT_EQUAL_MESSAGE(true, nsec::ringbuffer::contains(value2), "init: contains value");
+	TEST_ASSERT_EQUAL_MESSAGE(2, buffer.count(), "init: count is 2");
+	TEST_ASSERT_EQUAL_MESSAGE(true, buffer.contains(value2), "init: contains value");
 
-	nsec::ringbuffer::insert(value2);
+	buffer.insert(value2);
 
-	TEST_ASSERT_EQUAL_MESSAGE(2, nsec::ringbuffer::count(), "init: count is still 2");
-	TEST_ASSERT_EQUAL_MESSAGE(true, nsec::ringbuffer::contains(value2), "init: contains value");
+	TEST_ASSERT_EQUAL_MESSAGE(2, buffer.count(), "init: count is still 2");
+	TEST_ASSERT_EQUAL_MESSAGE(true, buffer.contains(value2), "init: contains value");
 
-	nsec::ringbuffer::clear();
+	buffer.clear();
 
-	TEST_ASSERT_EQUAL_MESSAGE(0, nsec::ringbuffer::count(), "init: count is 0");
-	TEST_ASSERT_EQUAL_MESSAGE(false, nsec::ringbuffer::contains(value1), "init: doesn't contain value");
-	TEST_ASSERT_EQUAL_MESSAGE(false, nsec::ringbuffer::contains(value2), "init: doesn't contain value");
+	TEST_ASSERT_EQUAL_MESSAGE(0, buffer.count(), "init: count is 0");
+	TEST_ASSERT_EQUAL_MESSAGE(false, buffer.contains(value1), "init: doesn't contain value");
+	TEST_ASSERT_EQUAL_MESSAGE(false, buffer.contains(value2), "init: doesn't contain value");
 }
 
-void setup() {
+void setup()
+{
 	// Wait ~2 seconds before the Unity test runner
 	// establishes connection with a board Serial interface
 	delay(2000);
@@ -59,4 +63,6 @@ void setup() {
 
 	UNITY_END();
 }
-void loop() {}
+void loop()
+{
+}
