@@ -27,6 +27,11 @@ const char unset_name_scroll[] PROGMEM = "Press X to set your name";
 
 constexpr uint16_t config_version_magic = 0xBAD8;
 
+/*
+ * Format to a fixed size buffer. Caller must ensure it has enough space
+ * for the formatted string, or risk being the subject of a talk at the next
+ * edition of nsec.
+ */
 class formatter : public Print {
 public:
 	explicit formatter(char *msg) : _ptr{ msg }
@@ -178,6 +183,8 @@ void nr::badge::setup()
 	Serial.begin(38400);
 
 	load_config();
+
+	_strip_animator.set_shooting_star_animation(1, 90);
 }
 
 uint8_t nr::badge::level() const noexcept
@@ -664,7 +671,7 @@ void nr::badge::pairing_completed_animator::start(nr::badge& badge) noexcept
 	badge._strip_animator.set_pairing_completed_animation(
 		badge._badges_discovered_last_exchange > 0 ?
 			nl::strip_animator::pairing_completed_animation_type::HAPPY_CLOWN_BARF :
-			nl::strip_animator::pairing_completed_animation_type::SAD_AND_LONELY);
+			nl::strip_animator::pairing_completed_animation_type::NO_NEW_FRIENDS);
 	memset(current_message, 0, sizeof(current_message));
 
 	// format current msg
@@ -714,7 +721,7 @@ void nr::badge::pairing_completed_animator::tick(
 					nl::strip_animator::pairing_completed_animation_type::
 						HAPPY_CLOWN_BARF :
 					nl::strip_animator::pairing_completed_animation_type::
-						SAD_AND_LONELY,
+						NO_NEW_FRIENDS,
 				new_level);
 
 			memset(current_message, 0, sizeof(current_message));

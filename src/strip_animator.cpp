@@ -63,11 +63,21 @@ const nl::strip_animator::keyframe PROGMEM happy_clown_barf_keyframes[] = {
 	{ { 161, 255, 181 }, 600 },
 };
 
-const nl::strip_animator::keyframe PROGMEM sad_and_lonely_keyframes[] = {
+const nl::strip_animator::keyframe PROGMEM no_new_friends_keyframes[] = {
 	{ { 0, 0, 0 }, 0 },
 	{ { 255, 0, 0 }, 200 },
 	{ { 0, 0, 0 }, 400 },
 	{ { 255, 0, 0 }, 600 },
+};
+
+// Colors evoking a star cooling down
+const nl::strip_animator::keyframe PROGMEM burning_star_keyframes[] = {
+	{ { 0, 0, 0 }, 0 }, // black
+	{ { 255, 255, 255 }, 300 }, // white
+	{ { 180, 0, 200 }, 400 }, // violet
+	{ { 70, 0, 0 }, 900 }, // red
+	{ { 0, 0, 0 }, 1500 }, // black
+	{ { 0, 0, 0 }, 5000 }, // maintain black
 };
 
 nl::strip_animator::keyframe keyframe_from_flash(const nl::strip_animator::keyframe *src_keyframe)
@@ -95,92 +105,6 @@ void nl::strip_animator::setup() noexcept
 
 void nl::strip_animator::_legacy_animation_tick() noexcept
 {
-	if (_state.legacy.start_position > 15) {
-		// wrap around when reaching the end led strip
-		_state.legacy.start_position = 0;
-	}
-
-	// Set all pixel colors to 'off'
-	_pixels.clear();
-	for (uint8_t i = 0; i < _config.legacy.level; i++) // determine how many LED
-							   // should be ON
-	{
-		// led_ID is the current LED index that we are update.
-		uint8_t const led_ID = (_state.legacy.start_position + i) % 16; // This is going
-										// over every single
-										// LED that needs to
-										// be on based on
-										// the current LVL
-
-		// enable more colors if your lvl is more than the 16 LEDs
-		uint8_t b = 0;
-		uint8_t r = 0;
-		uint8_t g = 0;
-		if (i < 16) // only blue to start
-		{
-			b = 5;
-		} else if (i >= 16 && i < 32) // introduce red
-		{
-			b = 5;
-			r = 5;
-		} else if (i >= 32 && i < 48) // introduce green
-		{
-			b = 5;
-			g = 5;
-		} else if (i >= 48 && i < 64) // have all 3 colors
-		{
-			g = 5;
-			r = 5;
-			b = 5;
-		} else if (i >= 64 && i < 80) // increase brightness + speed
-		{
-			period_ms(100);
-			b = 10;
-			r = 5;
-			b = 5;
-		} else if (i >= 80 && i < 96) // increase brightness
-		{
-			period_ms(50);
-			b = 10;
-			r = 10;
-			b = 5;
-		} else if (i >= 96 && i < 112) // increase brightness
-		{
-			period_ms(25);
-			b = 10;
-			r = 10;
-			b = 10;
-		} else if (i >= 112 && i < 128) // max score
-		{
-			period_ms(12);
-			r = random(1, 10);
-			g = 0;
-			b = 0;
-		} else if (i >= 128 && i < 144) // max score
-		{
-			period_ms(6);
-			r = random(1, 10);
-			g = 0;
-			b = random(1, 10);
-		} else if (i >= 144 && i < 160) // max score
-		{
-			period_ms(3);
-			r = random(1, 10);
-			g = random(1, 10);
-			b = random(1, 10);
-		} else if (i >= 160) // max score
-		{
-			period_ms(1);
-			r = random(1, 15);
-			g = random(1, 15);
-			b = random(1, 15);
-		}
-
-		// apply color
-		_pixels.setPixelColor(led_ID, _pixels.Color(r, g, b));
-	}
-
-	_state.legacy.start_position++;
 }
 
 uint8_t nl::strip_animator::_get_keyframe_index(const indice_storage_element *indices,
@@ -209,6 +133,31 @@ void nl::strip_animator::_keyframe_animation_tick(
 {
 	// Animation specific setup
 	switch (_config.keyframed._animation) {
+	case keyframed_animation::SHOOTING_STAR:
+		if (_state.keyframed.shooting_star.ticks_in_position ==
+		    _config.keyframed.shooting_star.ticks_before_advance) {
+			_state.keyframed.shooting_star.ticks_in_position = 0;
+			// Stored on 4 bits, wraps around at 15.
+			_state.keyframed.shooting_star.position++;
+
+			const auto led_interval = 16 / _config.keyframed.shooting_star.star_count;
+			for (uint8_t i = 0; i < _config.keyframed.shooting_star.star_count; i++) {
+				const auto position = (_state.keyframed.shooting_star.position +
+						       (led_interval * i)) %
+					16;
+
+				_set_keyframe_index(
+					_state.keyframed.origin_keyframe_index, position, 0);
+				_set_keyframe_index(
+					_state.keyframed.destination_keyframe_index, position, 0);
+
+				_state.keyframed.ticks_since_start_of_animation[position] = 0;
+				_config.keyframed.active |= 1 << position;
+			}
+		}
+
+		_state.keyframed.shooting_star.ticks_in_position++;
+		break;
 	default:
 		break;
 	}
@@ -217,9 +166,9 @@ void nl::strip_animator::_keyframe_animation_tick(
 
 	for (uint8_t i = 0; i < 16; i++) {
 		const auto origin_keyframe_index =
-			_get_keyframe_index(_state.keyframed._origin_keyframe_index, i);
+			_get_keyframe_index(_state.keyframed.origin_keyframe_index, i);
 		const auto destination_keyframe_index =
-			_get_keyframe_index(_state.keyframed._destination_keyframe_index, i);
+			_get_keyframe_index(_state.keyframed.destination_keyframe_index, i);
 
 		const auto origin_keyframe =
 			keyframe_from_flash(&_config.keyframed.keyframes[origin_keyframe_index]);
@@ -251,13 +200,12 @@ void nl::strip_animator::_keyframe_animation_tick(
 		const auto destination_keyframe = keyframe_from_flash(
 			&_config.keyframed.keyframes[destination_keyframe_index]);
 
-		//destination_keyframe.color.log(F("destination keyframe: "));
+		// destination_keyframe.color.log(F("destination keyframe: "));
 
 		const auto new_color = interpolate(origin_keyframe,
 						   destination_keyframe,
 						   uint16_t(time_since_animation_start));
 		// new_color.log(F("interpolated color: "));
-
 
 		_pixels.setPixelColor(i,
 				      _pixels.gamma8(new_color.r()),
@@ -290,8 +238,8 @@ void nl::strip_animator::_keyframe_animation_tick(
 		}
 
 		_set_keyframe_index(
-			_state.keyframed._origin_keyframe_index, i, new_origin_keyframe_index);
-		_set_keyframe_index(_state.keyframed._destination_keyframe_index,
+			_state.keyframed.origin_keyframe_index, i, new_origin_keyframe_index);
+		_set_keyframe_index(_state.keyframed.destination_keyframe_index,
 				    i,
 				    new_destination_keyframe_index);
 	}
@@ -375,6 +323,9 @@ void nl::strip_animator::set_show_level_animation(
 	_current_animation_type = animation_type::KEYFRAMED;
 	_config.keyframed._animation = keyframed_animation::PAIRING_COMPLETED;
 	_config.keyframed.active = 0;
+
+	_reset_keyframed_animation_state();
+
 	if (animation_type == pairing_completed_animation_type::HAPPY_CLOWN_BARF) {
 		_config.keyframed.keyframe_count =
 			sizeof(happy_clown_barf_keyframes) / sizeof(*happy_clown_barf_keyframes);
@@ -391,13 +342,12 @@ void nl::strip_animator::set_show_level_animation(
 		}
 	} else {
 		_config.keyframed.keyframe_count =
-			sizeof(sad_and_lonely_keyframes) / sizeof(*sad_and_lonely_keyframes);
-		_config.keyframed.keyframes = sad_and_lonely_keyframes;
+			sizeof(no_new_friends_keyframes) / sizeof(*no_new_friends_keyframes);
+		_config.keyframed.keyframes = no_new_friends_keyframes;
 	}
 
 	_config.keyframed.loop_point_index = 1;
 	_config.keyframed.brightness = 50;
-	_reset_keyframed_animation_state();
 
 	for (uint8_t i = 0; i < 8; i++) {
 		// LED at bit number one is the left-most, so we need to "invert" the level pattern.
@@ -407,4 +357,22 @@ void nl::strip_animator::set_show_level_animation(
 
 	// Animation always active on the bottom row.
 	_config.keyframed.active |= 0xFF00;
+}
+
+void nl::strip_animator::set_shooting_star_animation(uint8_t star_count,
+						     unsigned int advance_interval_ms) noexcept
+{
+	period_ms(20);
+	_current_animation_type = animation_type::KEYFRAMED;
+	_config.keyframed._animation = keyframed_animation::SHOOTING_STAR;
+	_config.keyframed.active = 0;
+	_reset_keyframed_animation_state();
+	_config.keyframed.keyframe_count =
+		sizeof(burning_star_keyframes) / sizeof(*burning_star_keyframes);
+	_config.keyframed.keyframes = burning_star_keyframes;
+
+	_config.keyframed.loop_point_index = 0;
+	_config.keyframed.brightness = 50;
+	_config.keyframed.shooting_star.ticks_before_advance = advance_interval_ms / period_ms();
+	_config.keyframed.shooting_star.star_count = star_count;
 }

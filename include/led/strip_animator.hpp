@@ -31,10 +31,14 @@ public:
 
 	enum class pairing_completed_animation_type : uint8_t {
 		HAPPY_CLOWN_BARF,
-		SAD_AND_LONELY,
+		NO_NEW_FRIENDS,
 	};
 	void set_pairing_completed_animation(pairing_completed_animation_type) noexcept;
 	void set_show_level_animation(pairing_completed_animation_type, uint8_t level) noexcept;
+
+	// Should probably make the palette configurable
+	void set_shooting_star_animation(uint8_t star_count,
+					 unsigned int advance_interval_ms) noexcept;
 
 	struct led_color {
 		led_color() = default;
@@ -118,6 +122,9 @@ private:
 	enum class keyframed_animation : uint8_t {
 		PROGRESS_BAR,
 		PAIRING_COMPLETED,
+		SHOOTING_STAR, // Shooting star running accross the LEDs
+		SPARKS, // Random sparks appearing
+		GLOW,
 	};
 
 	void _legacy_animation_tick() noexcept;
@@ -141,7 +148,9 @@ private:
 		struct {
 			union {
 				struct {
-				} progress_bar;
+					uint8_t ticks_before_advance;
+					uint8_t star_count;
+				} shooting_star;
 			};
 			uint8_t keyframe_count : 4;
 			uint8_t loop_point_index : 4;
@@ -159,11 +168,13 @@ private:
 		struct {
 			union {
 				struct {
-				} progress_bar;
+					uint8_t position : 4;
+					uint8_t ticks_in_position;
+				} shooting_star;
 			};
 
-			indice_storage_element _origin_keyframe_index[8];
-			indice_storage_element _destination_keyframe_index[8];
+			indice_storage_element origin_keyframe_index[8];
+			indice_storage_element destination_keyframe_index[8];
 			uint8_t ticks_since_start_of_animation[16];
 		} keyframed;
 	} _state;
