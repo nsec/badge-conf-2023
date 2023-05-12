@@ -156,6 +156,7 @@ void nr::badge::factory_reset()
 	config.version_magic = 1234;
 
 	EEPROM.put(0, config);
+	_id_buffer.clear();
 
 	void (*so_looooong)(void) = nullptr;
 	so_looooong();
