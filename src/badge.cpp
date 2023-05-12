@@ -367,7 +367,16 @@ void nr::badge::_network_app_state(nr::badge::network_app_state new_state) noexc
 
 nr::badge::badge_discovered_result nr::badge::on_badge_discovered(const uint8_t *id) noexcept
 {
-	return badge_discovered_result::NEW;
+	/*
+	 * Since the chips were all sources from the same supplier in one batch,
+	 * their IDs are fairly close together. This makes the use of the last 4
+	 * bytes as a "unique" ID acceptable in our context.
+	 */
+	const uint32_t id_low = (uint32_t(id[6]) << 24) | (uint32_t(id[7]) << 16) |
+		(uint32_t(id[8]) << 8) | id[9];
+
+	const auto inserted = _id_buffer.insert(id_low);
+	return inserted ? badge_discovered_result::NEW : badge_discovered_result::ALREADY_KNOWN;
 }
 
 void nr::badge::on_badge_discovery_completed() noexcept

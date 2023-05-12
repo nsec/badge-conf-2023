@@ -51,13 +51,14 @@ public:
 
 		set_status(RB_STATUS_CLEAN);
 	}
-	void insert(uint32_t item)
+
+	bool insert(uint32_t item)
 	{
 		/*
 		 * Don't insert duplicate items.
 		 */
 		if (contains(item)) {
-			return;
+			return false;
 		}
 
 		set_status(RB_STATUS_DIRTY);
@@ -68,7 +69,9 @@ public:
 		inc_head();
 
 		set_status(RB_STATUS_CLEAN);
+		return true;
 	}
+
 	bool contains(uint32_t item) const
 	{
 		const auto count = get_count();
@@ -84,6 +87,7 @@ public:
 
 		return false;
 	}
+
 	uint16_t count() const
 	{
 		return get_count();
@@ -151,6 +155,7 @@ private:
 	{
 		EEPROM.update(RB_HEAD_ADDR + BaseOffset, head);
 	}
+
 	uint16_t inc_head()
 	{
 		auto head = get_head();
@@ -165,6 +170,7 @@ private:
 	{
 		return (index * sizeof(uint32_t)) + RB_RESERVED_BYTES + BaseOffset;
 	}
+
 	void set(uint16_t index, uint32_t item)
 	{
 		EEPROM.put(item_addr(index), item);
