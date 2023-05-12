@@ -65,12 +65,9 @@ const nl::strip_animator::keyframe PROGMEM happy_clown_barf_keyframes[] = {
 
 const nl::strip_animator::keyframe PROGMEM sad_and_lonely_keyframes[] = {
 	{ { 0, 0, 0 }, 0 },
-	{ { 102, 0, 255 }, 200 },
-	{ { 184, 0, 255 }, 1200 },
-	{ { 255, 0, 255 }, 2400 },
-	{ { 255, 0, 186 }, 3600 },
-	{ { 255, 0, 37 }, 4800 },
-	{ { 102, 0, 255 }, 6000 },
+	{ { 255, 0, 0 }, 200 },
+	{ { 0, 0, 0 }, 400 },
+	{ { 255, 0, 0 }, 600 },
 };
 
 nl::strip_animator::keyframe keyframe_from_flash(const nl::strip_animator::keyframe *src_keyframe)
@@ -382,11 +379,22 @@ void nl::strip_animator::set_show_level_animation(
 		_config.keyframed.keyframe_count =
 			sizeof(happy_clown_barf_keyframes) / sizeof(*happy_clown_barf_keyframes);
 		_config.keyframed.keyframes = happy_clown_barf_keyframes;
+
+		// Apply a slight offset between LEDs to achieve a "sparkle" effect.
+		for (uint8_t i = 0; i < 16; i++) {
+			_state.keyframed.ticks_since_start_of_animation[i] = (i * 10) %
+				(keyframe_from_flash(
+					 &_config.keyframed
+						  .keyframes[_config.keyframed.keyframe_count - 1])
+					 .time /
+				 period_ms());
+		}
 	} else {
 		_config.keyframed.keyframe_count =
 			sizeof(sad_and_lonely_keyframes) / sizeof(*sad_and_lonely_keyframes);
 		_config.keyframed.keyframes = sad_and_lonely_keyframes;
 	}
+
 	_config.keyframed.loop_point_index = 1;
 	_config.keyframed.brightness = 50;
 	_reset_keyframed_animation_state();
@@ -395,15 +403,6 @@ void nl::strip_animator::set_show_level_animation(
 		// LED at bit number one is the left-most, so we need to "invert" the level pattern.
 		const auto value_bit = (level >> i) & 1;
 		_config.keyframed.active |= value_bit << (7 - i);
-	}
-
-	// Apply a slight offset between LEDs to achieve a "sparkle" effect.
-	for (uint8_t i = 0; i < 16; i++) {
-		_state.keyframed.ticks_since_start_of_animation[i] = (i * 10) %
-			(keyframe_from_flash(
-				 &_config.keyframed.keyframes[_config.keyframed.keyframe_count - 1])
-				 .time /
-			 period_ms());
 	}
 
 	// Animation always active on the bottom row.
