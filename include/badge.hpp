@@ -54,6 +54,8 @@ public:
 			    const uint8_t *message) noexcept;
 	void on_app_message_sent() noexcept;
 
+	void apply_score_change(uint8_t new_badges_discovered_count) noexcept;
+
 	void tick(nsec::scheduling::absolute_time_ms current_time_ms) noexcept;
 
 private:

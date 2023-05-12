@@ -710,7 +710,7 @@ void nr::badge::pairing_completed_animator::tick(
 			message_formatter.print(int(new_level));
 			badge._scroll_screen.set_property(current_message);
 		} else {
-			// TODO save
+			badge.apply_score_change(badge._badges_discovered_last_exchange);
 			badge._network_app_state(network_app_state::IDLE);
 		}
 	}
@@ -726,4 +726,10 @@ nr::badge::pairing_completed_animator::animation_state
 nr::badge::pairing_completed_animator::_animation_state() const noexcept
 {
 	return animation_state(_current_state);
+}
+
+void nr::badge::apply_score_change(uint8_t new_badges_discovered_count) noexcept
+{
+	// Saves to EEPROM
+	set_social_level(_social_level + new_badges_discovered_count);
 }
