@@ -16,7 +16,8 @@ public:
 	using choice_action = void(*)();
 	explicit main_menu_choices(
 		const choice_action& set_name_action,
-		const choice_action& show_badge_info_action) noexcept;
+		const choice_action& show_badge_info_action,
+		const choice_action& factory_reset_action) noexcept;
 
 	/* Deactivate copy and assignment. */
 	main_menu_choices(const main_menu_choices&) = delete;
@@ -31,7 +32,8 @@ public:
 private:
 	const choice_action _set_name_action;
 	const choice_action _show_badge_info_action;
-	const menu_screen::choices::choice _choices[4];
+	const choice_action _factory_reset_action;
+	const menu_screen::choices::choice _choices[3];
 };
 
 } // namespace nsec::display

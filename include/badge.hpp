@@ -192,8 +192,9 @@ private:
 	uint8_t _social_level : 7;
 	// Storage for network_app_state
 	uint8_t _current_network_app_state : 4;
-	uint8_t _is_user_name_set : 1;
 	uint8_t _badges_discovered_last_exchange : 5;
+	bool _is_user_name_set : 1;
+	bool _is_expecting_factory_reset : 1;
 	// Mask to prevent repeats after a screen transition, one bit per button.
 	uint8_t _button_had_non_repeat_event_since_screen_focus_change;
 	char _user_name[nsec::config::user::name_max_length];

@@ -18,12 +18,12 @@ nd::text_screen::text_screen() noexcept :
 void nd::text_screen::_render(scheduling::absolute_time_ms current_time_ms,
 			      Adafruit_SSD1306& canvas) noexcept
 {
+	// Reset text rendering properties
 	canvas.setCursor(0, 0);
 	canvas.setTextSize(1);
 	canvas.setTextWrap(true);
+	canvas.setTextColor(SSD1306_WHITE);
 	_print(canvas, current_time_ms);
-	// This screen is always "damaged" since it could change on every tick.
-	damage();
 }
 
 void nd::text_screen::set_printer(const text_printer& printer)

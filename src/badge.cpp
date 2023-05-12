@@ -53,7 +53,7 @@ void badge_info_printer(void *badge_data,
 			Print& print,
 			nsec::scheduling::absolute_time_ms current_time_ms)
 {
-	auto *badge = reinterpret_cast<class nsec::runtime::badge *>(badge_data);
+	const auto *badge = reinterpret_cast<const class nsec::runtime::badge *>(badge_data);
 
 	print.print(F("ID: "));
 	for (uint8_t i = 0; i < UniqueIDsize; i++) {
@@ -71,6 +71,11 @@ void badge_info_printer(void *badge_data,
 
 	print.print(F("Connected: "));
 	print.println(badge->is_connected() ? as_flash_string(yes_str) : as_flash_string(no_str));
+}
+
+void factory_reset_confirmation_printer(void *, Print& print, nsec::scheduling::absolute_time_ms)
+{
+	print.print(F("Hold Okay to confirm"));
 }
 
 } // anonymous namespace
@@ -99,6 +104,14 @@ nr::badge::badge() :
 			badge->_text_screen.set_printer(
 				nd::text_screen::text_printer{ badge_info_printer, badge });
 			badge->set_focused_screen(badge->_text_screen);
+		},
+		[]() {
+			auto *badge = &nsec::g::the_badge;
+
+			badge->_text_screen.set_printer(nd::text_screen::text_printer{
+				factory_reset_confirmation_printer, badge });
+			badge->set_focused_screen(badge->_text_screen);
+			badge->_is_expecting_factory_reset = true;
 		})
 {
 	_network_app_state(network_app_state::UNCONNECTED);
@@ -197,11 +210,13 @@ void nr::badge::on_button_event(nsec::button::id button, nsec::button::event eve
 		_focused_screen->button_event(button, event);
 	}
 
-	// The rest is temporary to easily simulate level up/down.
-	if (event == nsec::button::event::UP) {
-		return;
+	// Hackish button handling for the generic "text" screen.
+	if (_is_expecting_factory_reset && event == nsec::button::event::DOWN_REPEAT &&
+	    button == button::id::OK && !filter_out_button_event) {
+		factory_reset();
 	}
 
+	// The rest is temporary to easily simulate level up/down.
 	switch (button) {
 	case nsec::button::id::UP:
 		set_social_level(_social_level + 1, false);
@@ -238,6 +253,7 @@ void nr::badge::set_focused_screen(nd::screen& newly_focused_screen) noexcept
 	_focused_screen = &newly_focused_screen;
 	_focused_screen->focused();
 	_button_had_non_repeat_event_since_screen_focus_change = 0;
+	_is_expecting_factory_reset = false;
 }
 
 void nr::badge::relase_focus_current_screen() noexcept
