@@ -468,11 +468,6 @@ void nl::strip_animator::_keyframe_animation_tick(
 		const auto time_since_animation_start =
 			_state.keyframed.ticks_since_start_of_animation[i] * period_ms();
 
-		//	Serial.println();
-		//	Serial.print(F("Time since animation start: "));
-		//	Serial.println(time_since_animation_start);
-		//	origin_keyframe.color.log(F("origin keyframe: "));
-
 		if (_state.keyframed.ticks_since_start_of_animation[i] != 255) {
 			// Saturate counter.
 			_state.keyframed.ticks_since_start_of_animation[i]++;

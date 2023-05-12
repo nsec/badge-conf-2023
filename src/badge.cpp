@@ -182,9 +182,6 @@ void nr::badge::setup()
 
 	_network_handler.setup();
 
-	// Hardware serial init (through USB-C connector).
-	Serial.begin(38400);
-
 	load_config();
 }
 
@@ -275,7 +272,6 @@ void nr::badge::relase_focus_current_screen() noexcept
 
 void nr::badge::on_disconnection() noexcept
 {
-	Serial.println(F("Connection lost"));
 	_network_app_state(network_app_state::UNCONNECTED);
 	// Clear the debug LED
 	digitalWrite(LED_DBG, LOW);
@@ -287,11 +283,6 @@ void nr::badge::on_pairing_begin() noexcept
 
 void nr::badge::on_pairing_end(nc::peer_id_t our_peer_id, uint8_t peer_count) noexcept
 {
-	Serial.print(F("Connected to network: peer_id="));
-	Serial.print(int(our_peer_id));
-	Serial.print(F(", peer_count="));
-	Serial.println(int(peer_count));
-
 	_network_app_state(network_app_state::ANIMATE_PAIRING);
 }
 
@@ -388,9 +379,6 @@ nr::badge::badge_discovered_result nr::badge::on_badge_discovered(const uint8_t 
 
 void nr::badge::on_badge_discovery_completed() noexcept
 {
-	Serial.print(F("Discovery completed: "));
-	Serial.print(_id_exchanger.new_badges_discovered());
-	Serial.println(F(" new badges"));
 	_badges_discovered_last_exchange = _id_exchanger.new_badges_discovered();
 	_network_app_state(network_app_state::ANIMATE_PAIRING_COMPLETED);
 }

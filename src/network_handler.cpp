@@ -9,8 +9,6 @@
 #include "globals.hpp"
 #include "network/network_handler.hpp"
 
-#define NETWORK_VERBOSE_LOG 0
-
 namespace ns = nsec::scheduling;
 namespace nc = nsec::communication;
 namespace ng = nsec::g;
@@ -30,151 +28,6 @@ enum class wire_msg_type : uint8_t {
 	// ...
 };
 }
-
-namespace logging {
-
-#if NETWORK_VERBOSE_LOG == 1
-const char left_str[] PROGMEM = "left";
-const char right_str[] PROGMEM = "right";
-
-const char unknown_str[] PROGMEM = "UNKNOWN";
-const char unconnected_str[] PROGMEM = "UNCONNECTED";
-
-// Message reception states
-const char magic_byte_1_str[] PROGMEM = "RECEIVE_MAGIC_BYTE_1";
-const char magic_byte_2_str[] PROGMEM = "RECEIVE_MAGIC_BYTE_2";
-const char receive_header_str[] PROGMEM = "RECEIVE_HEADER";
-const char receive_payload_str[] PROGMEM = "RECEIVE_PAYLOAD";
-
-// Message transmission state
-const char none_str[] PROGMEM = "NONE";
-const char attempt_send_str[] PROGMEM = "ATTEMPT_SEND";
-const char wait_confirmation_str[] PROGMEM = "WAIT_CONFIRMATION";
-
-// Wire message types
-const char monitor_str[] PROGMEM = "MONITOR";
-const char reset_str[] PROGMEM = "RESET";
-const char announce_str[] PROGMEM = "ANNOUNCE";
-const char announce_reply_str[] PROGMEM = "ANNOUNCE_REPLY";
-const char ok_str[] PROGMEM = "OK";
-const char app_message_str[] PROGMEM = "APP_MESSAGE";
-
-const __FlashStringHelper *as_flash_string(const char *str)
-{
-	return static_cast<const __FlashStringHelper *>(static_cast<const void *>(str));
-}
-
-void log_wire_msg_type(uint8_t type, const __FlashStringHelper *operation) noexcept
-{
-	const __FlashStringHelper *str;
-
-	Serial.print(operation);
-	Serial.print(F(" wire msg type: "));
-	switch (wire_msg_type(type)) {
-	case wire_msg_type::MONITOR:
-		str = as_flash_string(monitor_str);
-		break;
-	case wire_msg_type::RESET:
-		str = as_flash_string(reset_str);
-		break;
-	case wire_msg_type::ANNOUNCE:
-		str = as_flash_string(announce_str);
-		break;
-	case wire_msg_type::ANNOUNCE_REPLY:
-		str = as_flash_string(announce_reply_str);
-		break;
-	case wire_msg_type::OK:
-		str = as_flash_string(ok_str);
-		break;
-	default:
-		Serial.print(as_flash_string(app_message_str));
-		Serial.print(F(" "));
-		Serial.println(int(type));
-		return;
-	}
-
-	Serial.println(str);
-}
-
-void log_connector_states(bool left_is_connected, bool right_is_connected) noexcept
-{
-	Serial.print(F("Network topology change: left ["));
-	if (!left_is_connected) {
-		Serial.print(F("un"));
-	}
-
-	Serial.print(F("connected"));
-	Serial.print(F("], right ["));
-	if (!right_is_connected) {
-		Serial.print(F("un"));
-	}
-
-	Serial.print(F("connected"));
-	Serial.println(F("]"));
-}
-
-void log_listening_side(nc::peer_relative_position side) noexcept
-{
-	Serial.print(F("Listening to peer: "));
-	Serial.println(side == nc::peer_relative_position::LEFT ? as_flash_string(left_str) :
-								  as_flash_string(right_str));
-}
-
-void log_network_reset() noexcept
-{
-	Serial.println(F("Network reset"));
-}
-
-void log_serial_overflow() noexcept
-{
-	Serial.println(F("Serial overflow"));
-}
-
-void log_invalid_magic_byte(uint8_t expected, uint8_t actual) noexcept
-{
-	Serial.print(F("Invalid magic byte: "));
-	Serial.print(int(actual));
-	Serial.print(F(" expected "));
-	Serial.println(int(expected));
-}
-
-void log_network_timeout() noexcept
-{
-	Serial.println(F("Network timeout!"));
-}
-
-#else
-
-void log_wire_msg_type(uint8_t type, const __FlashStringHelper *operation) noexcept
-{
-}
-
-void log_connector_states(bool left_is_connected, bool right_is_connected) noexcept
-{
-}
-
-void log_listening_side(nc::peer_relative_position side) noexcept
-{
-}
-
-void log_network_reset() noexcept
-{
-}
-
-void log_serial_overflow() noexcept
-{
-}
-
-void log_invalid_magic_byte(uint8_t expected, uint8_t actual) noexcept
-{
-}
-
-void log_network_timeout() noexcept
-{
-}
-
-#endif
-} /* namespace logging */
 
 namespace {
 
@@ -253,7 +106,6 @@ void send_wire_header(SoftwareSerial& serial, uint8_t msg_type, uint16_t checksu
 {
 	const wire_msg_header header = { .type = msg_type, .checksum = checksum };
 
-	logging::log_wire_msg_type(msg_type, F("Sending"));
 	send_wire_magic(serial);
 	serial.write(reinterpret_cast<const uint8_t *>(&header), sizeof(header));
 }
@@ -330,110 +182,8 @@ nc::network_handler::link_position nc::network_handler::position() const noexcep
 	return link_position(_current_position);
 }
 
-#if NETWORK_VERBOSE_LOG == 1
-void nc::network_handler::_log_wire_protocol_state(wire_protocol_state state) noexcept
-{
-	const __FlashStringHelper *state_name_str[] = {
-		[uint8_t(wire_protocol_state::UNCONNECTED)] = F("UNCONNECTED"),
-		[uint8_t(wire_protocol_state::WAIT_TO_INITIATE_DISCOVERY)] =
-			F("WAIT_TO_INITIATE_DISCOVERY"),
-		[uint8_t(wire_protocol_state::DISCOVERY_RECEIVE_ANNOUNCE)] =
-			F("DISCOVERY_RECEIVE_ANNOUNCE"),
-		[uint8_t(wire_protocol_state::DISCOVERY_RECEIVE_MONITOR_AFTER_ANNOUNCE)] =
-			F("DISCOVERY_RECEIVE_MONITOR_AFTER_ANNOUNCE"),
-		[uint8_t(wire_protocol_state::DISCOVERY_SEND_ANNOUNCE)] =
-			F("DISCOVERY_SEND_ANNOUNCE"),
-		[uint8_t(wire_protocol_state::DISCOVERY_CONFIRM_ANNOUNCE)] =
-			F("DISCOVERY_CONFIRM_ANNOUNCE"),
-		[uint8_t(wire_protocol_state::DISCOVERY_SEND_MONITOR_AFTER_ANNOUNCE)] =
-			F("DISCOVERY_SEND_MONITOR_AFTER_ANNOUNCE"),
-		[uint8_t(wire_protocol_state::DISCOVERY_CONFIRM_MONITOR_AFTER_ANNOUNCE)] =
-			F("DISCOVERY_CONFIRM_MONITOR_AFTER_ANNOUNCE"),
-		[uint8_t(wire_protocol_state::DISCOVERY_RECEIVE_ANNOUNCE_REPLY)] =
-			F("DISCOVERY_RECEIVE_ANNOUNCE_REPLY"),
-		[uint8_t(wire_protocol_state::DISCOVERY_RECEIVE_MONITOR_AFTER_ANNOUNCE_REPLY)] =
-			F("DISCOVERY_RECEIVE_MONITOR_AFTER_ANNOUNCE_REPLY"),
-		[uint8_t(wire_protocol_state::DISCOVERY_SEND_ANNOUNCE_REPLY)] =
-			F("DISCOVERY_SEND_ANNOUNCE_REPLY"),
-		[uint8_t(wire_protocol_state::DISCOVERY_CONFIRM_ANNOUNCE_REPLY)] =
-			F("DISCOVERY_CONFIRM_ANNOUNCE_REPLY"),
-		[uint8_t(wire_protocol_state::DISCOVERY_SEND_MONITOR_AFTER_ANNOUNCE_REPLY)] =
-			F("DISCOVERY_SEND_MONITOR_AFTER_ANNOUNCE_REPLY"),
-		[uint8_t(wire_protocol_state::DISCOVERY_CONFIRM_MONITOR_AFTER_ANNOUNCE_REPLY)] =
-			F("DISCOVERY_CONFIRM_MONITOR_AFTER_ANNOUNCE_REPLY"),
-		[uint8_t(wire_protocol_state::RUNNING_RECEIVE_MESSAGE)] =
-			F("RUNNING_RECEIVE_MESSAGE"),
-		[uint8_t(wire_protocol_state::RUNNING_SEND_APP_MESSAGE)] =
-			F("RUNNING_SEND_APP_MESSAGE"),
-		[uint8_t(wire_protocol_state::RUNNING_CONFIRM_APP_MESSAGE)] =
-			F("RUNNING_CONFIRM_APP_MESSAGE"),
-		[uint8_t(wire_protocol_state::RUNNING_SEND_MONITOR)] = F("RUNNING_SEND_MONITOR"),
-		[uint8_t(wire_protocol_state::RUNNING_CONFIRM_MONITOR)] =
-			F("RUNNING_CONFIRM_MONITOR"),
-	};
-
-	Serial.print(F("Protocol state: "));
-	Serial.println(state_name_str[uint8_t(state)]);
-}
-
-void nc::network_handler::_log_message_reception_state(message_reception_state state) noexcept
-{
-	const __FlashStringHelper *str;
-
-	Serial.print(F("Msg reception state: "));
-	switch (state) {
-	case message_reception_state::RECEIVE_MAGIC_BYTE_1:
-		str = logging::as_flash_string(logging::magic_byte_1_str);
-		break;
-	case message_reception_state::RECEIVE_MAGIC_BYTE_2:
-		str = logging::as_flash_string(logging::magic_byte_2_str);
-		break;
-	case message_reception_state::RECEIVE_HEADER:
-		str = logging::as_flash_string(logging::receive_header_str);
-		break;
-	case message_reception_state::RECEIVE_PAYLOAD:
-		str = logging::as_flash_string(logging::receive_payload_str);
-		break;
-	}
-
-	Serial.println(str);
-}
-
-void nc::network_handler::_log_message_transmission_state(message_transmission_state state) noexcept
-{
-	const __FlashStringHelper *str;
-
-	Serial.print(F("Msg transmission state: "));
-	switch (state) {
-	case message_transmission_state::NONE:
-		str = logging::as_flash_string(logging::none_str);
-		break;
-	case message_transmission_state::ATTEMPT_SEND:
-		str = logging::as_flash_string(logging::attempt_send_str);
-		break;
-	case message_transmission_state::WAIT_CONFIRMATION:
-		str = logging::as_flash_string(logging::wait_confirmation_str);
-		break;
-	}
-
-	Serial.println(str);
-}
-#else /* NETWORK_VERBOSE_LOG */
-void nc::network_handler::_log_wire_protocol_state(wire_protocol_state state) noexcept
-{
-}
-void nc::network_handler::_log_message_reception_state(message_reception_state state) noexcept
-{
-}
-void nc::network_handler::_log_message_transmission_state(message_transmission_state state) noexcept
-{
-}
-#endif
-
 void nc::network_handler::_reset() noexcept
 {
-	logging::log_network_reset();
-
 	_position(link_position::UNKNOWN);
 	_wire_protocol_state(wire_protocol_state::UNCONNECTED);
 	_is_left_connected = false;
@@ -484,7 +234,6 @@ nc::network_handler::check_connections_result nc::network_handler::_check_connec
 		}
 	}
 
-	logging::log_connector_states(left_is_connected, right_is_connected);
 	_reset();
 
 	_is_left_connected = left_is_connected;
@@ -523,7 +272,6 @@ nc::peer_relative_position nc::network_handler::_listening_side() const noexcept
 void nc::network_handler::_listening_side(peer_relative_position side) noexcept
 {
 	_current_listening_side = uint8_t(side);
-	logging::log_listening_side(_listening_side());
 	switch (_listening_side()) {
 	case peer_relative_position::LEFT:
 		_left_serial.listen();
@@ -567,11 +315,6 @@ void nc::network_handler::_wire_protocol_state(wire_protocol_state state) noexce
 	_ticks_in_wire_state = 0;
 	// Reset timeout timestamp.
 	_last_message_received_time_ms = millis();
-
-	if (previous_protocol_state != _wire_protocol_state()) {
-		// Log the state change.
-		_log_wire_protocol_state(_wire_protocol_state());
-	}
 
 	if (_is_wire_protocol_in_a_running_state(previous_protocol_state) &&
 	    state == wire_protocol_state::UNCONNECTED) {
@@ -620,7 +363,6 @@ nc::network_handler::_message_reception_state() const noexcept
 void nc::network_handler::_message_reception_state(message_reception_state new_state) noexcept
 {
 	_current_message_reception_state = uint8_t(new_state);
-	_log_message_reception_state(new_state);
 }
 
 nc::network_handler::message_transmission_state
@@ -632,7 +374,6 @@ nc::network_handler::_message_transmission_state() const noexcept
 void nc::network_handler::_message_transmission_state(message_transmission_state new_state) noexcept
 {
 	_current_message_transmission_state = uint8_t(new_state);
-	_log_message_transmission_state(new_state);
 }
 
 nc::peer_relative_position nc::network_handler::_outgoing_message_direction() const noexcept
@@ -713,10 +454,6 @@ nc::network_handler::handle_reception_result nc::network_handler::_handle_recept
 {
 	bool saw_data = false;
 
-	if (serial.overflow()) {
-		logging::log_serial_overflow();
-	}
-
 	while (serial.available()) {
 		saw_data = true;
 
@@ -725,7 +462,6 @@ nc::network_handler::handle_reception_result nc::network_handler::_handle_recept
 		{
 			const auto front_byte = uint8_t(serial.read());
 			if (front_byte != wire_protocol_magic_1) {
-				logging::log_invalid_magic_byte(wire_protocol_magic_1, front_byte);
 				break;
 			}
 
@@ -737,7 +473,6 @@ nc::network_handler::handle_reception_result nc::network_handler::_handle_recept
 			const auto front_byte = uint8_t(serial.read());
 
 			if (front_byte != wire_protocol_magic_2) {
-				logging::log_invalid_magic_byte(wire_protocol_magic_2, front_byte);
 				break;
 			}
 
@@ -753,7 +488,6 @@ nc::network_handler::handle_reception_result nc::network_handler::_handle_recept
 			const wire_msg_header header = { .type = uint8_t(serial.peek()) };
 
 			const auto msg_type = header.type;
-			logging::log_wire_msg_type(msg_type, F("Received"));
 
 			const auto msg_payload_size = wire_msg_payload_size(msg_type);
 			_message_reception_state(message_reception_state::RECEIVE_PAYLOAD);
@@ -911,7 +645,6 @@ void nc::network_handler::_run_wire_protocol(ns::absolute_time_ms current_time_m
 		    nsec::config::communication::network_handler_timeout_ms &&
 	    _wire_protocol_state() != wire_protocol_state ::UNCONNECTED) {
 		// No activity for a while... reset.
-		logging::log_network_timeout();
 		_reset();
 		return;
 	}

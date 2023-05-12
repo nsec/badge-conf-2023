@@ -39,24 +39,16 @@ void nd::renderer::run(scheduling::absolute_time_ms current_time_ms) noexcept
 		return;
 	}
 
-	const auto entry = millis();
-
 	if (focused_screen().cleared_on_every_frame()) {
 		_display.clearDisplay();
 	}
 
 	focused_screen().render(current_time_ms, _display);
-	const auto exit = millis();
-
 	if (focused_screen().cleared_on_every_frame()) {
 		_display.display();
 	}
 
 	if (++_render_time_sampling_counter == render_time_sampling_period) {
-		const auto last_frame_duration_ms = exit - entry;
-
-		Serial.print(F("Frame time (ms): "));
-		Serial.println(last_frame_duration_ms);
 		_render_time_sampling_counter = 0;
 	}
 }

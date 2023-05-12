@@ -76,18 +76,6 @@ public:
 			return components[np_blue_offset];
 		}
 
-		void log(const __FlashStringHelper *context) const
-		{
-			Serial.print(context);
-			Serial.print(F("{"));
-			Serial.print(int(r()));
-			Serial.print(F(", "));
-			Serial.print(int(g()));
-			Serial.print(F(", "));
-			Serial.print(int(b()));
-			Serial.println(F("}"));
-		}
-
 		uint8_t components[3];
 
 	private:
