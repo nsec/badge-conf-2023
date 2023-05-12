@@ -191,6 +191,8 @@ private:
 	network_app_state _network_app_state() const noexcept;
 	void _network_app_state(network_app_state) noexcept;
 
+	void _set_user_name_scroll_screen() noexcept;
+
 	uint8_t _social_level : 7;
 	// Storage for network_app_state
 	uint8_t _current_network_app_state : 4;

@@ -267,13 +267,7 @@ void nr::badge::relase_focus_current_screen() noexcept
 	}
 
 	if (_focused_screen == &_menu_screen || _focused_screen == &_splash_screen) {
-		if (_is_user_name_set) {
-			_scroll_screen.set_property(_user_name);
-		} else {
-			_scroll_screen.set_property(as_flash_string(unset_name_scroll));
-		}
-
-		set_focused_screen(_scroll_screen);
+		_set_user_name_scroll_screen();
 	} else {
 		_menu_screen.set_choices(_main_menu_choices);
 		set_focused_screen(_menu_screen);
@@ -332,6 +326,17 @@ nr::badge::network_app_state nr::badge::_network_app_state() const noexcept
 	return network_app_state(_current_network_app_state);
 }
 
+void nr::badge::_set_user_name_scroll_screen() noexcept
+{
+	if (_is_user_name_set) {
+		_scroll_screen.set_property(_user_name);
+	} else {
+		_scroll_screen.set_property(as_flash_string(unset_name_scroll));
+	}
+
+	set_focused_screen(_scroll_screen);
+}
+
 void nr::badge::_network_app_state(nr::badge::network_app_state new_state) noexcept
 {
 	_id_exchanger.reset();
@@ -359,7 +364,7 @@ void nr::badge::_network_app_state(nr::badge::network_app_state new_state) noexc
 		break;
 	case network_app_state::IDLE:
 	case network_app_state::UNCONNECTED:
-		relase_focus_current_screen();
+		_set_user_name_scroll_screen();
 		_strip_animator.set_current_animation_idle(_social_level);
 		_renderer.period_ms(nsec::config::display::refresh_period_ms);
 		break;
@@ -662,7 +667,7 @@ void nr::badge::pairing_completed_animator::start(nr::badge& badge) noexcept
 
 	// format current msg
 	formatter message_formatter(current_message);
-	if (badge._badges_discovered_last_exchange > 0 ) {
+	if (badge._badges_discovered_last_exchange > 0) {
 		message_formatter.print(badge._badges_discovered_last_exchange);
 	} else {
 		message_formatter.print(F("No"));
@@ -677,7 +682,7 @@ void nr::badge::pairing_completed_animator::start(nr::badge& badge) noexcept
 	message_formatter.print(F(" discovered "));
 	if (badge._badges_discovered_last_exchange > 0) {
 		message_formatter.print(F(":D"));
-	}else {
+	} else {
 		message_formatter.print(F(":("));
 	}
 
