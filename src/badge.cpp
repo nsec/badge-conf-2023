@@ -662,16 +662,23 @@ void nr::badge::pairing_completed_animator::start(nr::badge& badge) noexcept
 
 	// format current msg
 	formatter message_formatter(current_message);
-	message_formatter.print(badge._badges_discovered_last_exchange);
+	if (badge._badges_discovered_last_exchange > 0 ) {
+		message_formatter.print(badge._badges_discovered_last_exchange);
+	} else {
+		message_formatter.print(F("No"));
+	}
+
 	message_formatter.print(F(" "));
 	message_formatter.print(F("new badge"));
 	if (badge._badges_discovered_last_exchange > 1) {
 		message_formatter.print(F("s"));
 	}
 
-	message_formatter.print(F(" discovered"));
+	message_formatter.print(F(" discovered "));
 	if (badge._badges_discovered_last_exchange > 0) {
-		message_formatter.print(F("!"));
+		message_formatter.print(F(":D"));
+	}else {
+		message_formatter.print(F(":("));
 	}
 
 	badge._scroll_screen.set_property(current_message);
