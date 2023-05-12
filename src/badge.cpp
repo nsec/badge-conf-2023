@@ -278,6 +278,8 @@ void nr::badge::on_disconnection() noexcept
 {
 	Serial.println(F("Connection lost"));
 	_network_app_state(network_app_state::UNCONNECTED);
+	// Clear the debug LED
+	digitalWrite(LED_DBG, LOW);
 }
 
 void nr::badge::on_pairing_begin() noexcept
