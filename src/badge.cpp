@@ -55,8 +55,9 @@ void badge_info_printer(void *badge_data,
 {
 	const auto *badge = reinterpret_cast<const class nsec::runtime::badge *>(badge_data);
 
+	// Print the last 4 bytes of the serial unique ID
 	print.print(F("ID: "));
-	for (uint8_t i = 0; i < UniqueIDsize; i++) {
+	for (uint8_t i = UniqueIDsize - 4; i < UniqueIDsize; i++) {
 		if (UniqueID[i] < 0x10) {
 			print.print(F("0"));
 		}
