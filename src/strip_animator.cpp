@@ -102,6 +102,118 @@ const nl::strip_animator::keyframe PROGMEM shooting_star_2_keyframes[] = {
 	{ { 0, 0, 0 }, 1500 },
 	{ { 0, 0, 0 }, 5000 },
 };
+
+const nl::strip_animator::keyframe PROGMEM shooting_star_3_keyframes[] = {
+	{ { 123,179,255 }, 0 },
+	{ { 232,106,240 }, 500 },
+	{ { 158,55,159 }, 1000 },
+	{ { 0, 0, 0 }, 1300 },
+	{ { 0, 0, 0 }, 5000 },
+};
+
+const nl::strip_animator::keyframe PROGMEM shooting_star_4_keyframes[] = {
+	{ { 115,205,186 }, 0 },
+	{ { 198,240,234 }, 500 },
+	{ { 79,145,62 }, 1000 },
+	{ { 0, 0, 0 }, 1300 },
+	{ { 0, 0, 0 }, 5000 },
+};
+
+const nl::strip_animator::keyframe PROGMEM shooting_star_5_keyframes[] = {
+	{ { 255, 128, 0 }, 0 },
+	{ { 200, 128, 0 }, 600 },
+	{ { 0, 0, 0 }, 1300 },
+	{ { 0, 0, 0 }, 5000 },
+};
+
+const nl::strip_animator::keyframe PROGMEM shooting_star_6_keyframes[] = {
+	{ { 0, 255, 128 }, 0 },
+	{ { 255,255, 51 }, 500 },
+	{ { 255,153, 51 }, 1000 },
+	{ { 0, 0, 0 }, 1300 },
+	{ { 0, 0, 0 }, 5000 },
+};
+
+const nl::strip_animator::keyframe PROGMEM shooting_star_7_keyframes[] = {
+	{ { 255,0,255 }, 0 },
+	{ { 127,0,255 }, 500 },
+	{ { 0,0,32 }, 1000 },
+	{ { 0, 0, 0 }, 1300 },
+	{ { 0, 0, 0 }, 5000 },
+};
+
+const nl::strip_animator::keyframe PROGMEM shooting_star_8_keyframes[] = {
+	{ { 0, 0, 0 }, 0 },
+	{ { 255, 204, 204 }, 100 },
+	{ { 51, 153, 255 }, 400 },
+	{ { 76, 0, 153 }, 900 },
+	{ { 0, 0, 0 }, 1500 },
+	{ { 0, 0, 0 }, 5000 },
+};
+
+struct shooting_star_parameters {
+	uint8_t shooting_star_count;
+	uint16_t delay_advance_ms;
+	const nl::strip_animator::keyframe *keyframes;
+	uint8_t keyframe_count;
+};
+
+const shooting_star_parameters PROGMEM params[] = {
+	// white-violet-red, slow
+	{ 1, 90, shooting_star_tungsten_keyframes, ARRAY_LENGTH(shooting_star_tungsten_keyframes) },
+	{ 2, 2*90, shooting_star_tungsten_keyframes, ARRAY_LENGTH(shooting_star_tungsten_keyframes) },
+	{ 4, 3*90, shooting_star_tungsten_keyframes, ARRAY_LENGTH(shooting_star_tungsten_keyframes) },
+	{ 8, 4*90, shooting_star_tungsten_keyframes, ARRAY_LENGTH(shooting_star_tungsten_keyframes) },
+	// cyan-blue, slow
+	{ 1, 90, shooting_star_2_keyframes, ARRAY_LENGTH(shooting_star_2_keyframes) },
+	{ 2, 2*90, shooting_star_2_keyframes, ARRAY_LENGTH(shooting_star_2_keyframes) },
+	{ 4, 3*90, shooting_star_2_keyframes, ARRAY_LENGTH(shooting_star_2_keyframes) },
+	{ 8, 4*90, shooting_star_2_keyframes, ARRAY_LENGTH(shooting_star_2_keyframes) },
+	// violet-blue, fast
+	{ 1, 40, shooting_star_3_keyframes, ARRAY_LENGTH(shooting_star_3_keyframes) },
+	{ 2, 2*40, shooting_star_3_keyframes, ARRAY_LENGTH(shooting_star_3_keyframes) },
+	{ 4, 3*40, shooting_star_3_keyframes, ARRAY_LENGTH(shooting_star_3_keyframes) },
+	{ 8, 4*40, shooting_star_3_keyframes, ARRAY_LENGTH(shooting_star_3_keyframes) },
+	// aqua-green , fast
+	{ 1, 40, shooting_star_4_keyframes, ARRAY_LENGTH(shooting_star_4_keyframes) },
+	{ 2, 2*40, shooting_star_4_keyframes, ARRAY_LENGTH(shooting_star_4_keyframes) },
+	{ 4, 3*40, shooting_star_4_keyframes, ARRAY_LENGTH(shooting_star_4_keyframes) },
+	{ 8, 4*40, shooting_star_4_keyframes, ARRAY_LENGTH(shooting_star_4_keyframes) },
+	// orange , slow
+	{ 1, 90, shooting_star_5_keyframes, ARRAY_LENGTH(shooting_star_5_keyframes) },
+	{ 2, 2*90, shooting_star_5_keyframes, ARRAY_LENGTH(shooting_star_5_keyframes) },
+	{ 4, 3*90, shooting_star_5_keyframes, ARRAY_LENGTH(shooting_star_5_keyframes) },
+	{ 8, 4*90, shooting_star_5_keyframes, ARRAY_LENGTH(shooting_star_5_keyframes) },
+	// green to orange , slow
+	{ 1, 90, shooting_star_6_keyframes, ARRAY_LENGTH(shooting_star_6_keyframes) },
+	{ 2, 2*90, shooting_star_6_keyframes, ARRAY_LENGTH(shooting_star_6_keyframes) },
+	{ 4, 3*90, shooting_star_6_keyframes, ARRAY_LENGTH(shooting_star_6_keyframes) },
+	{ 8, 4*90, shooting_star_6_keyframes, ARRAY_LENGTH(shooting_star_6_keyframes) },
+	// violet to blue , slow
+	{ 1, 90, shooting_star_7_keyframes, ARRAY_LENGTH(shooting_star_7_keyframes) },
+	{ 2, 2*90, shooting_star_7_keyframes, ARRAY_LENGTH(shooting_star_7_keyframes) },
+	{ 4, 3*90, shooting_star_7_keyframes, ARRAY_LENGTH(shooting_star_7_keyframes) },
+	{ 8, 4*90, shooting_star_7_keyframes, ARRAY_LENGTH(shooting_star_7_keyframes) },
+	// white to blue, slow
+	{ 1, 90, shooting_star_8_keyframes, ARRAY_LENGTH(shooting_star_8_keyframes) },
+	{ 2, 2*90, shooting_star_8_keyframes, ARRAY_LENGTH(shooting_star_8_keyframes) },
+	{ 4, 3*90, shooting_star_8_keyframes, ARRAY_LENGTH(shooting_star_8_keyframes) },
+	{ 8, 4*90, shooting_star_8_keyframes, ARRAY_LENGTH(shooting_star_8_keyframes) },
+};
+
+shooting_star_parameters shooting_star_parameters_from_flash(const shooting_star_parameters* params)
+{
+	shooting_star_parameters value;
+
+	value.shooting_star_count = pgm_read_byte(&params->shooting_star_count);
+	value.delay_advance_ms = pgm_read_word(&params->delay_advance_ms);
+
+	static_assert(sizeof(value.keyframes) == sizeof(uint16_t));
+	value.keyframes = reinterpret_cast<const nl::strip_animator::keyframe*>(pgm_read_word(&params->keyframes));
+	value.keyframe_count = pgm_read_byte(&params->keyframe_count);
+
+	return value;
+}
 }
 }
 
@@ -276,62 +388,15 @@ nl::strip_animator::led_color nl::strip_animator::_color(uint8_t led_id) const n
 
 void nl::strip_animator::set_idle_animation(uint8_t id) noexcept
 {
-	switch (id) {
-	case 1:
-		return _set_shooting_star_animation(
-			1,
-			90,
-			keyframes::shooting_star::shooting_star_tungsten_keyframes,
-			ARRAY_LENGTH(keyframes::shooting_star::shooting_star_tungsten_keyframes));
-	case 2:
-		return _set_shooting_star_animation(
-			2,
-			2 * 90,
-			keyframes::shooting_star::shooting_star_tungsten_keyframes,
-			ARRAY_LENGTH(keyframes::shooting_star::shooting_star_tungsten_keyframes));
-	case 3:
-		return _set_shooting_star_animation(
-			4,
-			4 * 90,
-			keyframes::shooting_star::shooting_star_tungsten_keyframes,
-			ARRAY_LENGTH(keyframes::shooting_star::shooting_star_tungsten_keyframes));
-	case 4:
-		return _set_shooting_star_animation(
-			8,
-			8*90,
-			keyframes::shooting_star::shooting_star_tungsten_keyframes,
-			ARRAY_LENGTH(keyframes::shooting_star::shooting_star_tungsten_keyframes));
-	case 5:
-		return _set_shooting_star_animation(
-			1,
-			90,
-			keyframes::shooting_star::shooting_star_2_keyframes,
-			ARRAY_LENGTH(keyframes::shooting_star::shooting_star_2_keyframes));
-	case 6:
-		return _set_shooting_star_animation(
-			2,
-			2 * 90,
-			keyframes::shooting_star::shooting_star_2_keyframes,
-			ARRAY_LENGTH(keyframes::shooting_star::shooting_star_2_keyframes));
-	case 7:
-		return _set_shooting_star_animation(
-			4,
-			4 * 90,
-			keyframes::shooting_star::shooting_star_2_keyframes,
-			ARRAY_LENGTH(keyframes::shooting_star::shooting_star_2_keyframes));
-	case 8:
-		return _set_shooting_star_animation(
-			8,
-			8*90,
-			keyframes::shooting_star::shooting_star_2_keyframes,
-			ARRAY_LENGTH(keyframes::shooting_star::shooting_star_2_keyframes));
-	default:
-		_set_shooting_star_animation(
-			1,
-			90,
-			keyframes::shooting_star::shooting_star_tungsten_keyframes,
-			ARRAY_LENGTH(keyframes::shooting_star::shooting_star_tungsten_keyframes));
-	}
+	const auto ss_params = keyframes::shooting_star::shooting_star_parameters_from_flash(
+		&keyframes::shooting_star::params
+			[id % ARRAY_LENGTH(keyframes::shooting_star::params)]);
+
+	_set_shooting_star_animation(
+			ss_params.shooting_star_count,
+			ss_params.delay_advance_ms,
+			ss_params.keyframes,
+			ss_params.keyframe_count);
 }
 
 void nl::strip_animator::_reset_keyframed_animation_state() noexcept
