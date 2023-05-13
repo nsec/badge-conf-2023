@@ -55,6 +55,7 @@ public:
 	void on_app_message_sent() noexcept;
 
 	void apply_score_change(uint8_t new_badges_discovered_count) noexcept;
+	void show_badge_info() noexcept;
 
 	void tick(nsec::scheduling::absolute_time_ms current_time_ms) noexcept;
 

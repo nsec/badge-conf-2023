@@ -753,6 +753,13 @@ void nr::badge::apply_score_change(uint8_t new_badges_discovered_count) noexcept
 	set_social_level(_compute_new_social_level(_social_level, new_badges_discovered_count));
 }
 
+void nr::badge::show_badge_info() noexcept
+{
+	_text_screen.set_printer(
+		nd::text_screen::text_printer{ badge_info_printer, &nsec::g::the_badge });
+	set_focused_screen(_text_screen);
+}
+
 uint8_t nr::badge::_compute_new_social_level(uint8_t current_social_level,
 					     uint8_t new_badges_discovered_count) noexcept
 {

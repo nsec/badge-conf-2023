@@ -67,6 +67,29 @@ nd::scroll_screen::scroll_screen() noexcept : screen()
 	_cleared_on_every_frame = false;
 }
 
+void nd::scroll_screen::button_event(nb::id id, nb::event event) noexcept
+{
+	if (event == nb::event::UP) {
+		// Not interested in any button release events; it allows us
+		// to assume the action is a button press or repeat.
+		return;
+	}
+
+	// Release focus to the previous screen.
+	if (id == nb::id::CANCEL) {
+		_release_focus();
+		return;
+	}
+
+	// Shortcut to the text screen
+	if (id == nb::id::UP && event == nb::event::DOWN_REPEAT) {
+		nsec::g::the_badge.show_badge_info();
+
+		// Queue a redraw on next rendering tick.
+		damage();
+	}
+}
+
 char nd::scroll_screen::_property_character_at_offset(uint8_t offset) const noexcept
 {
 	return _property.is_value_in_ram ?
