@@ -124,6 +124,7 @@ nr::badge::badge() :
 	_id_exchanger.reset();
 	set_focused_screen(_splash_screen);
 	set_social_level(nsec::config::social::initial_level, false);
+	_set_selected_animation(1, false);
 }
 
 void nr::badge::load_config()
@@ -185,8 +186,6 @@ void nr::badge::setup()
 	Serial.begin(38400);
 
 	load_config();
-
-	_strip_animator.set_shooting_star_animation(1, 90);
 }
 
 uint8_t nr::badge::level() const noexcept
