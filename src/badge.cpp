@@ -203,6 +203,12 @@ void nr::badge::on_button_event(nsec::button::id button, nsec::button::event eve
 {
 	const auto button_mask_position = static_cast<unsigned int>(button);
 
+	if (_network_app_state() != network_app_state::UNCONNECTED &&
+	    _network_app_state() != network_app_state::IDLE) {
+		// Don't allow button press during "modal" states.
+		return;
+	}
+
 	/*
 	 * After a focus change, don't spam the newly focused screen with
 	 * repeat events of the button. We want to let the user the time to react,
@@ -773,4 +779,12 @@ void nr::badge::_set_selected_animation(uint8_t animation_id, bool save_to_confi
 	if (save_to_config) {
 		save_config();
 	}
+}
+
+void nr::badge::cycle_selected_animation(nr::badge::cycle_animation_direction direction) noexcept
+{
+	const auto selected_animation =
+		constrain(_selected_animation + int8_t(direction), 1, _social_level);
+
+	_set_selected_animation(selected_animation, true);
 }

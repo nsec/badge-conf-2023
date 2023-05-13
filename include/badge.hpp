@@ -59,6 +59,9 @@ public:
 
 	void tick(nsec::scheduling::absolute_time_ms current_time_ms) noexcept;
 
+	enum cycle_animation_direction : int8_t { PREVIOUS = -1, NEXT = 1 };
+	void cycle_selected_animation(cycle_animation_direction direction) noexcept;
+
 private:
 	enum class network_app_state : uint8_t {
 		UNCONNECTED,

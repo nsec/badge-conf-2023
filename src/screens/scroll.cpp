@@ -88,6 +88,13 @@ void nd::scroll_screen::button_event(nb::id id, nb::event event) noexcept
 		// Queue a redraw on next rendering tick.
 		damage();
 	}
+
+	if (id == nb::id::LEFT || id == nb::id::RIGHT) {
+		nsec::g::the_badge.cycle_selected_animation(
+			id == nb::id::LEFT ?
+				nsec::runtime::badge::cycle_animation_direction::PREVIOUS :
+				nsec::runtime::badge::cycle_animation_direction::NEXT);
+	}
 }
 
 char nd::scroll_screen::_property_character_at_offset(uint8_t offset) const noexcept
