@@ -12,6 +12,8 @@ namespace nl = nsec::led;
 namespace ns = nsec::scheduling;
 namespace ng = nsec::g;
 
+#define ARRAY_LENGTH(array) (sizeof(array)/sizeof(*array))
+
 namespace {
 constexpr int16_t scaling_factor = 1024;
 
@@ -41,6 +43,18 @@ nl::strip_animator::led_color interpolate(const nl::strip_animator::keyframe& or
 	return new_color;
 }
 
+nl::strip_animator::keyframe keyframe_from_flash(const nl::strip_animator::keyframe *src_keyframe)
+{
+	const auto r = pgm_read_byte(&src_keyframe->color.r());
+	const auto g = pgm_read_byte(&src_keyframe->color.g());
+	const auto b = pgm_read_byte(&src_keyframe->color.b());
+
+	return { { r, g, b }, pgm_read_word(&src_keyframe->time) };
+}
+
+} // namespace
+
+namespace keyframes {
 const nl::strip_animator::keyframe PROGMEM red_to_green_progress_bar_keyframe_template[] = {
 	// red
 	{ { 100, 20, 0 }, 0 },
@@ -70,8 +84,10 @@ const nl::strip_animator::keyframe PROGMEM no_new_friends_keyframes[] = {
 	{ { 255, 0, 0 }, 600 },
 };
 
-// Colors evoking a star cooling down
-const nl::strip_animator::keyframe PROGMEM burning_star_keyframes[] = {
+
+namespace shooting_star {
+// Colors evoking a tungten flash
+const nl::strip_animator::keyframe PROGMEM shooting_star_tungsten_keyframes[] = {
 	{ { 0, 0, 0 }, 0 }, // black
 	{ { 255, 255, 255 }, 100 }, // white
 	{ { 180, 0, 200 }, 400 }, // violet
@@ -80,16 +96,14 @@ const nl::strip_animator::keyframe PROGMEM burning_star_keyframes[] = {
 	{ { 0, 0, 0 }, 5000 }, // maintain black
 };
 
-nl::strip_animator::keyframe keyframe_from_flash(const nl::strip_animator::keyframe *src_keyframe)
-{
-	const auto r = pgm_read_byte(&src_keyframe->color.r());
-	const auto g = pgm_read_byte(&src_keyframe->color.g());
-	const auto b = pgm_read_byte(&src_keyframe->color.b());
-
-	return { { r, g, b }, pgm_read_word(&src_keyframe->time) };
+const nl::strip_animator::keyframe PROGMEM shooting_star_2_keyframes[] = {
+	{ { 0, 255, 159 }, 0 },
+	{ { 0, 138, 198 }, 900 },
+	{ { 0, 0, 0 }, 1500 },
+	{ { 0, 0, 0 }, 5000 },
+};
 }
-
-} // namespace
+}
 
 nl::strip_animator::strip_animator() noexcept :
 	ns::periodic_task(100) /* Set by the various animations. */,
@@ -262,8 +276,62 @@ nl::strip_animator::led_color nl::strip_animator::_color(uint8_t led_id) const n
 
 void nl::strip_animator::set_idle_animation(uint8_t id) noexcept
 {
-	// Temporary for testing purposes.
-	set_shooting_star_animation(id, 90 * id);
+	switch (id) {
+	case 1:
+		return _set_shooting_star_animation(
+			1,
+			90,
+			keyframes::shooting_star::shooting_star_tungsten_keyframes,
+			ARRAY_LENGTH(keyframes::shooting_star::shooting_star_tungsten_keyframes));
+	case 2:
+		return _set_shooting_star_animation(
+			2,
+			2 * 90,
+			keyframes::shooting_star::shooting_star_tungsten_keyframes,
+			ARRAY_LENGTH(keyframes::shooting_star::shooting_star_tungsten_keyframes));
+	case 3:
+		return _set_shooting_star_animation(
+			4,
+			4 * 90,
+			keyframes::shooting_star::shooting_star_tungsten_keyframes,
+			ARRAY_LENGTH(keyframes::shooting_star::shooting_star_tungsten_keyframes));
+	case 4:
+		return _set_shooting_star_animation(
+			8,
+			8*90,
+			keyframes::shooting_star::shooting_star_tungsten_keyframes,
+			ARRAY_LENGTH(keyframes::shooting_star::shooting_star_tungsten_keyframes));
+	case 5:
+		return _set_shooting_star_animation(
+			1,
+			90,
+			keyframes::shooting_star::shooting_star_2_keyframes,
+			ARRAY_LENGTH(keyframes::shooting_star::shooting_star_2_keyframes));
+	case 6:
+		return _set_shooting_star_animation(
+			2,
+			2 * 90,
+			keyframes::shooting_star::shooting_star_2_keyframes,
+			ARRAY_LENGTH(keyframes::shooting_star::shooting_star_2_keyframes));
+	case 7:
+		return _set_shooting_star_animation(
+			4,
+			4 * 90,
+			keyframes::shooting_star::shooting_star_2_keyframes,
+			ARRAY_LENGTH(keyframes::shooting_star::shooting_star_2_keyframes));
+	case 8:
+		return _set_shooting_star_animation(
+			8,
+			8*90,
+			keyframes::shooting_star::shooting_star_2_keyframes,
+			ARRAY_LENGTH(keyframes::shooting_star::shooting_star_2_keyframes));
+	default:
+		_set_shooting_star_animation(
+			1,
+			90,
+			keyframes::shooting_star::shooting_star_tungsten_keyframes,
+			ARRAY_LENGTH(keyframes::shooting_star::shooting_star_tungsten_keyframes));
+	}
 }
 
 void nl::strip_animator::_reset_keyframed_animation_state() noexcept
@@ -283,10 +351,8 @@ void nl::strip_animator::set_red_to_green_led_progress_bar(uint8_t active_led_co
 		_current_animation_type = animation_type::KEYFRAMED;
 		_config.keyframed._animation = keyframed_animation::PROGRESS_BAR;
 		_config.keyframed.active = 0;
-		_config.keyframed.keyframe_count =
-			sizeof(red_to_green_progress_bar_keyframe_template) /
-			sizeof(*red_to_green_progress_bar_keyframe_template);
-		_config.keyframed.keyframes = red_to_green_progress_bar_keyframe_template;
+		_config.keyframed.keyframe_count = ARRAY_LENGTH(keyframes::red_to_green_progress_bar_keyframe_template);
+		_config.keyframed.keyframes = keyframes::red_to_green_progress_bar_keyframe_template;
 		_config.keyframed.loop_point_index = 2;
 		_config.keyframed.brightness = 120;
 
@@ -325,15 +391,13 @@ void nl::strip_animator::set_show_level_animation(
 	uint8_t keyframe_count = 0;
 
 	if (animation_type == pairing_completed_animation_type::HAPPY_CLOWN_BARF) {
-		keyframe_count =
-			sizeof(happy_clown_barf_keyframes) / sizeof(*happy_clown_barf_keyframes);
-		keyframes = happy_clown_barf_keyframes;
+		keyframe_count = ARRAY_LENGTH(keyframes::happy_clown_barf_keyframes);
+		keyframes = keyframes::happy_clown_barf_keyframes;
 		// Apply a slight offset between LEDs to achieve a "sparkle" effect.
 		cycle_offset = 10;
 	} else {
-		keyframe_count =
-			sizeof(no_new_friends_keyframes) / sizeof(*no_new_friends_keyframes);
-		keyframes = no_new_friends_keyframes;
+		keyframe_count = ARRAY_LENGTH(keyframes::no_new_friends_keyframes);
+		keyframes = keyframes::no_new_friends_keyframes;
 	}
 
 	if (set_lower_bar_on) {
@@ -343,17 +407,18 @@ void nl::strip_animator::set_show_level_animation(
 	_set_keyframed_cycle_animation(keyframes, keyframe_count, 1, active_mask, cycle_offset, 40);
 }
 
-void nl::strip_animator::set_shooting_star_animation(uint8_t star_count,
-						     unsigned int advance_interval_ms) noexcept
+void nl::strip_animator::_set_shooting_star_animation(uint8_t star_count,
+						     unsigned int advance_interval_ms,
+						     const keyframe *keyframes,
+						     uint8_t keyframe_count) noexcept
 {
 	period_ms(20);
 	_current_animation_type = animation_type::KEYFRAMED;
 	_config.keyframed._animation = keyframed_animation::SHOOTING_STAR;
 	_config.keyframed.active = 0;
 	_reset_keyframed_animation_state();
-	_config.keyframed.keyframe_count =
-		sizeof(burning_star_keyframes) / sizeof(*burning_star_keyframes);
-	_config.keyframed.keyframes = burning_star_keyframes;
+	_config.keyframed.keyframe_count = keyframe_count;
+	_config.keyframed.keyframes = keyframes;
 
 	_config.keyframed.loop_point_index = 0;
 	_config.keyframed.brightness = 50;

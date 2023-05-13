@@ -40,10 +40,6 @@ public:
 				      uint8_t level,
 				      bool set_lower_bar_on) noexcept;
 
-	// Should probably make the palette configurable
-	void set_shooting_star_animation(uint8_t star_count,
-					 unsigned int advance_interval_ms) noexcept;
-
 	struct led_color {
 		led_color() = default;
 		constexpr led_color(uint8_t r_in, uint8_t g_in, uint8_t b_in) :
@@ -187,6 +183,11 @@ private:
 	void _set_keyframe_index(indice_storage_element *indices,
 				 uint8_t led_id,
 				 uint8_t index) noexcept;
+
+	void _set_shooting_star_animation(uint8_t star_count,
+					  unsigned int advance_interval_ms,
+					  const keyframe *keyframe,
+					  uint8_t keyframe_count) noexcept;
 
 	void _set_keyframed_cycle_animation(const keyframe *keyframe,
 					    uint8_t keyframe_count,
