@@ -18,7 +18,7 @@ AVRDUDE="$HOME/tmp/avrdude/build_linux/src/avrdude"
 # Set the usb bus and id numbers of all 4 usbasp
 USB0=(003 004)
 USB1=(001 009)
-USB2=(000 000)
+USB2=(005 003)
 USB3=(000 000)
 
 
@@ -57,7 +57,6 @@ flash_loop() {
 
         error=0
 
-        # Set the fuses
         echo "Setting fuses on usbasp:$usb_bus:$usb_id"
         $AVRDUDE -e -p atmega328pb -c usbasp -P "usb:$usb_bus:$usb_id" -B 10 -U lock:w:0x0f:m -U hfuse:w:0xde:m -U lfuse:w:0xff:m -U efuse:w:0xfd:m || error=1
         if [ $error = 1 ]; then
@@ -66,9 +65,8 @@ flash_loop() {
             continue
         fi
 
-        # -e: chip erase, -v: verbose
         echo "Flashing on usbasp:$usb_bus:$usb_id"
-        $AVRDUDE -p atmega328pb -c usbasp -P "usb:$usb_bus:$usb_id" -U "flash:w:$FIRMWARE:i" || error=1
+        $AVRDUDE -p atmega328pb -c usbasp -P "usb:$usb_bus:$usb_id" -B 3Mhz -U "flash:w:$FIRMWARE:i" || error=1
         if [ $error = 1 ]; then
             echo "Failed to flash firmware. Press any key to retry."
             read -r
