@@ -73,7 +73,7 @@ const nl::strip_animator::keyframe PROGMEM no_new_friends_keyframes[] = {
 // Colors evoking a star cooling down
 const nl::strip_animator::keyframe PROGMEM burning_star_keyframes[] = {
 	{ { 0, 0, 0 }, 0 }, // black
-	{ { 255, 255, 255 }, 300 }, // white
+	{ { 255, 255, 255 }, 100 }, // white
 	{ { 180, 0, 200 }, 400 }, // violet
 	{ { 70, 0, 0 }, 900 }, // red
 	{ { 0, 0, 0 }, 1500 }, // black

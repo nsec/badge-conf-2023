@@ -45,7 +45,7 @@ static_assert(button_down_repeat_delay_ms % polling_period_ms == 0);
 } // namespace nsec::config::button
 
 namespace nsec::config::display {
-constexpr nsec::scheduling::relative_time_ms refresh_period_ms = 4;
+constexpr nsec::scheduling::relative_time_ms refresh_period_ms = 16;
 
 constexpr uint8_t menu_font_size = 1;
 constexpr uint8_t scroll_font_size = 3;
