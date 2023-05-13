@@ -214,8 +214,168 @@ shooting_star_parameters shooting_star_parameters_from_flash(const shooting_star
 
 	return value;
 }
+} // namespace shooting_star
+
+namespace color_cycle {
+struct color_cycle_parameters {
+	uint16_t active_pattern;
+	uint8_t cycle_offset;
+	uint8_t keyframe_count;
+	const nl::strip_animator::keyframe *keyframes;
+};
+
+// Dark wave synth
+const nl::strip_animator::keyframe PROGMEM color_cycle_1_keyframes[] = {
+	{ { 0,0,0 }, 0 },
+	{ { 255,73,219 }, 1 },
+	{ { 28,28,62 }, 1000 },
+	{ { 50,240,255 }, 2000 },
+	{ { 255,129,50 }, 3000 },
+	{ { 90,52,123 }, 4000 },
+	{ { 255,73,219 }, 5000 },
+};
+
+// red-white
+const nl::strip_animator::keyframe PROGMEM color_cycle_2_keyframes[] = {
+	{ { 0,0,0 }, 0 },
+	{ { 255,255,255 }, 1 },
+	{ { 255,0,0 }, 1000 },
+	{ { 255,255,255 }, 2000 },
+};
+
+// pastel rainbow
+const nl::strip_animator::keyframe PROGMEM color_cycle_3_keyframes[] = {
+	{ { 0,0,0 }, 0 },
+	{ { 255,179,186 }, 1 },
+	{ { 255,223,186 }, 1000 },
+	{ { 255,255,186 }, 2000 },
+	{ { 186,255,201 }, 3000 },
+	{ { 186,225,255 }, 4000 },
+	{ { 255,179,186 }, 5000 },
+};
+
+// orange breathing
+const nl::strip_animator::keyframe PROGMEM color_cycle_orange_breathing_keyframes[] = {
+	{ { 0,0,0 }, 0 },
+	{ { 153,76,0 }, 1 },
+	{ { 255,178,102 }, 2000 },
+	{ { 153,76,0 }, 4000 },
+};
+
+const nl::strip_animator::keyframe PROGMEM color_cycle_red_breathing_keyframes[] = {
+	{ { 0,0,0 }, 0 },
+	{ { 153,0,0 }, 1 },
+	{ { 255,102,102 }, 2000 },
+	{ { 153,0,0 }, 4000 },
+};
+
+const nl::strip_animator::keyframe PROGMEM color_cycle_yellow_breathing_keyframes[] = {
+	{ { 0,0,0 }, 0 },
+	{ { 153,153,0 }, 1 },
+	{ { 255,255,102 }, 2000 },
+	{ { 153,153,0 }, 4000 },
+};
+
+const nl::strip_animator::keyframe PROGMEM color_cycle_green_breathing_keyframes[] = {
+	{ { 0,0,0 }, 0 },
+	{ { 0,153,0 }, 1 },
+	{ { 102,255,102 }, 2000 },
+	{ { 0,153,0 }, 4000 },
+};
+
+const nl::strip_animator::keyframe PROGMEM color_cycle_cyan_breathing_keyframes[] = {
+	{ { 0,0,0 }, 0 },
+	{ { 0,153,153 }, 1 },
+	{ { 102,255,255 }, 2000 },
+	{ { 0,153,153 }, 4000 },
+};
+
+const nl::strip_animator::keyframe PROGMEM color_cycle_blue_breathing_keyframes[] = {
+	{ { 0,0,0 }, 0 },
+	{ { 102,102,255 }, 1 },
+	{ { 0,0,153 }, 2000 },
+	{ { 102,102,255 }, 4000 },
+};
+
+const nl::strip_animator::keyframe PROGMEM color_cycle_violet_breathing_keyframes[] = {
+	{ { 0,0,0 }, 0 },
+	{ { 76,0,153 }, 1 },
+	{ { 178,102,255 }, 2000 },
+	{ { 76,0,153 }, 4000 },
+};
+
+const nl::strip_animator::keyframe PROGMEM color_cycle_pink_breathing_keyframes[] = {
+	{ { 0,0,0 }, 0 },
+	{ { 153,0,153 }, 1 },
+	{ { 255,102,255 }, 2000 },
+	{ { 153,0,153 }, 4000 },
+};
+
+const nl::strip_animator::keyframe PROGMEM color_cycle_white_breathing_keyframes[] = {
+	{ { 0,0,0 }, 0 },
+	{ { 153,76,0 }, 1 },
+	{ { 255,178,102 }, 2000 },
+	{ { 153,76,0 }, 4000 },
+};
+
+
+const color_cycle_parameters PROGMEM params[] = {
+	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_1_keyframes), color_cycle_1_keyframes },
+	{ 0xFFFF, 10, ARRAY_LENGTH(color_cycle_1_keyframes), color_cycle_1_keyframes },
+	{ 0b1010101010101010, 10, ARRAY_LENGTH(color_cycle_1_keyframes), color_cycle_1_keyframes },
+	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_2_keyframes), color_cycle_2_keyframes },
+	{ 0xFFFF, 10, ARRAY_LENGTH(color_cycle_2_keyframes), color_cycle_2_keyframes },
+	{ 0b1010101010101010, 10, ARRAY_LENGTH(color_cycle_2_keyframes), color_cycle_2_keyframes },
+	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_3_keyframes), color_cycle_3_keyframes },
+	{ 0xFFFF, 10, ARRAY_LENGTH(color_cycle_3_keyframes), color_cycle_3_keyframes },
+	{ 0b1010101010101010, 10, ARRAY_LENGTH(color_cycle_3_keyframes), color_cycle_3_keyframes },
+	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_orange_breathing_keyframes), color_cycle_orange_breathing_keyframes },
+	{ 0xFFFF, 60, ARRAY_LENGTH(color_cycle_orange_breathing_keyframes), color_cycle_orange_breathing_keyframes },
+	{ 0b1010101010101010, 60, ARRAY_LENGTH(color_cycle_orange_breathing_keyframes), color_cycle_orange_breathing_keyframes },
+	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_red_breathing_keyframes), color_cycle_red_breathing_keyframes },
+	{ 0xFFFF, 60, ARRAY_LENGTH(color_cycle_red_breathing_keyframes), color_cycle_red_breathing_keyframes },
+	{ 0b1010101010101010, 60, ARRAY_LENGTH(color_cycle_red_breathing_keyframes), color_cycle_red_breathing_keyframes },
+	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_yellow_breathing_keyframes), color_cycle_yellow_breathing_keyframes },
+	{ 0xFFFF, 60, ARRAY_LENGTH(color_cycle_yellow_breathing_keyframes), color_cycle_yellow_breathing_keyframes },
+	{ 0b1010101010101010, 60, ARRAY_LENGTH(color_cycle_yellow_breathing_keyframes), color_cycle_yellow_breathing_keyframes },
+	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_green_breathing_keyframes), color_cycle_green_breathing_keyframes },
+	{ 0xFFFF, 60, ARRAY_LENGTH(color_cycle_green_breathing_keyframes), color_cycle_green_breathing_keyframes },
+	{ 0b1010101010101010, 60, ARRAY_LENGTH(color_cycle_green_breathing_keyframes), color_cycle_green_breathing_keyframes },
+	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_cyan_breathing_keyframes), color_cycle_cyan_breathing_keyframes },
+	{ 0xFFFF, 60, ARRAY_LENGTH(color_cycle_cyan_breathing_keyframes), color_cycle_cyan_breathing_keyframes },
+	{ 0b1010101010101010, 60, ARRAY_LENGTH(color_cycle_cyan_breathing_keyframes), color_cycle_cyan_breathing_keyframes },
+	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_blue_breathing_keyframes), color_cycle_blue_breathing_keyframes },
+	{ 0xFFFF, 60, ARRAY_LENGTH(color_cycle_blue_breathing_keyframes), color_cycle_blue_breathing_keyframes },
+	{ 0b1010101010101010, 60, ARRAY_LENGTH(color_cycle_blue_breathing_keyframes), color_cycle_blue_breathing_keyframes },
+	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_violet_breathing_keyframes), color_cycle_violet_breathing_keyframes },
+	{ 0xFFFF, 60, ARRAY_LENGTH(color_cycle_violet_breathing_keyframes), color_cycle_violet_breathing_keyframes },
+	{ 0b1010101010101010, 60, ARRAY_LENGTH(color_cycle_violet_breathing_keyframes), color_cycle_violet_breathing_keyframes },
+	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_pink_breathing_keyframes), color_cycle_pink_breathing_keyframes },
+	{ 0xFFFF, 60, ARRAY_LENGTH(color_cycle_pink_breathing_keyframes), color_cycle_pink_breathing_keyframes },
+	{ 0b1010101010101010, 60, ARRAY_LENGTH(color_cycle_pink_breathing_keyframes), color_cycle_pink_breathing_keyframes },
+	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_white_breathing_keyframes), color_cycle_white_breathing_keyframes },
+	{ 0xFFFF, 60, ARRAY_LENGTH(color_cycle_white_breathing_keyframes), color_cycle_white_breathing_keyframes },
+	{ 0b1010101010101010, 60, ARRAY_LENGTH(color_cycle_white_breathing_keyframes), color_cycle_white_breathing_keyframes },
+};
+
+color_cycle_parameters color_cycle_parameters_from_flash(const color_cycle_parameters *params)
+{
+	color_cycle_parameters value;
+
+	value.active_pattern = pgm_read_word(&params->active_pattern);
+	value.cycle_offset = pgm_read_byte(&params->cycle_offset);
+	static_assert(sizeof(value.keyframes) == sizeof(uint16_t));
+	value.keyframes = reinterpret_cast<const nl::strip_animator::keyframe *>(
+		pgm_read_word(&params->keyframes));
+	value.keyframe_count = pgm_read_byte(&params->keyframe_count);
+
+	return value;
 }
-}
+
+} // namespace color_cycle
+
+
+} // namespace keyframes
 
 nl::strip_animator::strip_animator() noexcept :
 	ns::periodic_task(100) /* Set by the various animations. */,
@@ -388,15 +548,40 @@ nl::strip_animator::led_color nl::strip_animator::_color(uint8_t led_id) const n
 
 void nl::strip_animator::set_idle_animation(uint8_t id) noexcept
 {
-	const auto ss_params = keyframes::shooting_star::shooting_star_parameters_from_flash(
-		&keyframes::shooting_star::params
-			[id % ARRAY_LENGTH(keyframes::shooting_star::params)]);
+	const auto shooting_star_animations_count = ARRAY_LENGTH(keyframes::shooting_star::params);
+	const auto color_cycle_animations_count = ARRAY_LENGTH(keyframes::color_cycle::params);
 
-	_set_shooting_star_animation(
-			ss_params.shooting_star_count,
-			ss_params.delay_advance_ms,
-			ss_params.keyframes,
-			ss_params.keyframe_count);
+	while (true) {
+		if (id < color_cycle_animations_count) {
+			const auto cc_params =
+				keyframes::color_cycle::color_cycle_parameters_from_flash(
+					&keyframes::color_cycle::params
+						[id % color_cycle_animations_count]);
+
+			_set_keyframed_cycle_animation(cc_params.keyframes,
+						       cc_params.keyframe_count,
+						       1,
+						       cc_params.active_pattern,
+						       cc_params.cycle_offset,
+						       20);
+			break;
+		}
+		id -= color_cycle_animations_count;
+
+		if (id < shooting_star_animations_count) {
+			const auto ss_params =
+				keyframes::shooting_star::shooting_star_parameters_from_flash(
+					&keyframes::shooting_star::params
+						[id % shooting_star_animations_count]);
+
+			_set_shooting_star_animation(ss_params.shooting_star_count,
+						     ss_params.delay_advance_ms,
+						     ss_params.keyframes,
+						     ss_params.keyframe_count);
+			break;
+		}
+		id -= shooting_star_animations_count;
+	}
 }
 
 void nl::strip_animator::_reset_keyframed_animation_state() noexcept

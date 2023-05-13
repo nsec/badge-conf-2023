@@ -124,7 +124,7 @@ nr::badge::badge() :
 	_id_exchanger.reset();
 	set_focused_screen(_splash_screen);
 	set_social_level(nsec::config::social::initial_level, false);
-	_set_selected_animation(1, false);
+	_set_selected_animation(0, false);
 }
 
 void nr::badge::load_config()
@@ -235,7 +235,7 @@ void nr::badge::on_button_event(nsec::button::id button, nsec::button::event eve
 
 void nr::badge::set_social_level(uint8_t new_level, bool save)
 {
-	new_level = constrain(new_level, 1, nsec::config::social::max_level);
+	new_level = constrain(new_level, 0, nsec::config::social::max_level);
 
 	_social_level = new_level;
 	if (save) {
@@ -783,7 +783,7 @@ void nr::badge::_set_selected_animation(uint8_t animation_id, bool save_to_confi
 void nr::badge::cycle_selected_animation(nr::badge::cycle_animation_direction direction) noexcept
 {
 	const auto selected_animation =
-		constrain(_selected_animation + int8_t(direction), 1, _social_level);
+		constrain(_selected_animation + int8_t(direction), 0, _social_level);
 
 	_set_selected_animation(selected_animation, true);
 }
