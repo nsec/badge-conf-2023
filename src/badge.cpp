@@ -123,7 +123,7 @@ nr::badge::badge() :
 	_network_app_state(network_app_state::UNCONNECTED);
 	_id_exchanger.reset();
 	set_focused_screen(_splash_screen);
-	set_social_level(1, false);
+	set_social_level(nsec::config::social::initial_level, false);
 }
 
 void nr::badge::load_config()
@@ -713,8 +713,8 @@ void nr::badge::pairing_completed_animator::tick(
 		if (_animation_state() == animation_state::SHOW_PAIRING_COMPLETE_MESSAGE) {
 			_animation_state(animation_state::SHOW_NEW_LEVEL);
 
-			const auto new_level =
-				badge._social_level + badge._badges_discovered_last_exchange;
+			const auto new_level = _compute_new_social_level(
+				badge._social_level, badge._badges_discovered_last_exchange);
 
 			badge._strip_animator.set_show_level_animation(
 				badge._badges_discovered_last_exchange > 0 ?
@@ -752,5 +752,21 @@ nr::badge::pairing_completed_animator::_animation_state() const noexcept
 void nr::badge::apply_score_change(uint8_t new_badges_discovered_count) noexcept
 {
 	// Saves to EEPROM
-	set_social_level(_social_level + new_badges_discovered_count);
+	set_social_level(_compute_new_social_level(_social_level, new_badges_discovered_count));
+}
+
+uint8_t nr::badge::_compute_new_social_level(uint8_t current_social_level,
+					     uint8_t new_badges_discovered_count) noexcept
+{
+	uint16_t new_social_level = current_social_level;
+	uint16_t level_up = new_badges_discovered_count;
+
+	if (new_badges_discovered_count > 1) {
+		level_up = new_badges_discovered_count *
+			nsec::config::social::multiple_badges_discovered_simultaneously_multiplier;
+	}
+
+	new_social_level += level_up;
+
+	return constrain(new_social_level, 1U, nsec::config::social::max_level);
 }

@@ -18,7 +18,10 @@ constexpr unsigned int max_scheduled_task_count = 10;
 }
 
 namespace nsec::config::social {
+// For animation testing purposes.
+constexpr uint8_t initial_level = 1;
 constexpr uint8_t max_level = 128;
+constexpr uint8_t multiple_badges_discovered_simultaneously_multiplier = 2;
 }
 
 namespace nsec::config::user {

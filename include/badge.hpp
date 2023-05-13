@@ -193,7 +193,10 @@ private:
 
 	void _set_user_name_scroll_screen() noexcept;
 
-	uint8_t _social_level : 7;
+	static uint8_t _compute_new_social_level(uint8_t current_social_level,
+						 uint8_t new_badges_discovered_count) noexcept;
+
+	uint8_t _social_level;
 	// Storage for network_app_state
 	uint8_t _current_network_app_state : 4;
 	uint8_t _badges_discovered_last_exchange : 5;
