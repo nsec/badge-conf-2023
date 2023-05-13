@@ -179,7 +179,7 @@ private:
 
 	// Handle new button event
 	void on_button_event(button::id button, button::event event) noexcept;
-	void set_social_level(uint8_t new_level, bool save=true) noexcept;
+	void set_social_level(uint8_t new_level, bool save = true) noexcept;
 
 	void set_focused_screen(display::screen& focused_screen) noexcept;
 
