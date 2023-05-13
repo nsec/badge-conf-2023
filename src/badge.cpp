@@ -722,7 +722,8 @@ void nr::badge::pairing_completed_animator::tick(
 						HAPPY_CLOWN_BARF :
 					nl::strip_animator::pairing_completed_animation_type::
 						NO_NEW_FRIENDS,
-				new_level);
+				new_level,
+				false);
 
 			memset(current_message, 0, sizeof(current_message));
 

@@ -34,7 +34,9 @@ public:
 		NO_NEW_FRIENDS,
 	};
 	void set_pairing_completed_animation(pairing_completed_animation_type) noexcept;
-	void set_show_level_animation(pairing_completed_animation_type, uint8_t level) noexcept;
+	void set_show_level_animation(pairing_completed_animation_type,
+				      uint8_t level,
+				      bool set_lower_bar_on) noexcept;
 
 	// Should probably make the palette configurable
 	void set_shooting_star_animation(uint8_t star_count,
@@ -121,10 +123,9 @@ private:
 
 	enum class keyframed_animation : uint8_t {
 		PROGRESS_BAR,
-		PAIRING_COMPLETED,
 		SHOOTING_STAR, // Shooting star running accross the LEDs
 		SPARKS, // Random sparks appearing
-		GLOW,
+		CYCLE,
 	};
 
 	void _legacy_animation_tick() noexcept;
@@ -184,6 +185,13 @@ private:
 	void _set_keyframe_index(indice_storage_element *indices,
 				 uint8_t led_id,
 				 uint8_t index) noexcept;
+
+	void _set_keyframed_cycle_animation(const keyframe *keyframe,
+					    uint8_t keyframe_count,
+					    uint8_t loop_point_index,
+					    uint16_t active_mask,
+					    uint8_t cycle_offset_between_frames,
+					    uint8_t refresh_rate) noexcept;
 };
 } // namespace nsec::led
 #endif // NSEC_LED_STRIP_ANIMATOR_HPP

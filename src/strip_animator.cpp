@@ -311,52 +311,45 @@ void nl::strip_animator::set_red_to_green_led_progress_bar(uint8_t active_led_co
 void nl::strip_animator::set_pairing_completed_animation(
 	nl::strip_animator::pairing_completed_animation_type animation_type) noexcept
 {
-	set_show_level_animation(animation_type, 0xFF);
+	set_show_level_animation(animation_type, 0xFF, true);
 }
 
 void nl::strip_animator::set_show_level_animation(
-	nl::strip_animator::pairing_completed_animation_type animation_type, uint8_t level) noexcept
+	nl::strip_animator::pairing_completed_animation_type animation_type,
+	uint8_t level,
+	bool set_lower_bar_on) noexcept
 {
 	period_ms(40);
 
-	// Setup animation parameters.
-	_current_animation_type = animation_type::KEYFRAMED;
-	_config.keyframed._animation = keyframed_animation::PAIRING_COMPLETED;
-	_config.keyframed.active = 0;
-
-	_reset_keyframed_animation_state();
-
-	if (animation_type == pairing_completed_animation_type::HAPPY_CLOWN_BARF) {
-		_config.keyframed.keyframe_count =
-			sizeof(happy_clown_barf_keyframes) / sizeof(*happy_clown_barf_keyframes);
-		_config.keyframed.keyframes = happy_clown_barf_keyframes;
-
-		// Apply a slight offset between LEDs to achieve a "sparkle" effect.
-		for (uint8_t i = 0; i < 16; i++) {
-			_state.keyframed.ticks_since_start_of_animation[i] = (i * 10) %
-				(keyframe_from_flash(
-					 &_config.keyframed
-						  .keyframes[_config.keyframed.keyframe_count - 1])
-					 .time /
-				 period_ms());
-		}
-	} else {
-		_config.keyframed.keyframe_count =
-			sizeof(no_new_friends_keyframes) / sizeof(*no_new_friends_keyframes);
-		_config.keyframed.keyframes = no_new_friends_keyframes;
-	}
-
-	_config.keyframed.loop_point_index = 1;
-	_config.keyframed.brightness = 50;
+	uint8_t cycle_offset = 0;
+	uint16_t active_mask = 0;
 
 	for (uint8_t i = 0; i < 8; i++) {
 		// LED at bit number one is the left-most, so we need to "invert" the level pattern.
 		const auto value_bit = (level >> i) & 1;
-		_config.keyframed.active |= value_bit << (7 - i);
+		active_mask |= value_bit << (7 - i);
 	}
 
-	// Animation always active on the bottom row.
-	_config.keyframed.active |= 0xFF00;
+	const keyframe *keyframes = nullptr;
+	uint8_t keyframe_count = 0;
+
+	if (animation_type == pairing_completed_animation_type::HAPPY_CLOWN_BARF) {
+		keyframe_count =
+			sizeof(happy_clown_barf_keyframes) / sizeof(*happy_clown_barf_keyframes);
+		keyframes = happy_clown_barf_keyframes;
+		// Apply a slight offset between LEDs to achieve a "sparkle" effect.
+		cycle_offset = 10;
+	} else {
+		keyframe_count =
+			sizeof(no_new_friends_keyframes) / sizeof(*no_new_friends_keyframes);
+		keyframes = no_new_friends_keyframes;
+	}
+
+	if (set_lower_bar_on) {
+		active_mask |= 0xFF00;
+	}
+
+	_set_keyframed_cycle_animation(keyframes, keyframe_count, 1, active_mask, cycle_offset, 40);
 }
 
 void nl::strip_animator::set_shooting_star_animation(uint8_t star_count,
@@ -375,4 +368,37 @@ void nl::strip_animator::set_shooting_star_animation(uint8_t star_count,
 	_config.keyframed.brightness = 50;
 	_config.keyframed.shooting_star.ticks_before_advance = advance_interval_ms / period_ms();
 	_config.keyframed.shooting_star.star_count = star_count;
+}
+
+void nl::strip_animator::_set_keyframed_cycle_animation(const keyframe *keyframe,
+							uint8_t keyframe_count,
+							uint8_t loop_point_index,
+							uint16_t active_mask,
+							uint8_t cycle_offset_between_frames,
+							uint8_t refresh_rate) noexcept
+{
+	period_ms(refresh_rate);
+
+	// Setup animation parameters.
+	_current_animation_type = animation_type::KEYFRAMED;
+	_config.keyframed._animation = keyframed_animation::CYCLE;
+	_config.keyframed.active = active_mask;
+
+	_reset_keyframed_animation_state();
+
+	_config.keyframed.keyframe_count = keyframe_count;
+	_config.keyframed.keyframes = keyframe;
+
+	// Apply an offset between LEDs to achieve a "sparkle" effect.
+	for (uint8_t i = 0; i < 16; i++) {
+		_state.keyframed.ticks_since_start_of_animation[i] =
+			(i * cycle_offset_between_frames) %
+			(keyframe_from_flash(
+				 &_config.keyframed.keyframes[_config.keyframed.keyframe_count - 1])
+				 .time /
+			 period_ms());
+	}
+
+	_config.keyframed.loop_point_index = loop_point_index;
+	_config.keyframed.brightness = 50;
 }
