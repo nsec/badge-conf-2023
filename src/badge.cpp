@@ -684,15 +684,9 @@ void nr::badge::pairing_completed_animator::start(nr::badge& badge) noexcept
 
 	message_formatter.print(F(" "));
 	message_formatter.print(F("new badge"));
-	if (badge._badges_discovered_last_exchange > 1) {
+	if (badge._badges_discovered_last_exchange > 1 ||
+	    badge._badges_discovered_last_exchange == 0) {
 		message_formatter.print(F("s"));
-	}
-
-	message_formatter.print(F(" discovered "));
-	if (badge._badges_discovered_last_exchange > 0) {
-		message_formatter.print(F(":D"));
-	} else {
-		message_formatter.print(F(":("));
 	}
 
 	badge._scroll_screen.set_property(current_message);
@@ -730,6 +724,9 @@ void nr::badge::pairing_completed_animator::tick(
 			formatter message_formatter(current_message);
 			message_formatter.print(F("Level "));
 			message_formatter.print(int(new_level));
+			message_formatter.print(F(" (+"));
+			message_formatter.print(int(new_level - badge._social_level));
+			message_formatter.print(F(")"));
 			badge._scroll_screen.set_property(current_message);
 		} else {
 			badge.apply_score_change(badge._badges_discovered_last_exchange);
