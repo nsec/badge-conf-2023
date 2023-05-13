@@ -26,7 +26,9 @@ public:
 
 	void setup() noexcept;
 
-	void set_current_animation_idle(uint8_t current_level) noexcept;
+	void set_idle_animation(uint8_t id) noexcept;
+
+
 	void set_red_to_green_led_progress_bar(uint8_t led_count) noexcept;
 
 	enum class pairing_completed_animation_type : uint8_t {

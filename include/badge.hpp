@@ -168,7 +168,7 @@ private:
 
 	struct eeprom_config {
 		uint16_t version_magic;
-		uint8_t favorite_animation;
+		uint8_t favorite_animation_id;
 		bool is_name_set;
 		uint8_t social_level;
 		char name[nsec::config::user::name_max_length];
@@ -180,7 +180,7 @@ private:
 
 	// Handle new button event
 	void on_button_event(button::id button, button::event event) noexcept;
-	void set_social_level(uint8_t new_level, bool save = true) noexcept;
+	void set_social_level(uint8_t new_level, bool save) noexcept;
 
 	void set_focused_screen(display::screen& focused_screen) noexcept;
 
@@ -196,8 +196,10 @@ private:
 
 	static uint8_t _compute_new_social_level(uint8_t current_social_level,
 						 uint8_t new_badges_discovered_count) noexcept;
+	void _set_selected_animation(uint8_t animation_id, bool save) noexcept;
 
 	uint8_t _social_level;
+	uint8_t _selected_animation;
 	// Storage for network_app_state
 	uint8_t _current_network_app_state : 4;
 	uint8_t _badges_discovered_last_exchange : 5;

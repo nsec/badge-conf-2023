@@ -140,13 +140,15 @@ void nr::badge::load_config()
 		memcpy(_user_name, config.name, sizeof(_user_name));
 		_is_user_name_set = config.is_name_set;
 	}
+
+	_set_selected_animation(config.favorite_animation_id, false);
 }
 
 void nr::badge::save_config() const
 {
 	eeprom_config config;
 	config.version_magic = config_version_magic;
-	config.favorite_animation = 0;
+	config.favorite_animation_id = _selected_animation;
 	config.is_name_set = _is_user_name_set;
 	config.social_level = _social_level;
 
@@ -224,28 +226,13 @@ void nr::badge::on_button_event(nsec::button::id button, nsec::button::event eve
 	    button == button::id::OK && !filter_out_button_event) {
 		factory_reset();
 	}
-
-	// The rest is temporary to easily simulate level up/down.
-	switch (button) {
-	case nsec::button::id::UP:
-		set_social_level(_social_level + 1, false);
-		break;
-	case nsec::button::id::DOWN:
-		set_social_level(_social_level - 1, false);
-		break;
-	default:
-		break;
-	}
 }
 
 void nr::badge::set_social_level(uint8_t new_level, bool save)
 {
-	new_level = max(1, new_level);
-	new_level = min(nsec::config::social::max_level, new_level);
+	new_level = constrain(new_level, 1, nsec::config::social::max_level);
 
 	_social_level = new_level;
-	_strip_animator.set_current_animation_idle(_social_level);
-
 	if (save) {
 		save_config();
 	}
@@ -374,7 +361,7 @@ void nr::badge::_network_app_state(nr::badge::network_app_state new_state) noexc
 	case network_app_state::IDLE:
 	case network_app_state::UNCONNECTED:
 		_set_user_name_scroll_screen();
-		_strip_animator.set_current_animation_idle(_social_level);
+		_strip_animator.set_idle_animation(_social_level);
 		_renderer.period_ms(nsec::config::display::refresh_period_ms);
 		break;
 	}
@@ -750,7 +737,9 @@ nr::badge::pairing_completed_animator::_animation_state() const noexcept
 void nr::badge::apply_score_change(uint8_t new_badges_discovered_count) noexcept
 {
 	// Saves to EEPROM
-	set_social_level(_compute_new_social_level(_social_level, new_badges_discovered_count));
+	set_social_level(_compute_new_social_level(_social_level, new_badges_discovered_count),
+			 true);
+	_set_selected_animation(_social_level, true);
 }
 
 void nr::badge::show_badge_info() noexcept
@@ -774,4 +763,14 @@ uint8_t nr::badge::_compute_new_social_level(uint8_t current_social_level,
 	new_social_level += level_up;
 
 	return constrain(new_social_level, 1U, nsec::config::social::max_level);
+}
+
+void nr::badge::_set_selected_animation(uint8_t animation_id, bool save_to_config) noexcept
+{
+	_selected_animation = animation_id;
+	_strip_animator.set_idle_animation(animation_id);
+
+	if (save_to_config) {
+		save_config();
+	}
 }

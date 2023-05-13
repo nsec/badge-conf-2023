@@ -103,10 +103,6 @@ void nl::strip_animator::setup() noexcept
 	_pixels.begin();
 }
 
-void nl::strip_animator::_legacy_animation_tick() noexcept
-{
-}
-
 uint8_t nl::strip_animator::_get_keyframe_index(const indice_storage_element *indices,
 						uint8_t led_id) const noexcept
 {
@@ -248,9 +244,6 @@ void nl::strip_animator::_keyframe_animation_tick(
 void nl::strip_animator::run(scheduling::absolute_time_ms current_time_ms) noexcept
 {
 	switch (_current_animation_type) {
-	case animation_type::LEGACY:
-		_legacy_animation_tick();
-		break;
 	case animation_type::KEYFRAMED:
 		_keyframe_animation_tick(current_time_ms);
 		break;
@@ -267,12 +260,10 @@ nl::strip_animator::led_color nl::strip_animator::_color(uint8_t led_id) const n
 	return led_color(&_pixels.getPixels()[led_id * 3]);
 }
 
-void nl::strip_animator::set_current_animation_idle(uint8_t current_level) noexcept
+void nl::strip_animator::set_idle_animation(uint8_t id) noexcept
 {
-	period_ms(200);
-	_current_animation_type = animation_type::LEGACY;
-	_state.legacy.start_position = 0;
-	_config.legacy.level = current_level;
+	// Temporary for testing purposes.
+	set_shooting_star_animation(id, 90 * id);
 }
 
 void nl::strip_animator::_reset_keyframed_animation_state() noexcept
