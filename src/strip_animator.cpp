@@ -427,7 +427,85 @@ const nl::strip_animator::keyframe PROGMEM color_cycle_12_keyframes[] = {
 	{ { 228, 3, 3 }, 3500 },
 };
 
+const nl::strip_animator::keyframe PROGMEM color_cycle_13_keyframes[] = {
+	{ { 0, 0, 0 }, 0 },
+	{ { 0, 0, 0 }, 1 },
+	{ { 21, 4, 133 }, 500 },
+	{ { 21, 4, 133 }, 1000 },
+	{ { 0, 0, 0 }, 1100 },
+	{ { 0, 0, 0 }, 1250 },
+	{ { 198, 42, 136 }, 1750 },
+	{ { 198, 42, 136 }, 2250 },
+	{ { 0, 0, 0 }, 2350 },
+	{ { 0, 0, 0 }, 2450 },
+	{ { 3, 196, 161 }, 2950 },
+	{ { 3, 196, 161 }, 3450 },
+	{ { 0, 0, 0 }, 3550 },
+	{ { 0, 0, 0 }, 3650 },
+};
+
+const nl::strip_animator::keyframe PROGMEM color_cycle_14_keyframes[] = {
+	{ { 0, 0, 0 }, 0 },
+	{ { 0, 0, 0 }, 1 },
+	{ { 31, 138, 112 }, 500 },
+	{ { 31, 138, 112 }, 1000 },
+	{ { 0, 0, 0 }, 1100 },
+	{ { 0, 0, 0 }, 1250 },
+	{ { 191, 219, 56 }, 1750 },
+	{ { 191, 219, 56 }, 2250 },
+	{ { 0, 0, 0 }, 2350 },
+	{ { 0, 0, 0 }, 2450 },
+	{ { 252, 115, 0 }, 2950 },
+	{ { 252, 115, 0 }, 3450 },
+	{ { 0, 0, 0 }, 3550 },
+	{ { 0, 0, 0 }, 3650 },
+};
+
+const nl::strip_animator::keyframe PROGMEM color_cycle_spark_1_keyframes[] = {
+	{ { 0, 0, 0 }, 0 },
+	{ { 255, 255, 255 }, 100 },
+	{ { 180, 0, 200 }, 400 },
+	{ { 70, 0, 0 }, 900 },
+	{ { 0, 0, 0 }, 1500 },
+	{ { 0, 0, 0 }, 5000 },
+};
+
+const nl::strip_animator::keyframe PROGMEM color_cycle_spark_2_keyframes[] = {
+	{ { 0, 0, 0 }, 0 },
+	{ { 230, 238, 117 }, 100 },
+	{ { 218, 73, 73 }, 400 },
+	{ { 79, 28, 76 }, 900 },
+	{ { 0, 0, 0 }, 1500 },
+	{ { 0, 0, 0 }, 5000 },
+};
+
+const nl::strip_animator::keyframe PROGMEM color_cycle_spark_3_keyframes[] = {
+	{ { 0, 0, 0 }, 0 },
+	{ { 160, 193, 184 }, 100 },
+	{ { 113, 159, 176 }, 400 },
+	{ { 53, 31, 57 }, 900 },
+	{ { 0, 0, 0 }, 1500 },
+	{ { 0, 0, 0 }, 5000 },
+};
+
 const color_cycle_parameters PROGMEM params[] = {
+	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_spark_1_keyframes), color_cycle_spark_1_keyframes },
+	{ 0xFFFF, 70, ARRAY_LENGTH(color_cycle_spark_1_keyframes), color_cycle_spark_1_keyframes },
+
+	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_spark_2_keyframes), color_cycle_spark_2_keyframes },
+	{ 0xFFFF, 70, ARRAY_LENGTH(color_cycle_spark_2_keyframes), color_cycle_spark_2_keyframes },
+
+	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_spark_3_keyframes), color_cycle_spark_3_keyframes },
+	{ 0xFFFF, 70, ARRAY_LENGTH(color_cycle_spark_3_keyframes), color_cycle_spark_3_keyframes },
+
+	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_13_keyframes), color_cycle_13_keyframes },
+	{ 0xFFFF, 10, ARRAY_LENGTH(color_cycle_13_keyframes), color_cycle_13_keyframes },
+	{ 0b1010101010101010, 10, ARRAY_LENGTH(color_cycle_13_keyframes), color_cycle_13_keyframes },
+
+	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_14_keyframes), color_cycle_14_keyframes },
+	{ 0xFFFF, 10, ARRAY_LENGTH(color_cycle_14_keyframes), color_cycle_14_keyframes },
+	{ 0b1010101010101010, 10, ARRAY_LENGTH(color_cycle_14_keyframes), color_cycle_14_keyframes },
+
 	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_10_keyframes), color_cycle_10_keyframes },
 	{ 0xFFFF, 10, ARRAY_LENGTH(color_cycle_10_keyframes), color_cycle_10_keyframes },
 	{ 0b1010101010101010, 10, ARRAY_LENGTH(color_cycle_10_keyframes), color_cycle_10_keyframes },
