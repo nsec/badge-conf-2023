@@ -782,15 +782,20 @@ nl::strip_animator::led_color nl::strip_animator::_color(uint8_t led_id) const n
 
 void nl::strip_animator::set_idle_animation(uint8_t id) noexcept
 {
+	/*
+	 * This looks pretty bad, but the goal is to alternate between animations
+	 * of each type as 'id' increases.
+	 */
 	const auto shooting_star_animations_count = ARRAY_LENGTH(keyframes::shooting_star::params);
 	const auto color_cycle_animations_count = ARRAY_LENGTH(keyframes::color_cycle::params);
 
-	while (true) {
-		if (id < color_cycle_animations_count) {
+	id = id % (shooting_star_animations_count + color_cycle_animations_count);
+
+	if (id / 2 < shooting_star_animations_count && id / 2 < color_cycle_animations_count) {
+		if (id % 2) {
 			const auto cc_params =
 				keyframes::color_cycle::color_cycle_parameters_from_flash(
-					&keyframes::color_cycle::params
-						[id % color_cycle_animations_count]);
+					&keyframes::color_cycle::params[id / 2]);
 
 			_set_keyframed_cycle_animation(cc_params.keyframes,
 						       cc_params.keyframe_count,
@@ -798,23 +803,44 @@ void nl::strip_animator::set_idle_animation(uint8_t id) noexcept
 						       cc_params.active_pattern,
 						       cc_params.cycle_offset,
 						       20);
-			break;
-		}
-		id -= color_cycle_animations_count;
-
-		if (id < shooting_star_animations_count) {
+			return;
+		} else {
 			const auto ss_params =
 				keyframes::shooting_star::shooting_star_parameters_from_flash(
-					&keyframes::shooting_star::params
-						[id % shooting_star_animations_count]);
+					&keyframes::shooting_star::params[id / 2]);
 
 			_set_shooting_star_animation(ss_params.shooting_star_count,
 						     ss_params.delay_advance_ms,
 						     ss_params.keyframes,
 						     ss_params.keyframe_count);
-			break;
+			return;
 		}
+	}
+
+	// Handle arrays being of different lengths.
+	if (shooting_star_animations_count > color_cycle_animations_count) {
+		id -= color_cycle_animations_count;
+		const auto ss_params =
+			keyframes::shooting_star::shooting_star_parameters_from_flash(
+				&keyframes::shooting_star::params[id]);
+
+		_set_shooting_star_animation(ss_params.shooting_star_count,
+					     ss_params.delay_advance_ms,
+					     ss_params.keyframes,
+					     ss_params.keyframe_count);
+		return;
+	} else {
 		id -= shooting_star_animations_count;
+		const auto cc_params = keyframes::color_cycle::color_cycle_parameters_from_flash(
+			&keyframes::color_cycle::params[id]);
+
+		_set_keyframed_cycle_animation(cc_params.keyframes,
+					       cc_params.keyframe_count,
+					       1,
+					       cc_params.active_pattern,
+					       cc_params.cycle_offset,
+					       20);
+		return;
 	}
 }
 
