@@ -489,15 +489,6 @@ const nl::strip_animator::keyframe PROGMEM color_cycle_spark_3_keyframes[] = {
 };
 
 const color_cycle_parameters PROGMEM params[] = {
-	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_spark_1_keyframes), color_cycle_spark_1_keyframes },
-	{ 0xFFFF, 70, ARRAY_LENGTH(color_cycle_spark_1_keyframes), color_cycle_spark_1_keyframes },
-
-	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_spark_2_keyframes), color_cycle_spark_2_keyframes },
-	{ 0xFFFF, 70, ARRAY_LENGTH(color_cycle_spark_2_keyframes), color_cycle_spark_2_keyframes },
-
-	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_spark_3_keyframes), color_cycle_spark_3_keyframes },
-	{ 0xFFFF, 70, ARRAY_LENGTH(color_cycle_spark_3_keyframes), color_cycle_spark_3_keyframes },
-
 	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_13_keyframes), color_cycle_13_keyframes },
 	{ 0xFFFF, 10, ARRAY_LENGTH(color_cycle_13_keyframes), color_cycle_13_keyframes },
 	{ 0b1010101010101010, 10, ARRAY_LENGTH(color_cycle_13_keyframes), color_cycle_13_keyframes },
@@ -549,6 +540,15 @@ const color_cycle_parameters PROGMEM params[] = {
 	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_8_keyframes), color_cycle_8_keyframes },
 	{ 0xFFFF, 10, ARRAY_LENGTH(color_cycle_8_keyframes), color_cycle_8_keyframes },
 	{ 0b1010101010101010, 10, ARRAY_LENGTH(color_cycle_8_keyframes), color_cycle_8_keyframes },
+
+	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_spark_1_keyframes), color_cycle_spark_1_keyframes },
+	{ 0xFFFF, 70, ARRAY_LENGTH(color_cycle_spark_1_keyframes), color_cycle_spark_1_keyframes },
+
+	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_spark_2_keyframes), color_cycle_spark_2_keyframes },
+	{ 0xFFFF, 70, ARRAY_LENGTH(color_cycle_spark_2_keyframes), color_cycle_spark_2_keyframes },
+
+	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_spark_3_keyframes), color_cycle_spark_3_keyframes },
+	{ 0xFFFF, 70, ARRAY_LENGTH(color_cycle_spark_3_keyframes), color_cycle_spark_3_keyframes },
 
 	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_9_keyframes), color_cycle_9_keyframes },
 	{ 0xFFFF, 10, ARRAY_LENGTH(color_cycle_9_keyframes), color_cycle_9_keyframes },

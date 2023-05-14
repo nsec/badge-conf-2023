@@ -771,7 +771,7 @@ void nr::badge::_set_selected_animation(uint8_t animation_id, bool save_to_confi
 void nr::badge::cycle_selected_animation(nr::badge::cycle_animation_direction direction) noexcept
 {
 	const auto selected_animation =
-		constrain(_selected_animation + int8_t(direction), 0, _social_level);
+		constrain(_selected_animation + int8_t(direction), 0, _social_level - 1);
 
 	_set_selected_animation(selected_animation, true);
 }
