@@ -10,7 +10,7 @@ set -eu
 #set -x
 
 # Path to the firmware file
-FIRMWARE=".pio/build/default/firmware.hex"
+FIRMWARE="binary/firmware.hex"
 
 # Set the path to the patched avrdude binary
 AVRDUDE="$HOME/tmp/avrdude/build_linux/src/avrdude"
