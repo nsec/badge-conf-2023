@@ -318,44 +318,205 @@ const nl::strip_animator::keyframe PROGMEM color_cycle_white_breathing_keyframes
 	{ { 153,76,0 }, 4000 },
 };
 
+// Magenta-blue heartbeat
+const nl::strip_animator::keyframe PROGMEM color_cycle_magenta_blue_hb_keyframes[] = {
+	{ { 0,0,0 }, 0 },
+	{ { 0,0,0 }, 1 },
+	{ { 0,0,0 }, 200 },
+	{ { 255,50,255 }, 300 },
+	{ { 20,20,20 }, 400 },
+	{ { 20,20,20 }, 500 },
+	{ { 25,25,127 }, 600 },
+	{ { 0,0,0 }, 800 },
+	{ { 0,0,0 }, 1200 },
+};
+
+const nl::strip_animator::keyframe PROGMEM color_cycle_green_pink_hb_keyframes[] = {
+	{ { 0,0,0 }, 0 },
+	{ { 0,0,0 }, 1 },
+	{ { 0,0,0 }, 200 },
+	{ { 50,200,50 }, 300 },
+	{ { 10,10,10 }, 400 },
+	{ { 10,10,10 }, 500 },
+	{ { 200,50,170 }, 600 },
+	{ { 0,0,0 }, 800 },
+	{ { 0,0,0 }, 1200 },
+};
+
+// purple-white
+const nl::strip_animator::keyframe PROGMEM color_cycle_4_keyframes[] = {
+	{ { 0,0,0 }, 0 },
+	{ { 255,255,255 }, 1 },
+	{ { 101, 78, 146 }, 1000 },
+	{ { 255,255,255 }, 2000 },
+};
+
+// yellow-white
+const nl::strip_animator::keyframe PROGMEM color_cycle_5_keyframes[] = {
+	{ { 0,0,0 }, 0 },
+	{ { 255,255,255 }, 1 },
+	{ { 249, 245, 75 }, 1000 },
+	{ { 255,255,255 }, 2000 },
+};
+
+// cyan-white
+const nl::strip_animator::keyframe PROGMEM color_cycle_6_keyframes[] = {
+	{ { 0,0,0 }, 0 },
+	{ { 255,255,255 }, 1 },
+	{ { 139, 245, 250 }, 1000 },
+	{ { 255,255,255 }, 2000 },
+};
+
+// orange-white
+const nl::strip_animator::keyframe PROGMEM color_cycle_7_keyframes[] = {
+	{ { 0,0,0 }, 0 },
+	{ { 255,255,255 }, 1 },
+	{ { 252, 115, 0 }, 1000 },
+	{ { 255,255,255 }, 2000 },
+};
+
+// lime-white
+const nl::strip_animator::keyframe PROGMEM color_cycle_8_keyframes[] = {
+	{ { 0,0,0 }, 0 },
+	{ { 255,255,255 }, 1 },
+	{ { 130, 205, 71 }, 1000 },
+	{ { 255,255,255 }, 2000 },
+};
+
+// pink-white
+const nl::strip_animator::keyframe PROGMEM color_cycle_9_keyframes[] = {
+	{ { 0,0,0 }, 0 },
+	{ { 255,255,255 }, 1 },
+	{ { 249, 0, 191 }, 1000 },
+	{ { 255,255,255 }, 2000 },
+};
+
+const nl::strip_animator::keyframe PROGMEM color_cycle_10_keyframes[] = {
+	{ { 0, 0, 0 }, 0 },
+	{ { 242, 227, 219 }, 100 },
+	{ { 65, 100, 74 }, 200 },
+	{ { 38, 58, 41 }, 300 },
+	{ { 232, 106, 51 }, 400 },
+	{ { 242, 227, 219 }, 500 },
+};
+
+const nl::strip_animator::keyframe PROGMEM color_cycle_11_keyframes[] = {
+	{ { 0, 0, 0 }, 0 },
+	{ { 255, 184, 76 }, 100 },
+	{ { 242, 102, 171 }, 200 },
+	{ { 164, 89, 209 }, 300 },
+	{ { 44, 211, 225 }, 400 },
+	{ { 255, 184, 76 }, 500 },
+};
+
+// Pride
+const nl::strip_animator::keyframe PROGMEM color_cycle_12_keyframes[] = {
+	{ { 0, 0, 0 }, 0 },
+	{ { 228, 3, 3 }, 500 },
+	{ { 228, 3, 3 }, 950 },
+	{ { 255, 140, 0 }, 1000 },
+	{ { 255, 140, 0 }, 1450 },
+	{ { 255, 237, 0 }, 1500 },
+	{ { 255, 237, 0 }, 1950 },
+	{ { 0, 128, 38 }, 2000 },
+	{ { 0, 128, 38 }, 2450 },
+	{ { 36, 64, 142 }, 2500 },
+	{ { 36, 64, 142 }, 2950 },
+	{ { 115, 41, 130 }, 3000 },
+	{ { 115, 41, 130 }, 3450 },
+	{ { 228, 3, 3 }, 3500 },
+};
 
 const color_cycle_parameters PROGMEM params[] = {
+	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_10_keyframes), color_cycle_10_keyframes },
+	{ 0xFFFF, 10, ARRAY_LENGTH(color_cycle_10_keyframes), color_cycle_10_keyframes },
+	{ 0b1010101010101010, 10, ARRAY_LENGTH(color_cycle_10_keyframes), color_cycle_10_keyframes },
+
+	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_11_keyframes), color_cycle_11_keyframes },
+	{ 0xFFFF, 10, ARRAY_LENGTH(color_cycle_11_keyframes), color_cycle_11_keyframes },
+	{ 0b1010101010101010, 10, ARRAY_LENGTH(color_cycle_11_keyframes), color_cycle_11_keyframes },
+
+	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_12_keyframes), color_cycle_12_keyframes },
+	{ 0xFFFF, 10, ARRAY_LENGTH(color_cycle_12_keyframes), color_cycle_12_keyframes },
+	{ 0b1010101010101010, 10, ARRAY_LENGTH(color_cycle_12_keyframes), color_cycle_12_keyframes },
+
 	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_1_keyframes), color_cycle_1_keyframes },
 	{ 0xFFFF, 10, ARRAY_LENGTH(color_cycle_1_keyframes), color_cycle_1_keyframes },
 	{ 0b1010101010101010, 10, ARRAY_LENGTH(color_cycle_1_keyframes), color_cycle_1_keyframes },
+
 	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_2_keyframes), color_cycle_2_keyframes },
 	{ 0xFFFF, 10, ARRAY_LENGTH(color_cycle_2_keyframes), color_cycle_2_keyframes },
 	{ 0b1010101010101010, 10, ARRAY_LENGTH(color_cycle_2_keyframes), color_cycle_2_keyframes },
+
 	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_3_keyframes), color_cycle_3_keyframes },
 	{ 0xFFFF, 10, ARRAY_LENGTH(color_cycle_3_keyframes), color_cycle_3_keyframes },
 	{ 0b1010101010101010, 10, ARRAY_LENGTH(color_cycle_3_keyframes), color_cycle_3_keyframes },
+
+	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_4_keyframes), color_cycle_4_keyframes },
+	{ 0xFFFF, 10, ARRAY_LENGTH(color_cycle_4_keyframes), color_cycle_4_keyframes },
+	{ 0b1010101010101010, 10, ARRAY_LENGTH(color_cycle_4_keyframes), color_cycle_4_keyframes },
+
+	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_5_keyframes), color_cycle_5_keyframes },
+	{ 0xFFFF, 10, ARRAY_LENGTH(color_cycle_5_keyframes), color_cycle_5_keyframes },
+	{ 0b1010101010101010, 10, ARRAY_LENGTH(color_cycle_5_keyframes), color_cycle_5_keyframes },
+
+	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_6_keyframes), color_cycle_6_keyframes },
+	{ 0xFFFF, 10, ARRAY_LENGTH(color_cycle_6_keyframes), color_cycle_6_keyframes },
+	{ 0b1010101010101010, 10, ARRAY_LENGTH(color_cycle_6_keyframes), color_cycle_6_keyframes },
+
+	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_7_keyframes), color_cycle_7_keyframes },
+	{ 0xFFFF, 10, ARRAY_LENGTH(color_cycle_7_keyframes), color_cycle_7_keyframes },
+	{ 0b1010101010101010, 10, ARRAY_LENGTH(color_cycle_7_keyframes), color_cycle_7_keyframes },
+
+	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_8_keyframes), color_cycle_8_keyframes },
+	{ 0xFFFF, 10, ARRAY_LENGTH(color_cycle_8_keyframes), color_cycle_8_keyframes },
+	{ 0b1010101010101010, 10, ARRAY_LENGTH(color_cycle_8_keyframes), color_cycle_8_keyframes },
+
+	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_9_keyframes), color_cycle_9_keyframes },
+	{ 0xFFFF, 10, ARRAY_LENGTH(color_cycle_9_keyframes), color_cycle_9_keyframes },
+	{ 0b1010101010101010, 10, ARRAY_LENGTH(color_cycle_9_keyframes), color_cycle_9_keyframes },
+
 	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_orange_breathing_keyframes), color_cycle_orange_breathing_keyframes },
 	{ 0xFFFF, 60, ARRAY_LENGTH(color_cycle_orange_breathing_keyframes), color_cycle_orange_breathing_keyframes },
 	{ 0b1010101010101010, 60, ARRAY_LENGTH(color_cycle_orange_breathing_keyframes), color_cycle_orange_breathing_keyframes },
+
 	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_red_breathing_keyframes), color_cycle_red_breathing_keyframes },
 	{ 0xFFFF, 60, ARRAY_LENGTH(color_cycle_red_breathing_keyframes), color_cycle_red_breathing_keyframes },
 	{ 0b1010101010101010, 60, ARRAY_LENGTH(color_cycle_red_breathing_keyframes), color_cycle_red_breathing_keyframes },
+
 	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_yellow_breathing_keyframes), color_cycle_yellow_breathing_keyframes },
 	{ 0xFFFF, 60, ARRAY_LENGTH(color_cycle_yellow_breathing_keyframes), color_cycle_yellow_breathing_keyframes },
 	{ 0b1010101010101010, 60, ARRAY_LENGTH(color_cycle_yellow_breathing_keyframes), color_cycle_yellow_breathing_keyframes },
+
 	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_green_breathing_keyframes), color_cycle_green_breathing_keyframes },
 	{ 0xFFFF, 60, ARRAY_LENGTH(color_cycle_green_breathing_keyframes), color_cycle_green_breathing_keyframes },
 	{ 0b1010101010101010, 60, ARRAY_LENGTH(color_cycle_green_breathing_keyframes), color_cycle_green_breathing_keyframes },
+
 	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_cyan_breathing_keyframes), color_cycle_cyan_breathing_keyframes },
 	{ 0xFFFF, 60, ARRAY_LENGTH(color_cycle_cyan_breathing_keyframes), color_cycle_cyan_breathing_keyframes },
 	{ 0b1010101010101010, 60, ARRAY_LENGTH(color_cycle_cyan_breathing_keyframes), color_cycle_cyan_breathing_keyframes },
+
 	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_blue_breathing_keyframes), color_cycle_blue_breathing_keyframes },
 	{ 0xFFFF, 60, ARRAY_LENGTH(color_cycle_blue_breathing_keyframes), color_cycle_blue_breathing_keyframes },
 	{ 0b1010101010101010, 60, ARRAY_LENGTH(color_cycle_blue_breathing_keyframes), color_cycle_blue_breathing_keyframes },
+
 	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_violet_breathing_keyframes), color_cycle_violet_breathing_keyframes },
 	{ 0xFFFF, 60, ARRAY_LENGTH(color_cycle_violet_breathing_keyframes), color_cycle_violet_breathing_keyframes },
 	{ 0b1010101010101010, 60, ARRAY_LENGTH(color_cycle_violet_breathing_keyframes), color_cycle_violet_breathing_keyframes },
+
 	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_pink_breathing_keyframes), color_cycle_pink_breathing_keyframes },
 	{ 0xFFFF, 60, ARRAY_LENGTH(color_cycle_pink_breathing_keyframes), color_cycle_pink_breathing_keyframes },
 	{ 0b1010101010101010, 60, ARRAY_LENGTH(color_cycle_pink_breathing_keyframes), color_cycle_pink_breathing_keyframes },
+
 	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_white_breathing_keyframes), color_cycle_white_breathing_keyframes },
 	{ 0xFFFF, 60, ARRAY_LENGTH(color_cycle_white_breathing_keyframes), color_cycle_white_breathing_keyframes },
 	{ 0b1010101010101010, 60, ARRAY_LENGTH(color_cycle_white_breathing_keyframes), color_cycle_white_breathing_keyframes },
+
+	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_magenta_blue_hb_keyframes), color_cycle_magenta_blue_hb_keyframes },
+	{ 0b1010101010101010, 0, ARRAY_LENGTH(color_cycle_magenta_blue_hb_keyframes), color_cycle_magenta_blue_hb_keyframes },
+
+	{ 0xFFFF, 0, ARRAY_LENGTH(color_cycle_green_pink_hb_keyframes), color_cycle_green_pink_hb_keyframes },
+	{ 0b1010101010101010, 0, ARRAY_LENGTH(color_cycle_green_pink_hb_keyframes), color_cycle_green_pink_hb_keyframes },
 };
 
 color_cycle_parameters color_cycle_parameters_from_flash(const color_cycle_parameters *params)
